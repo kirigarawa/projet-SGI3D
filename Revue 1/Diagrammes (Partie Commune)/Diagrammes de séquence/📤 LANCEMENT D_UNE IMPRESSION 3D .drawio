@@ -1,0 +1,297 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0" version="29.2.9">
+  <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
+    <mxGraphModel grid="0" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-1" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Application Web&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1232" width="100" x="38" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-2" parent="aM9ryv3xv72pqoxQDRHE-1" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1099" width="10" x="45" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-5" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Raspberry Pi&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1254" width="100" x="363" y="6" as="geometry" />
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-6" parent="aM9ryv3xv72pqoxQDRHE-5" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1114" width="10" x="45" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-34" edge="1" parent="aM9ryv3xv72pqoxQDRHE-5" source="aM9ryv3xv72pqoxQDRHE-6" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="aM9ryv3xv72pqoxQDRHE-6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="131" y="128" />
+              <mxPoint x="131" y="164" />
+            </Array>
+            <mxPoint x="60" y="128.00127659574466" as="sourcePoint" />
+            <mxPoint x="60" y="164.00127659574466" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-35" connectable="0" parent="npad0y9J-GefpTxgypvT-34" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;3.Slicing Cura (STL → G-code)&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0542" y="-1" as="geometry">
+            <mxPoint x="30" y="4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-7" edge="1" parent="1" source="aM9ryv3xv72pqoxQDRHE-2" style="html=1;verticalAlign=bottom;endArrow=block;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;" target="aM9ryv3xv72pqoxQDRHE-6" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="370" y="123" />
+              <mxPoint x="180" y="120" />
+            </Array>
+            <mxPoint x="195" y="130" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-31" connectable="0" parent="aM9ryv3xv72pqoxQDRHE-7" style="edgeLabel;html=1;align=left;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; white-space: pre-wrap;&quot;&gt;2.Transfert fichier STL&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1552" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Utilisateur&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="30" x="-157" y="21" as="geometry" />
+        </mxCell>
+        <mxCell id="aM9ryv3xv72pqoxQDRHE-3" edge="1" parent="1" source="npad0y9J-GefpTxgypvT-9" style="html=1;verticalAlign=bottom;startArrow=oval;endArrow=block;startSize=8;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;" target="aM9ryv3xv72pqoxQDRHE-2" value="">
+          <mxGeometry relative="1" x="-0.04" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="-128" y="112" />
+            </Array>
+            <mxPoint x="-121" y="112" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-6" connectable="0" parent="aM9ryv3xv72pqoxQDRHE-3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1544" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-7" connectable="0" parent="aM9ryv3xv72pqoxQDRHE-3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2034" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-14" connectable="0" parent="aM9ryv3xv72pqoxQDRHE-3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;1.Upload fichier STL&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1456" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-9" parent="1" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1201" width="10" x="-147" y="103" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-11" edge="1" parent="1" style="html=1;verticalAlign=bottom;startArrow=oval;endArrow=block;startSize=8;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;" target="aM9ryv3xv72pqoxQDRHE-2" value="">
+          <mxGeometry relative="1" x="-0.04" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="-16" y="374" />
+            </Array>
+            <mxPoint x="-136" y="374" as="sourcePoint" />
+            <mxPoint x="73" y="374" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-12" connectable="0" parent="npad0y9J-GefpTxgypvT-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1544" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-13" connectable="0" parent="npad0y9J-GefpTxgypvT-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2034" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-40" connectable="0" parent="npad0y9J-GefpTxgypvT-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;6.Clic &quot;Démarrer impression&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2762" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-21" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;MySQL&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1249" width="100" x="1196" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-22" parent="npad0y9J-GefpTxgypvT-21" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1117" width="10" x="45" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-37" edge="1" parent="1" source="aM9ryv3xv72pqoxQDRHE-6" style="endArrow=classic;html=1;rounded=0;" target="npad0y9J-GefpTxgypvT-26" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="492" y="240" />
+            </Array>
+            <mxPoint x="403" y="240" as="sourcePoint" />
+            <mxPoint x="711" y="239.99999999999997" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-38" connectable="0" parent="npad0y9J-GefpTxgypvT-37" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;4.Sauvegarde G-code&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0885" as="geometry">
+            <mxPoint x="-32" y="8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-39" edge="1" parent="1" source="npad0y9J-GefpTxgypvT-26" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;" target="aM9ryv3xv72pqoxQDRHE-6" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;5.Confirmation stockage&lt;/span&gt;">
+          <mxGeometry relative="1" x="0.3269" y="16" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="567" y="312" />
+            </Array>
+            <mxPoint x="707" y="312" as="sourcePoint" />
+            <mxPoint x="482" y="312" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-42" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="93" y="430" as="sourcePoint" />
+            <mxPoint x="408" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-43" connectable="0" parent="npad0y9J-GefpTxgypvT-42" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;7.Commande START&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.03" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-44" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;8.Envoi G-code via USB&lt;/span&gt;">
+          <mxGeometry height="50" relative="1" width="50" x="-0.0751" y="3" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="420" y="498" as="sourcePoint" />
+            <mxPoint x="673" y="498" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-45" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="668" y="565" as="sourcePoint" />
+            <mxPoint x="420" y="565" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-46" connectable="0" parent="npad0y9J-GefpTxgypvT-45" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;9.ACK démarrage&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.025" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-49" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1242" y="707" as="sourcePoint" />
+            <mxPoint x="419" y="707" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-50" connectable="0" parent="npad0y9J-GefpTxgypvT-49" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;11.Job ID créé&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1083" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-25" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;NAS Synology&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1267" width="100" x="848" y="-2" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-26" parent="npad0y9J-GefpTxgypvT-25" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1129" width="10" x="45" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-53" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="418" y="762" as="sourcePoint" />
+            <mxPoint x="671" y="762" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-54" connectable="0" parent="npad0y9J-GefpTxgypvT-53" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;12.Chauffage plateau/buse&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1237" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-55" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;" target="aM9ryv3xv72pqoxQDRHE-6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="665" y="820" as="sourcePoint" />
+            <mxPoint x="420" y="821" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-56" connectable="0" parent="npad0y9J-GefpTxgypvT-55" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;13.Températures atteintes&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1083" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-57" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="npad0y9J-GefpTxgypvT-18" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="422" y="879" as="sourcePoint" />
+            <mxPoint x="525" y="880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-58" connectable="0" parent="npad0y9J-GefpTxgypvT-57" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;14.Début extrusion&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0941" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-59" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="667" y="943" as="sourcePoint" />
+            <mxPoint x="419" y="943" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-60" connectable="0" parent="npad0y9J-GefpTxgypvT-59" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;15.Progression 0%&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1657" y="-1" as="geometry">
+            <mxPoint x="23" y="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-62" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="407" y="992" as="sourcePoint" />
+            <mxPoint x="92" y="992" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-63" connectable="0" parent="npad0y9J-GefpTxgypvT-62" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;16.Status &quot;Impression démarrée&quot;&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1322" y="-1" as="geometry">
+            <mxPoint x="19" y="6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-65" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="83" y="1083.0000000000005" as="sourcePoint" />
+            <mxPoint x="-137" y="1083.0000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-66" connectable="0" parent="npad0y9J-GefpTxgypvT-65" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;17.Notification démarrage + lien monitoring&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1394" y="-1" as="geometry">
+            <mxPoint x="17" y="-3" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-69" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(79, 85, 96); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Imprimante 3D&lt;/span&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="611" y="1266" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-70" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Raspberry Pi&lt;/span&gt;" vertex="1">
+          <mxGeometry height="62" width="120" x="353" y="1264" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-71" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Utilisateur&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="30" x="-157" y="1308" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-75" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Application Web&lt;/span&gt;" vertex="1">
+          <mxGeometry height="62" width="120" x="28" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-76" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(79, 85, 96); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;NAS Synology&lt;/span&gt;" vertex="1">
+          <mxGeometry height="62" width="120" x="838" y="1266" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-77" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(79, 85, 96); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;MySQL&lt;/span&gt;" vertex="1">
+          <mxGeometry height="62" width="120" x="1186" y="1266" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-78" edge="1" parent="1" source="aM9ryv3xv72pqoxQDRHE-6" style="endArrow=classic;html=1;rounded=0;" target="npad0y9J-GefpTxgypvT-21" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="478" y="654" as="sourcePoint" />
+            <mxPoint x="858" y="518" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-79" connectable="0" parent="npad0y9J-GefpTxgypvT-78" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start; background-color: rgb(27, 29, 30);&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20parent%3D%221%22%20style%3D%22rounded%3D0%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20value%3D%22%22%20vertex%3D%221%22%3E%3CmxGeometry%20height%3D%2262%22%20width%3D%22120%22%20x%3D%22838%22%20y%3D%221266%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0429" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-80" connectable="0" parent="npad0y9J-GefpTxgypvT-78" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start; background-color: rgb(27, 29, 30);&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20parent%3D%221%22%20style%3D%22rounded%3D0%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20value%3D%22%22%20vertex%3D%221%22%3E%3CmxGeometry%20height%3D%2262%22%20width%3D%22120%22%20x%3D%22838%22%20y%3D%221266%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0767" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-81" connectable="0" parent="npad0y9J-GefpTxgypvT-78" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space: pre-wrap;&quot;&gt;10.Enregistrement job (début, fichier, durée estimée)&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1275" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-17" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; text-align: left; white-space-collapse: preserve;&quot;&gt;Imprimante 3D&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1259" width="100" x="626" y="7" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-18" parent="npad0y9J-GefpTxgypvT-17" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
+          <mxGeometry height="1112" width="10" x="45" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="npad0y9J-GefpTxgypvT-82" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(171, 178, 191); font-family: jetbrains, &amp;quot;jetbrains Fallback&amp;quot;, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 14px; font-variant-ligatures: none; font-weight: 400; text-align: left; white-space-collapse: preserve;&quot;&gt;1. 📤 LANCEMENT D&#39;UNE IMPRESSION 3D&lt;/span&gt;" vertex="1">
+          <mxGeometry height="1485" width="1670" x="-280" y="-81" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

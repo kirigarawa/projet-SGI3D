@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.9">
+  <diagram name="Page-1" id="5f0bae14-7c28-e335-631c-24af17079c00">
+    <mxGraphModel dx="1938" dy="958" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="39150e848f15840c-17" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;exitX=0;exitY=0;exitDx=95;exitDy=0;exitPerimeter=0;entryX=0.371;entryY=0.986;entryDx=0;entryDy=0;entryPerimeter=0;" target="fBUaZuseW03KFIbZigJP-35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="125" />
+              <mxPoint x="740" y="72" />
+            </Array>
+            <mxPoint x="650" y="155.0000000000001" as="sourcePoint" />
+            <mxPoint x="780" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-82" connectable="0" parent="39150e848f15840c-17" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Email" vertex="1">
+          <mxGeometry relative="1" x="-0.2656" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="39150e848f15840c-18" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;" target="39150e848f15840c-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-80" connectable="0" parent="39150e848f15840c-18" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="HTTPS / API REST" vertex="1">
+          <mxGeometry relative="1" x="0.0046" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-33" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="260" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="39150e848f15840c-1" parent="fBUaZuseW03KFIbZigJP-33" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12" value="Smartphone" vertex="1">
+          <mxGeometry height="140" width="260" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-31" parent="fBUaZuseW03KFIbZigJP-33" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«componant»&lt;br&gt;&lt;b&gt;Application mobile&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="141.8181818181818" x="59.09090909090909" y="41.36363636363636" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-32" parent="fBUaZuseW03KFIbZigJP-31" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-34" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="260" x="820" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-35" parent="fBUaZuseW03KFIbZigJP-34" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12" value="Poste client" vertex="1">
+          <mxGeometry height="140" width="260" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-36" parent="fBUaZuseW03KFIbZigJP-34" style="html=1;dropTarget=0;whiteSpace=wrap;" value="«componant»&lt;br&gt;&lt;b&gt;Client web&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="141.8181818181818" x="59.09090909090909" y="41.36363636363636" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-37" parent="fBUaZuseW03KFIbZigJP-36" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-48" connectable="0" parent="1" style="group;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="" vertex="1">
+          <mxGeometry height="310" width="360" x="650" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-49" parent="fBUaZuseW03KFIbZigJP-48" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="Serveur d&#39;impression" vertex="1">
+          <mxGeometry height="310" width="360" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-52" parent="fBUaZuseW03KFIbZigJP-48" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Gestion état imprimantes&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="20" y="45.64379310344829" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-53" parent="fBUaZuseW03KFIbZigJP-52" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-54" parent="fBUaZuseW03KFIbZigJP-48" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;&lt;b&gt;Calcul avancement&lt;/b&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="20" y="139.9951724137931" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-55" parent="fBUaZuseW03KFIbZigJP-54" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-56" parent="fBUaZuseW03KFIbZigJP-48" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Calcul durée restante&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="20" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-57" parent="fBUaZuseW03KFIbZigJP-56" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-58" parent="fBUaZuseW03KFIbZigJP-48" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Calcul coût&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="190.00000000000003" y="45.639999999999986" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-59" parent="fBUaZuseW03KFIbZigJP-58" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-60" parent="fBUaZuseW03KFIbZigJP-48" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Gestion événements énergie&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="189.99999999999997" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-61" parent="fBUaZuseW03KFIbZigJP-60" style="shape=module;jettyWidth=8;jettyHeight=4;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-62" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="fBUaZuseW03KFIbZigJP-38" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="500.0000000000002" y="560.0000000000001" as="sourcePoint" />
+            <mxPoint x="285" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-85" connectable="0" parent="fBUaZuseW03KFIbZigJP-62" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="API interne / TCP-IP" vertex="1">
+          <mxGeometry relative="1" x="0.0601" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-63" connectable="0" parent="1" style="group;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="" vertex="1">
+          <mxGeometry height="200" width="180" x="880" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-64" parent="fBUaZuseW03KFIbZigJP-63" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="Ondulateur (UPS)" vertex="1">
+          <mxGeometry height="200" width="180" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-65" parent="fBUaZuseW03KFIbZigJP-63" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Détection coupure secteur&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="141.8181818181818" x="10.00090909090909" y="50.00363636363636" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-66" parent="fBUaZuseW03KFIbZigJP-65" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-67" parent="fBUaZuseW03KFIbZigJP-63" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Alimentation de secours&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="141.8181818181818" x="10" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-68" parent="fBUaZuseW03KFIbZigJP-67" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-38" connectable="0" parent="1" style="group;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="" vertex="1">
+          <mxGeometry height="210" width="343.77777777777777" x="40.00222222222223" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-39" parent="fBUaZuseW03KFIbZigJP-38" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="Serveur Web" vertex="1">
+          <mxGeometry height="210" width="364" x="-10.11" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-40" parent="fBUaZuseW03KFIbZigJP-38" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;API REST&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="10.00090909090909" y="45.64263322884012" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-41" parent="fBUaZuseW03KFIbZigJP-40" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-42" parent="fBUaZuseW03KFIbZigJP-38" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Service authentification&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="180" y="45.64379310344829" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-43" parent="fBUaZuseW03KFIbZigJP-42" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-44" parent="fBUaZuseW03KFIbZigJP-38" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Service consultation&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="10" y="129.9951724137931" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-45" parent="fBUaZuseW03KFIbZigJP-44" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-46" parent="fBUaZuseW03KFIbZigJP-38" style="html=1;dropTarget=0;whiteSpace=wrap;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="«componant»&lt;br&gt;&lt;b&gt;Service notifications&lt;/b&gt;" vertex="1">
+          <mxGeometry height="63.19749216300941" width="141.8181818181818" x="180" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-47" parent="fBUaZuseW03KFIbZigJP-46" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-75" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;entryX=0;entryY=0;entryDx=65;entryDy=0;entryPerimeter=0;exitX=0;exitY=0;exitDx=105;exitDy=170;exitPerimeter=0;" target="39150e848f15840c-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="130" />
+              <mxPoint x="300" y="130" />
+            </Array>
+            <mxPoint x="380" y="120" as="sourcePoint" />
+            <mxPoint x="260" y="60" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-81" connectable="0" parent="fBUaZuseW03KFIbZigJP-75" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="SMS / Email" vertex="1">
+          <mxGeometry relative="1" x="0.0143" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-76" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="200" width="170" x="419.99777777777786" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-70" parent="fBUaZuseW03KFIbZigJP-76" style="verticalAlign=top;align=left;spacingTop=8;spacingLeft=2;spacingRight=12;shape=cube;size=10;direction=south;fontStyle=4;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=1;fontFamily=Verdana;fontSize=12;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="Système de notification" vertex="1">
+          <mxGeometry height="200" width="170" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-71" parent="fBUaZuseW03KFIbZigJP-76" style="html=1;dropTarget=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="«componant»&lt;br&gt;&lt;b&gt;Envoi SMS&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="133.93939393939394" x="18.030303030303003" y="40.00363636363636" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-72" parent="fBUaZuseW03KFIbZigJP-71" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-73" parent="fBUaZuseW03KFIbZigJP-76" style="html=1;dropTarget=0;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="«componant»&lt;br&gt;&lt;b&gt;Envoi e‑mail&lt;/b&gt;" vertex="1">
+          <mxGeometry height="57.27272727272727" width="133.93939393939394" x="18.02944444444438" y="116.36000000000001" as="geometry" />
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-74" parent="fBUaZuseW03KFIbZigJP-73" style="shape=module;jettyWidth=8;jettyHeight=4;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="20" relative="1" width="20" x="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-77" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;exitX=0;exitY=0;exitDx=100;exitDy=0;exitPerimeter=0;entryX=0.601;entryY=0.989;entryDx=0;entryDy=0;entryPerimeter=0;" target="fBUaZuseW03KFIbZigJP-35" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="667" y="410" />
+              <mxPoint x="667" y="270" />
+              <mxPoint x="780" y="270" />
+              <mxPoint x="780" y="104" />
+            </Array>
+            <mxPoint x="628.0000000000002" y="580.0000000000001" as="sourcePoint" />
+            <mxPoint x="810" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-83" connectable="0" parent="fBUaZuseW03KFIbZigJP-77" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="HTTPS / API REST" vertex="1">
+          <mxGeometry relative="1" x="0.2669" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-78" edge="1" parent="1" source="fBUaZuseW03KFIbZigJP-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=none;startArrow=none;startFill=0;startSize=8;endArrow=none;endFill=0;endSize=16;fontFamily=Verdana;fontSize=12;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" target="fBUaZuseW03KFIbZigJP-48" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="818.0000000000002" y="560.0000000000001" as="sourcePoint" />
+            <mxPoint x="690" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fBUaZuseW03KFIbZigJP-87" connectable="0" parent="fBUaZuseW03KFIbZigJP-78" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Signal matériel / USB / GPIO" vertex="1">
+          <mxGeometry relative="1" x="-0.4252" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
