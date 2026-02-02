@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGI3D - Plan du site</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .sitemap {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 60px;
+            flex-wrap: wrap;
+            margin-top: 60px;
+        }
+
+        .page-node {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            width: 300px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .page-node:hover {
+            transform: translateY(-5px);
+        }
+
+        .page-node.home {
+            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
+            color: white;
+        }
+
+        .page-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .page-node.home .page-icon {
+            background: white;
+        }
+
+        .page-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .page-node h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .page-node.home h2 {
+            color: white;
+        }
+
+        .page-node p {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .page-node.home p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .page-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .page-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #4a4a4a;
+            text-decoration: none;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .page-node.home .page-link {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .page-link:hover {
+            background: #e0e0e0;
+            transform: translateX(5px);
+        }
+
+        .page-node.home .page-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .page-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .visit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 15px;
+            transition: transform 0.3s;
+        }
+
+        .page-node.home .visit-btn {
+            background: white;
+            color: #2a2a2a;
+        }
+
+        .visit-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .back-home:hover {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .back-home svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+
+            .sitemap {
+                gap: 30px;
+            }
+
+            .page-node {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour à l'accueil
+        </a>
+
+        <header>
+            <h1>PLAN DU SITE</h1>
+            <div class="subtitle">Navigation et structure SGI3D</div>
+        </header>
+
+        <div class="sitemap">
+            <!-- Page d'accueil -->
+            <div class="page-node home">
+                <div class="page-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </div>
+                <h2>Accueil</h2>
+                <p>Page principale avec imprimante 3D interactive</p>
+                <div class="page-links">
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Présentation des imprimantes
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Se connecter
+                    </span>
+                </div>
+                <a href="index.html" class="visit-btn">VISITER</a>
+            </div>
+
+            <!-- Page imprimantes -->
+            <div class="page-node">
+                <div class="page-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M3 3h18v18H3z"/>
+                        <path d="M9 9h6v6H9z"/>
+                    </svg>
+                </div>
+                <h2>Imprimantes</h2>
+                <p>Présentation détaillée des 2 modèles 3D avec caractéristiques</p>
+                <div class="page-links">
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Ultimaker 2+
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Geeetech A20T
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        Retour accueil
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Se connecter
+                    </span>
+                </div>
+                <a href="printers.html" class="visit-btn">VISITER</a>
+            </div>
+
+            <!-- Page connexion -->
+            <div class="page-node">
+                <div class="page-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <h2>Connexion</h2>
+                <p>Interface de connexion pour accéder au système de gestion</p>
+                <div class="page-links">
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Formulaire de connexion
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Connexion Google/Facebook
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        Retour accueil
+                    </span>
+                    <span class="page-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                        Voir les imprimantes
+                    </span>
+                </div>
+                <a href="login.html" class="visit-btn">VISITER</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
