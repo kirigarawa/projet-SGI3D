@@ -1,1255 +1,300 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGI3D - Nos Imprimantes 3D</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 30px;
-            transition: color 0.3s;
-        }
-
-        .back-button:hover {
-            color: #ffffff;
-        }
-
-        .back-button svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        h1 {
-            font-size: 56px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 6px;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 18px;
-            color: rgba(255,255,255,0.9);
-            letter-spacing: 2px;
-            font-weight: 300;
-            margin-bottom: 40px;
-        }
-
-        .tabs-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-
-        .tabs {
-            display: inline-flex;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 8px;
-            gap: 8px;
-            backdrop-filter: blur(10px);
-        }
-
-        .tab-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 35px;
-            background: transparent;
-            border: none;
-            border-radius: 10px;
-            color: rgba(255,255,255,0.6);
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-            text-align: left;
-        }
-
-        .tab-content {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 100%;
-        }
-
-        .tab-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .tab-badge {
-            font-size: 12px;
-            font-weight: 500;
-            opacity: 0.7;
-            letter-spacing: 0.3px;
-        }
-
-        .tab-btn svg {
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .tab-btn:hover {
-            color: rgba(255,255,255,0.9);
-            background: rgba(255,255,255,0.05);
-        }
-
-        .tab-btn.active {
-            background: rgba(255,255,255,0.95);
-            color: #2a2a2a;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-
-        .tab-btn.active svg {
-            stroke: #2a2a2a;
-        }
-
-        .tab-btn.active .tab-badge {
-            opacity: 0.6;
-        }
-
-        .printer-content {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .printer-panel {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .printer-panel.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .printers-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .printer-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            transition: transform 0.3s;
-        }
-
-        .printer-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .printer-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .printer-header h2 {
-            font-size: 32px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .printer-header .model {
-            font-size: 16px;
-            color: #666;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        .canvas-container {
-            width: 100%;
-            height: 400px;
-            min-height: 400px;
-            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-            border-radius: 15px;
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .canvas-container canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
-            cursor: grab;
-        }
-
-        .canvas-container canvas:active {
-            cursor: grabbing;
-        }
-
-        .canvas-hint {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.6);
-            font-size: 12px;
-            font-weight: 500;
-            text-align: center;
-            pointer-events: none;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .specs {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .spec-item {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #4a4a4a;
-        }
-
-        .spec-item .label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .spec-item .value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2a2a2a;
-        }
-
-        .features {
-            background: #f9f9f9;
-            padding: 25px;
-            border-radius: 12px;
-        }
-
-        .features h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2a2a2a;
-            margin-bottom: 15px;
-        }
-
-        .features ul {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .features li {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .features li::before {
-            content: '✓';
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        @media (max-width: 1024px) {
-            .printers-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tabs {
-                flex-direction: column;
-                width: 100%;
-                max-width: 400px;
-            }
-
-            .tab-btn {
-                justify-content: center;
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 640px) {
-            h1 {
-                font-size: 36px;
-                letter-spacing: 3px;
-            }
-
-            .subtitle {
-                font-size: 14px;
-            }
-
-            .tabs-container {
-                padding: 0 10px;
-            }
-
-            .tabs {
-                width: 100%;
-            }
-
-            .tab-btn {
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-
-            .tab-header {
-                font-size: 14px;
-            }
-
-            .tab-badge {
-                font-size: 11px;
-            }
-
-            .tab-btn svg {
-                width: 20px;
-                height: 20px;
-            }
-
-            .printer-card {
-                padding: 25px;
-            }
-
-            .specs {
-                grid-template-columns: 1fr;
-            }
-
-            .features ul {
-                grid-template-columns: 1fr;
-            }
-
-            .canvas-container {
-                height: 300px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SGI3D – Nos Imprimantes</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{padding-top:60px}
+  .printers-hero{text-align:center;padding:3rem 2rem 1.5rem}
+  .printers-hero h1{font-size:2.5rem;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#fff,rgba(255,255,255,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .printers-hero p{color:rgba(255,255,255,.6);margin-top:.5rem}
+  .printers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:2rem;padding:1.5rem 2rem 3rem;max-width:1200px;margin:0 auto}
+  .printer-card{background:rgba(255,255,255,.95);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;color:#2c3e50}
+  .printer-card-header{background:var(--btn-grad);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between}
+  .printer-card-header h2{font-size:1.3rem;font-weight:900;letter-spacing:2px}
+  .printer-card-header .badge-printer{background:rgba(255,255,255,.2);padding:.3rem .8rem;border-radius:20px;font-size:.8rem}
+  .printer-canvas-wrap{background:#111;display:flex;align-items:center;justify-content:center;height:300px}
+  .printer-canvas{width:100%;height:300px}
+  .printer-body{padding:2rem}
+  .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
+  .spec-item{background:#f8f9fa;border-radius:10px;padding:.8rem 1rem}
+  .spec-label{font-size:.72rem;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+  .spec-value{font-size:.95rem;font-weight:700;color:#2c3e50;margin-top:.2rem}
+  .features-list{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+  .features-list li{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#555}
+  .features-list li::before{content:'✅';font-size:.8rem}
+  .materials-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+  .mat-tag{background:#eef2f7;border:1px solid #d0dbe8;border-radius:8px;padding:.25rem .7rem;font-size:.8rem;font-weight:600;color:#3d5a80}
+  .print-form{background:#f8f9fa;border-radius:var(--radius-sm);padding:1.5rem;margin-top:1.5rem}
+  .print-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem;color:#2c3e50}
+  .print-form .form-group label{color:#555}
+  .print-form input,.print-form select{background:#fff;border:1.5px solid #e0e0e0;color:#2c3e50;border-radius:10px;padding:.7rem 1rem;width:100%;font-family:var(--font);font-size:.9rem}
+  .print-form input:focus,.print-form select:focus{outline:none;border-color:var(--accent)}
+  footer.site-footer{text-align:center;padding:2rem;color:rgba(255,255,255,.4);font-size:.8rem}
+  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
+  footer.site-footer a:hover{color:#fff}
+</style>
 </head>
 <body>
-    <div class="container">
-        <a href="index.html" class="back-button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Retour à l'accueil
-        </a>
-        
-        <a href="login.html" style="position: fixed; top: 40px; right: 40px; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); color: #2a2a2a; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s; z-index: 1000;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
-            </svg>
-            Se connecter
-        </a>
 
-        <header>
-            <h1>NOS IMPRIMANTES</h1>
-            <div class="subtitle">TECHNOLOGIE DE POINTE POUR VOS PROJETS</div>
-        </header>
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html" class="active">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="login.html" class="btn-nav" id="nav-auth">🔐 <span>Connexion</span></a>
+  </div>
+</nav>
 
-        <!-- Onglets de sélection -->
-        <div class="tabs-container">
-            <div class="tabs">
-                <button class="tab-btn active" data-printer="ultimaker">
-                    <div class="tab-content">
-                        <div class="tab-header">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                <path d="M9 9h6v6H9z"/>
-                            </svg>
-                            <span>Ultimaker 2+</span>
-                        </div>
-                        <div class="tab-badge">Design fermé • Professionnel</div>
-                    </div>
-                </button>
-                <button class="tab-btn" data-printer="geeetech">
-                    <div class="tab-content">
-                        <div class="tab-header">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="8" cy="12" r="2"/>
-                                <circle cx="16" cy="12" r="2"/>
-                                <circle cx="12" cy="12" r="2"/>
-                            </svg>
-                            <span>Geeetech A20T</span>
-                        </div>
-                        <div class="tab-badge">3 extrudeurs • Multi-couleur</div>
-                    </div>
-                </button>
-            </div>
-        </div>
+<div class="printers-hero">
+  <h1>NOS IMPRIMANTES 3D</h1>
+  <p>Parc machines SGI3D · Technologie FDM haute précision</p>
+</div>
 
-        <!-- Contenu des imprimantes -->
-        <div class="printer-content">
-            <!-- ULTIMAKER 2+ -->
-            <div class="printer-panel active" id="ultimaker-panel">
-            <div class="printer-card">
-                <div class="printer-header">
-                    <h2>ULTIMAKER 2+</h2>
-                    <div class="model">Imprimante 3D professionnelle</div>
-                </div>
+<div class="printers-grid">
 
-                <div class="canvas-container">
-                    <canvas id="ultimaker-canvas"></canvas>
-                    <div class="canvas-hint">🖱️ Glissez pour faire pivoter</div>
-                </div>
-
-                <div class="specs">
-                    <div class="spec-item">
-                        <div class="label">Volume d'impression</div>
-                        <div class="value">223 × 223 × 205 mm</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Diamètre buse</div>
-                        <div class="value">0.4 mm (0.25-0.8 mm)</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Épaisseur de couche</div>
-                        <div class="value">0.02 - 0.6 mm</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Vitesse d'impression</div>
-                        <div class="value">24 mm³/s</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Température max</div>
-                        <div class="value">260°C</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Précision XYZ</div>
-                        <div class="value">12.5, 12.5, 5 microns</div>
-                    </div>
-                </div>
-
-                <div class="features">
-                    <h3>Caractéristiques principales</h3>
-                    <ul>
-                        <li>Extrusion directe fiable</li>
-                        <li>Plateau chauffant jusqu'à 100°C</li>
-                        <li>Écran tactile couleur</li>
-                        <li>Détection automatique du matériau</li>
-                        <li>Connectivité USB et carte SD</li>
-                        <li>Compatible PLA, ABS, CPE, Nylon</li>
-                        <li>Système de refroidissement optimisé</li>
-                        <li>Calibration automatique du plateau</li>
-                    </ul>
-                </div>
-            </div>
-            </div>
-
-            <!-- GEEETECH A20T -->
-            <div class="printer-panel" id="geeetech-panel">
-            <div class="printer-card">
-                <div class="printer-header">
-                    <h2>GEEETECH A20T</h2>
-                    <div class="model">Imprimante 3D tri-couleur</div>
-                </div>
-
-                <div class="canvas-container">
-                    <canvas id="geeetech-canvas"></canvas>
-                    <div class="canvas-hint">🖱️ Glissez pour faire pivoter</div>
-                </div>
-
-                <div class="specs">
-                    <div class="spec-item">
-                        <div class="label">Volume d'impression</div>
-                        <div class="value">250 × 250 × 250 mm</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Diamètre buse</div>
-                        <div class="value">0.4 mm</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Épaisseur de couche</div>
-                        <div class="value">0.1 - 0.4 mm</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Vitesse d'impression</div>
-                        <div class="value">60 mm/s</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Température max</div>
-                        <div class="value">250°C</div>
-                    </div>
-                    <div class="spec-item">
-                        <div class="label">Extrudeurs</div>
-                        <div class="value">3 extrudeurs</div>
-                    </div>
-                </div>
-
-                <div class="features">
-                    <h3>Caractéristiques principales</h3>
-                    <ul>
-                        <li>Système d'extrusion 3-en-1</li>
-                        <li>Impression multi-couleur</li>
-                        <li>Plateau chauffant jusqu'à 80°C</li>
-                        <li>Écran tactile 3.5 pouces</li>
-                        <li>Reprise d'impression après coupure</li>
-                        <li>Détection de fin de filament</li>
-                        <li>Compatible PLA, ABS, TPU, Wood</li>
-                        <li>Structure robuste en aluminium</li>
-                    </ul>
-                </div>
-            </div>
-            </div>
-        </div>
+  <!-- ── Ultimaker 2+ ── -->
+  <div class="printer-card">
+    <div class="printer-card-header">
+      <div>
+        <h2>ULTIMAKER 2+</h2>
+        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression FDM Professionnelle</div>
+      </div>
+      <span class="badge-printer">🟢 Disponible</span>
     </div>
-
-    <footer style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.6); font-size: 14px;">
-        <a href="sitemap.html" style="color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 600;">
-            📍 Plan du site
-        </a>
-        <p style="margin-top: 10px;">© 2026 SGI3D - Système de Gestion d'Imprimantes 3D</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Fonction pour créer une imprimante 3D générique
-        function createPrinter(scene, type) {
-            const printerGroup = new THREE.Group();
-
-            if (type === 'ultimaker') {
-                // ========== ULTIMAKER 2+ - Design fermé avec boîtier ==========
-                
-                // Base massive
-                const baseGeometry = new THREE.BoxGeometry(4.5, 0.8, 4.5);
-                const baseMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x0d0d0d,
-                    metalness: 0.8,
-                    roughness: 0.2
-                });
-                const base = new THREE.Mesh(baseGeometry, baseMaterial);
-                base.position.y = 0.4;
-                base.castShadow = true;
-                printerGroup.add(base);
-
-                // Pieds
-                const footGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.6);
-                const footMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1a1a1a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const footPositions = [
-                    [-1.8, 0.2, -1.8],
-                    [1.8, 0.2, -1.8],
-                    [-1.8, 0.2, 1.8],
-                    [1.8, 0.2, 1.8]
-                ];
-                footPositions.forEach(pos => {
-                    const foot = new THREE.Mesh(footGeometry, footMaterial);
-                    foot.position.set(pos[0], pos[1], pos[2]);
-                    foot.castShadow = true;
-                    printerGroup.add(foot);
-                });
-
-                // Boîtier principal FERMÉ (caractéristique Ultimaker)
-                const bodyGeometry = new THREE.BoxGeometry(3.8, 5.5, 3.8);
-                const bodyMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1f1f1f,
-                    metalness: 0.6,
-                    roughness: 0.4
-                });
-                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                body.position.y = 3.55;
-                body.castShadow = true;
-                printerGroup.add(body);
-
-                // Panneaux latéraux gris clair (design Ultimaker)
-                const panelGeometry = new THREE.BoxGeometry(0.1, 5, 3.4);
-                const panelMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x3d3d3d,
-                    metalness: 0.4,
-                    roughness: 0.6
-                });
-                const panel1 = new THREE.Mesh(panelGeometry, panelMaterial);
-                panel1.position.set(-1.95, 3.3, 0);
-                printerGroup.add(panel1);
-                
-                const panel2 = new THREE.Mesh(panelGeometry, panelMaterial);
-                panel2.position.set(1.95, 3.3, 0);
-                printerGroup.add(panel2);
-
-                // Porte avant avec fenêtre (design Ultimaker caractéristique)
-                const doorFrameGeometry = new THREE.BoxGeometry(3.4, 5, 0.15);
-                const doorFrameMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x2a2a2a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const doorFrame = new THREE.Mesh(doorFrameGeometry, doorFrameMaterial);
-                doorFrame.position.set(0, 3.3, 1.93);
-                printerGroup.add(doorFrame);
-
-                // Fenêtre transparente
-                const windowGeometry = new THREE.BoxGeometry(2.8, 4.2, 0.08);
-                const windowMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x555555,
-                    metalness: 0.95,
-                    roughness: 0.05,
-                    transparent: true,
-                    opacity: 0.2
-                });
-                const window = new THREE.Mesh(windowGeometry, windowMaterial);
-                window.position.set(0, 3.3, 1.98);
-                printerGroup.add(window);
-
-                // Plateau d'impression en verre
-                const bedGeometry = new THREE.BoxGeometry(3.2, 0.12, 3.2);
-                const bedMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x5a5a5a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const bed = new THREE.Mesh(bedGeometry, bedMaterial);
-                bed.position.y = 1.8;
-                bed.castShadow = true;
-                printerGroup.add(bed);
-
-                // Rail Z arrière unique (caractéristique Ultimaker)
-                const railGeometry = new THREE.CylinderGeometry(0.18, 0.18, 4.8, 16);
-                const railMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x707070,
-                    metalness: 0.95,
-                    roughness: 0.05
-                });
-                const rail1 = new THREE.Mesh(railGeometry, railMaterial);
-                rail1.position.set(-1.4, 3.7, -1.6);
-                printerGroup.add(rail1);
-
-                const rail2 = new THREE.Mesh(railGeometry, railMaterial);
-                rail2.position.set(1.4, 3.7, -1.6);
-                printerGroup.add(rail2);
-
-                // Portique mobile
-                const gantrylGeometry = new THREE.BoxGeometry(3.6, 0.25, 0.25);
-                const gantryMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x3a3a3a,
-                    metalness: 0.8,
-                    roughness: 0.2
-                });
-                const gantry = new THREE.Mesh(gantrylGeometry, gantryMaterial);
-                gantry.position.set(0, 4.5, -1.6);
-                printerGroup.add(gantry);
-
-                // Tête d'impression Ultimaker (compacte)
-                const headGeometry = new THREE.BoxGeometry(0.7, 0.9, 0.7);
-                const headMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x2a2a2a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const head = new THREE.Mesh(headGeometry, headMaterial);
-                head.position.set(0, 4, 0);
-                head.castShadow = true;
-                printerGroup.add(head);
-
-                // Ventilateur de refroidissement
-                const fanGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.15);
-                const fanMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1a1a1a,
-                    metalness: 0.5,
-                    roughness: 0.5
-                });
-                const fan = new THREE.Mesh(fanGeometry, fanMaterial);
-                fan.position.set(0, 4, 0.5);
-                printerGroup.add(fan);
-
-                // Buse
-                const nozzleGeometry = new THREE.ConeGeometry(0.15, 0.35, 16);
-                const nozzleMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0xd0d0d0,
-                    metalness: 0.95,
-                    roughness: 0.05,
-                    emissive: 0xff3300,
-                    emissiveIntensity: 0.4
-                });
-                const nozzle = new THREE.Mesh(nozzleGeometry, nozzleMaterial);
-                nozzle.position.set(0, 3.45, 0);
-                printerGroup.add(nozzle);
-
-                // Logo Ultimaker (bleu caractéristique)
-                const logoGeometry = new THREE.BoxGeometry(1, 0.35, 0.08);
-                const logoMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x0099dd,
-                    emissive: 0x0099dd,
-                    emissiveIntensity: 0.5
-                });
-                const logo = new THREE.Mesh(logoGeometry, logoMaterial);
-                logo.position.set(0, 6.2, 1.93);
-                printerGroup.add(logo);
-
-                // Support de bobine intégré sur le dessus
-                const spoolHolderGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 16);
-                const spoolHolder = new THREE.Mesh(spoolHolderGeometry, railMaterial);
-                spoolHolder.position.set(0, 7, 0);
-                printerGroup.add(spoolHolder);
-
-                // Bobine sur le dessus
-                const spoolGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
-                const spoolMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x555555,
-                    metalness: 0.3,
-                    roughness: 0.7
-                });
-                const spool = new THREE.Mesh(spoolGeometry, spoolMaterial);
-                spool.position.set(0, 7, 0);
-                spool.rotation.x = Math.PI / 2;
-                spool.castShadow = true;
-                printerGroup.add(spool);
-
-            } else if (type === 'geeetech') {
-                // ========== GEEETECH A20T - Structure OUVERTE avec 3 extrudeurs ==========
-                
-                // Base large et solide
-                const baseGeometry = new THREE.BoxGeometry(5.5, 0.6, 5);
-                const baseMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x0d0d0d,
-                    metalness: 0.6,
-                    roughness: 0.4
-                });
-                const base = new THREE.Mesh(baseGeometry, baseMaterial);
-                base.position.y = 0.3;
-                base.castShadow = true;
-                printerGroup.add(base);
-
-                // Plaques de renfort sur la base
-                const reinforcementGeometry = new THREE.BoxGeometry(5.2, 0.1, 0.4);
-                const reinforcementMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x2a2a2a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const reinforcement1 = new THREE.Mesh(reinforcementGeometry, reinforcementMaterial);
-                reinforcement1.position.set(0, 0.65, -2.3);
-                printerGroup.add(reinforcement1);
-
-                const reinforcement2 = new THREE.Mesh(reinforcementGeometry, reinforcementMaterial);
-                reinforcement2.position.set(0, 0.65, 2.3);
-                printerGroup.add(reinforcement2);
-
-                // 4 colonnes VISIBLES du cadre (structure ouverte)
-                const columnGeometry = new THREE.BoxGeometry(0.25, 6.5, 0.25);
-                const columnMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x3a3a3a,
-                    metalness: 0.85,
-                    roughness: 0.15
-                });
-
-                const columnPositions = [
-                    [-2.5, 3.85, -2.2],
-                    [2.5, 3.85, -2.2],
-                    [-2.5, 3.85, 2.2],
-                    [2.5, 3.85, 2.2]
-                ];
-
-                columnPositions.forEach(pos => {
-                    const column = new THREE.Mesh(columnGeometry, columnMaterial);
-                    column.position.set(pos[0], pos[1], pos[2]);
-                    column.castShadow = true;
-                    printerGroup.add(column);
-                });
-
-                // Cadre supérieur
-                const topFrameGeometry = new THREE.BoxGeometry(5.5, 0.25, 5);
-                const topFrame = new THREE.Mesh(topFrameGeometry, columnMaterial);
-                topFrame.position.y = 7.1;
-                topFrame.castShadow = true;
-                printerGroup.add(topFrame);
-
-                // Barres de renfort supérieures
-                const topBarGeometry = new THREE.BoxGeometry(5.2, 0.15, 0.15);
-                const topBar1 = new THREE.Mesh(topBarGeometry, columnMaterial);
-                topBar1.position.set(0, 6.9, 0);
-                printerGroup.add(topBar1);
-
-                // Plateau d'impression GRAND (250x250)
-                const bedGeometry = new THREE.BoxGeometry(4.2, 0.25, 4.2);
-                const bedMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x4a4a4a,
-                    metalness: 0.6,
-                    roughness: 0.4
-                });
-                const bed = new THREE.Mesh(bedGeometry, bedMaterial);
-                bed.position.y = 1.8;
-                bed.castShadow = true;
-                printerGroup.add(bed);
-
-                // Grille sur le plateau
-                const gridGeometry = new THREE.PlaneGeometry(4, 4);
-                const gridMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x666666,
-                    wireframe: true,
-                    transparent: true,
-                    opacity: 0.3
-                });
-                const grid = new THREE.Mesh(gridGeometry, gridMaterial);
-                grid.rotation.x = -Math.PI / 2;
-                grid.position.y = 1.93;
-                printerGroup.add(grid);
-
-                // Support du plateau (vis trapézoïdales visibles)
-                const supportGeometry = new THREE.CylinderGeometry(0.12, 0.12, 1.4, 16);
-                const supportMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x5a5a5a,
-                    metalness: 0.9,
-                    roughness: 0.1
-                });
-
-                const supportPositions = [
-                    [-1.8, 1.1, -1.8],
-                    [1.8, 1.1, -1.8],
-                    [-1.8, 1.1, 1.8],
-                    [1.8, 1.1, 1.8]
-                ];
-
-                supportPositions.forEach(pos => {
-                    const support = new THREE.Mesh(supportGeometry, supportMaterial);
-                    support.position.set(pos[0], pos[1], pos[2]);
-                    support.castShadow = true;
-                    printerGroup.add(support);
-                });
-
-                // Rails X (doubles)
-                const railGeometry = new THREE.BoxGeometry(5, 0.12, 0.12);
-                const railMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x6a6a6a,
-                    metalness: 0.95,
-                    roughness: 0.05
-                });
-                
-                const rail1 = new THREE.Mesh(railGeometry, railMaterial);
-                rail1.position.set(0, 6.6, -2.1);
-                printerGroup.add(rail1);
-
-                const rail2 = new THREE.Mesh(railGeometry, railMaterial);
-                rail2.position.set(0, 6.6, 2.1);
-                printerGroup.add(rail2);
-
-                // Chariot principal LARGE
-                const carriageGeometry = new THREE.BoxGeometry(2.5, 0.5, 1);
-                const carriageMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1a1a1a,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const carriage = new THREE.Mesh(carriageGeometry, carriageMaterial);
-                carriage.position.set(0, 6.2, 0);
-                carriage.castShadow = true;
-                printerGroup.add(carriage);
-
-                // === 3 EXTRUDEURS (caractéristique principale A20T) ===
-                const extruderGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.6);
-                const extruderMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x2a2a2a,
-                    metalness: 0.6,
-                    roughness: 0.4
-                });
-
-                const extruderColors = [
-                    { color: 0xff0000, emissive: 0xff0000 }, // Rouge
-                    { color: 0x00ff00, emissive: 0x00ff00 }, // Vert
-                    { color: 0x0000ff, emissive: 0x0000ff }  // Bleu
-                ];
-                
-                for (let i = 0; i < 3; i++) {
-                    // Corps de l'extrudeur
-                    const extruder = new THREE.Mesh(extruderGeometry, extruderMaterial);
-                    extruder.position.set(-0.8 + i * 0.8, 5.5, 0);
-                    extruder.castShadow = true;
-                    printerGroup.add(extruder);
-
-                    // Buse pour chaque extrudeur
-                    const nozzleGeometry = new THREE.ConeGeometry(0.1, 0.25, 16);
-                    const nozzleMaterial = new THREE.MeshStandardMaterial({ 
-                        color: 0xc0c0c0,
-                        metalness: 0.95,
-                        roughness: 0.05
-                    });
-                    const nozzle = new THREE.Mesh(nozzleGeometry, nozzleMaterial);
-                    nozzle.position.set(-0.8 + i * 0.8, 5.1, 0);
-                    printerGroup.add(nozzle);
-
-                    // LED colorée GRANDE pour chaque extrudeur
-                    const ledGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-                    const ledMaterial = new THREE.MeshStandardMaterial({ 
-                        color: extruderColors[i].color,
-                        emissive: extruderColors[i].emissive,
-                        emissiveIntensity: 1
-                    });
-                    const led = new THREE.Mesh(ledGeometry, ledMaterial);
-                    led.position.set(-0.8 + i * 0.8, 5.85, 0.35);
-                    printerGroup.add(led);
-
-                    // Étiquette numéro pour chaque extrudeur
-                    const labelGeometry = new THREE.PlaneGeometry(0.2, 0.2);
-                    const labelMaterial = new THREE.MeshStandardMaterial({ 
-                        color: extruderColors[i].color,
-                        emissive: extruderColors[i].emissive,
-                        emissiveIntensity: 0.5
-                    });
-                    const label = new THREE.Mesh(labelGeometry, labelMaterial);
-                    label.position.set(-0.8 + i * 0.8, 5.5, 0.35);
-                    printerGroup.add(label);
-                }
-
-                // Ventilateur de refroidissement entre les extrudeurs
-                const fanGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.15);
-                const fanMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1a1a1a,
-                    metalness: 0.5,
-                    roughness: 0.5
-                });
-                const fan = new THREE.Mesh(fanGeometry, fanMaterial);
-                fan.position.set(0, 5.3, 0.4);
-                printerGroup.add(fan);
-
-                // Écran LCD sur le côté
-                const screenBaseGeometry = new THREE.BoxGeometry(1.5, 1, 0.2);
-                const screenBaseMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x1a1a1a,
-                    metalness: 0.5,
-                    roughness: 0.5
-                });
-                const screenBase = new THREE.Mesh(screenBaseGeometry, screenBaseMaterial);
-                screenBase.position.set(2.3, 2.5, -2.35);
-                screenBase.rotation.y = -Math.PI / 6;
-                screenBase.castShadow = true;
-                printerGroup.add(screenBase);
-
-                // Écran LCD actif
-                const screenGeometry = new THREE.BoxGeometry(1.3, 0.8, 0.05);
-                const screenMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x000000,
-                    emissive: 0x00ff88,
-                    emissiveIntensity: 0.4
-                });
-                const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-                screen.position.set(2.35, 2.5, -2.3);
-                screen.rotation.y = -Math.PI / 6;
-                printerGroup.add(screen);
-
-                // Boutons de contrôle
-                for (let i = 0; i < 4; i++) {
-                    const buttonGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.05, 16);
-                    const buttonMaterial = new THREE.MeshStandardMaterial({ 
-                        color: i === 0 ? 0xff3333 : 0x333333,
-                        emissive: i === 0 ? 0xff0000 : 0x000000,
-                        emissiveIntensity: i === 0 ? 0.3 : 0
-                    });
-                    const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
-                    button.position.set(2.2 + (i % 2) * 0.2, 1.8 + Math.floor(i / 2) * 0.2, -2.45);
-                    button.rotation.x = Math.PI / 2;
-                    button.rotation.z = -Math.PI / 6;
-                    printerGroup.add(button);
-                }
-
-                // Support de bobine latéral (sur le côté)
-                const spoolHolderGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 16);
-                const spoolHolderMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x5a5a5a,
-                    metalness: 0.9,
-                    roughness: 0.1
-                });
-                const spoolHolder = new THREE.Mesh(spoolHolderGeometry, spoolHolderMaterial);
-                spoolHolder.position.set(-3.5, 5.5, 0);
-                spoolHolder.rotation.z = Math.PI / 2;
-                printerGroup.add(spoolHolder);
-
-                // Bobine de filament
-                const spoolGeometry = new THREE.TorusGeometry(0.7, 0.3, 16, 32);
-                const spoolMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0x6a6a6a,
-                    metalness: 0.3,
-                    roughness: 0.7
-                });
-                const spool = new THREE.Mesh(spoolGeometry, spoolMaterial);
-                spool.position.set(-4.2, 5.5, 0);
-                spool.rotation.y = Math.PI / 2;
-                spool.castShadow = true;
-                printerGroup.add(spool);
-
-                // Filament visible qui va vers les extrudeurs
-                const filamentCurve = new THREE.QuadraticBezierCurve3(
-                    new THREE.Vector3(-3.8, 5.5, 0),
-                    new THREE.Vector3(-2, 6.5, 0),
-                    new THREE.Vector3(0, 6, 0)
-                );
-                const filamentPoints = filamentCurve.getPoints(50);
-                const filamentGeometry = new THREE.BufferGeometry().setFromPoints(filamentPoints);
-                const filamentMaterial = new THREE.LineBasicMaterial({ 
-                    color: 0x888888,
-                    linewidth: 2
-                });
-                const filament = new THREE.Line(filamentGeometry, filamentMaterial);
-                printerGroup.add(filament);
-
-                // Logo Geeetech
-                const logoGeometry = new THREE.BoxGeometry(1.2, 0.25, 0.08);
-                const logoMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0xff6600,
-                    emissive: 0xff6600,
-                    emissiveIntensity: 0.3
-                });
-                const logo = new THREE.Mesh(logoGeometry, logoMaterial);
-                logo.position.set(0, 0.85, -2.55);
-                printerGroup.add(logo);
-            }
-
-            scene.add(printerGroup);
-            return printerGroup;
-        }
-        // Stocker les scènes et renderers
-        const scenes = {};
-
-        // Fonction pour initialiser une scène
-        function setupScene(canvasId, printerType) {
-            console.log('Setting up scene for:', canvasId, printerType);
-            
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) {
-                console.error('Canvas not found:', canvasId);
-                return;
-            }
-
-            // Attendre que le canvas soit visible et ait des dimensions
-            const width = canvas.clientWidth || canvas.offsetWidth || 800;
-            const height = canvas.clientHeight || canvas.offsetHeight || 400;
-            
-            console.log('Canvas dimensions:', width, 'x', height);
-
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x2a2a2a);
-
-            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-            camera.position.set(8, 5, 10);
-            camera.lookAt(0, 3, 0);
-
-            const renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas, 
-                antialias: true 
-            });
-            renderer.setSize(width, height);
-            renderer.shadowMap.enabled = true;
-
-            console.log('Renderer created');
-
-            // Lumières
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 7);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-
-            const directionalLight2 = new THREE.DirectionalLight(0xaaaaaa, 0.4);
-            directionalLight2.position.set(-5, 5, -5);
-            scene.add(directionalLight2);
-
-            // Sol
-            const floorGeometry = new THREE.PlaneGeometry(20, 20);
-            const floorMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x1a1a1a,
-                metalness: 0.3,
-                roughness: 0.8
-            });
-            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            scene.add(floor);
-
-            // Grille
-            const gridHelper = new THREE.GridHelper(20, 20, 0x333333, 0x222222);
-            scene.add(gridHelper);
-
-            console.log('Creating printer model...');
-            
-            // Créer l'imprimante
-            const printer = createPrinter(scene, printerType);
-            
-            console.log('Printer created, children count:', printer.children.length);
-
-            // Animation
-            let mouseX = 0;
-            let mouseY = 0;
-            let targetRotationX = 0;
-            let targetRotationY = 0;
-            let time = 0;
-
-            canvas.addEventListener('mousemove', (event) => {
-                const rect = canvas.getBoundingClientRect();
-                mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-                
-                targetRotationY = mouseX * 0.5;
-                targetRotationX = mouseY * 0.3;
-            });
-
-            function animate() {
-                requestAnimationFrame(animate);
-                time += 0.01;
-
-                printer.rotation.y += (targetRotationY - printer.rotation.y) * 0.05;
-                printer.rotation.x += (targetRotationX - printer.rotation.x) * 0.05;
-                printer.rotation.y += 0.002;
-
-                camera.position.y = 5 + Math.sin(time * 0.3) * 0.3;
-
-                renderer.render(scene, camera);
-            }
-
-            console.log('Starting animation...');
-            animate();
-
-            // Responsive
-            const resizeObserver = new ResizeObserver(() => {
-                const width = canvas.clientWidth;
-                const height = canvas.clientHeight;
-                if (width > 0 && height > 0) {
-                    renderer.setSize(width, height);
-                    camera.aspect = width / height;
-                    camera.updateProjectionMatrix();
-                }
-            });
-            resizeObserver.observe(canvas);
-
-            // Stocker la scène
-            scenes[canvasId] = { scene, camera, renderer, printer };
-            
-            console.log('Scene setup complete for:', canvasId);
-        }
-
-        // Attendre que Three.js soit chargé
-        if (typeof THREE === 'undefined') {
-            console.error('THREE.js not loaded!');
-        } else {
-            console.log('THREE.js loaded successfully');
-        }
-
-        // Initialiser seulement la première scène au chargement
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                console.log('Page loaded, initializing Ultimaker scene...');
-                setupScene('ultimaker-canvas', 'ultimaker');
-            }, 200);
-        });
-
-        // Gestion des onglets
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const printerPanels = document.querySelectorAll('.printer-panel');
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const printerType = button.getAttribute('data-printer');
-                const canvasId = `${printerType}-canvas`;
-                
-                console.log('Tab clicked:', printerType);
-                
-                // Retirer la classe active de tous les boutons
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Ajouter la classe active au bouton cliqué
-                button.classList.add('active');
-                
-                // Cacher tous les panneaux
-                printerPanels.forEach(panel => panel.classList.remove('active'));
-                
-                // Afficher le panneau correspondant
-                const targetPanel = document.getElementById(`${printerType}-panel`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                    
-                    // Attendre que le DOM se mette à jour avant d'initialiser la scène
-                    setTimeout(() => {
-                        // Initialiser la scène si elle n'existe pas encore
-                        if (!scenes[canvasId]) {
-                            console.log('Initializing new scene for:', canvasId);
-                            setupScene(canvasId, printerType);
-                        } else {
-                            // Forcer le re-render de la scène existante
-                            console.log('Re-rendering existing scene for:', canvasId);
-                            const sceneData = scenes[canvasId];
-                            const canvas = document.getElementById(canvasId);
-                            if (canvas && sceneData) {
-                                const width = canvas.clientWidth || canvas.offsetWidth;
-                                const height = canvas.clientHeight || canvas.offsetHeight;
-                                console.log('Canvas dimensions on tab switch:', width, 'x', height);
-                                if (width > 0 && height > 0) {
-                                    sceneData.renderer.setSize(width, height);
-                                    sceneData.camera.aspect = width / height;
-                                    sceneData.camera.updateProjectionMatrix();
-                                    sceneData.renderer.render(sceneData.scene, sceneData.camera);
-                                }
-                            }
-                        }
-                    }, 150);
-                }
-            });
-        });
-    </script>
+    <div class="printer-canvas-wrap">
+      <canvas id="canvas-ultimaker" class="printer-canvas"></canvas>
+    </div>
+    <div class="printer-body">
+      <div class="specs-grid">
+        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">223×223×205 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm (0.25–0.8)</div></div>
+        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.02–0.6 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">24 mm³/s</div></div>
+        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">260 °C</div></div>
+        <div class="spec-item"><div class="spec-label">Précision XYZ</div><div class="spec-value">12.5/12.5/5 µm</div></div>
+      </div>
+      <ul class="features-list">
+        <li>Extrusion directe haute précision</li>
+        <li>Plateau chauffant jusqu'à 100°C</li>
+        <li>Écran tactile couleur intégré</li>
+        <li>Détection automatique matériau</li>
+        <li>Connectivité USB &amp; carte SD</li>
+        <li>Nivellement automatique du plateau</li>
+        <li>Refroidissement optimisé dual fan</li>
+      </ul>
+      <div style="margin-top:1rem"><strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
+        <div class="materials-row"><span class="mat-tag">PLA</span><span class="mat-tag">ABS</span><span class="mat-tag">CPE</span><span class="mat-tag">Nylon</span><span class="mat-tag">PVA</span></div>
+      </div>
+      <div class="print-form">
+        <h3>🖨️ Lancer une impression</h3>
+        <div class="form-group">
+          <label>Nom du fichier</label>
+          <input type="text" id="ult-file" placeholder="piece_v2.stl">
+        </div>
+        <div class="form-group" style="display:flex;gap:1rem">
+          <div style="flex:1"><label>Matière</label>
+            <select id="ult-mat"><option>PLA</option><option>ABS</option><option>CPE</option><option>Nylon</option><option>PVA</option></select>
+          </div>
+          <div style="flex:1"><label>Durée (min)</label>
+            <input type="number" id="ult-dur" placeholder="90" min="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="launchPrint('Ultimaker 2+','ult-file','ult-mat','ult-dur')">▶️ Lancer l'impression</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Geeetech A20T ── -->
+  <div class="printer-card">
+    <div class="printer-card-header">
+      <div>
+        <h2>GEEETECH A20T</h2>
+        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression tri-couleur FDM</div>
+      </div>
+      <span class="badge-printer">🟢 Disponible</span>
+    </div>
+    <div class="printer-canvas-wrap">
+      <canvas id="canvas-geeetech" class="printer-canvas"></canvas>
+    </div>
+    <div class="printer-body">
+      <div class="specs-grid">
+        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">250×250×250 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.1–0.4 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">60 mm/s</div></div>
+        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">250 °C</div></div>
+        <div class="spec-item"><div class="spec-label">Extrudeurs</div><div class="spec-value">3 (tri-couleur)</div></div>
+      </div>
+      <ul class="features-list">
+        <li>Extrusion 3-en-1 tri-couleur</li>
+        <li>Impression multi-couleur native</li>
+        <li>Plateau chauffant jusqu'à 80°C</li>
+        <li>Écran tactile 3.5 pouces</li>
+        <li>Reprise après coupure de courant</li>
+        <li>Détection de fin de filament</li>
+        <li>Châssis aluminium robuste</li>
+      </ul>
+      <div style="margin-top:1rem"><strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
+        <div class="materials-row"><span class="mat-tag">PLA</span><span class="mat-tag">ABS</span><span class="mat-tag">TPU</span><span class="mat-tag">Wood</span></div>
+      </div>
+      <div class="print-form">
+        <h3>🖨️ Lancer une impression</h3>
+        <div class="form-group">
+          <label>Nom du fichier</label>
+          <input type="text" id="gee-file" placeholder="objet_tricolor.stl">
+        </div>
+        <div class="form-group" style="display:flex;gap:1rem">
+          <div style="flex:1"><label>Matière</label>
+            <select id="gee-mat"><option>PLA</option><option>ABS</option><option>TPU</option><option>Wood</option></select>
+          </div>
+          <div style="flex:1"><label>Durée (min)</label>
+            <input type="number" id="gee-dur" placeholder="60" min="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="launchPrint('Geeetech A20T','gee-file','gee-mat','gee-dur')">▶️ Lancer l'impression</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a href="index.html">🏠 Accueil</a> · <a href="login.html">🔐 Connexion</a> · <a href="dashboard.html">📊 Dashboard</a> · <a href="sitemap.html">🗺️ Plan du site</a>
+  <p style="margin-top:.5rem">© 2025 SGI3D v3.0</p>
+</footer>
+
+<div id="toast-container"></div>
+
+<script src="db.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Mise à jour nav si connecté
+(function(){
+  const s=SGI3D_DB.getSession();
+  if(s){
+    const a=document.getElementById('nav-auth');
+    a.href='dashboard.html'; a.innerHTML='👤 <span>'+s.name.split(' ')[0]+'</span>';
+  }
+})();
+
+// ── Lancer une impression ──────────────────────────────────────────────────
+function launchPrint(printer, fileId, matId, durId){
+  if(!SGI3D_DB.isLoggedIn()){
+    showToast('⚠️ Connectez-vous pour lancer une impression','warning');
+    setTimeout(()=>window.location.href='login.html',1500);
+    return;
+  }
+  const file=document.getElementById(fileId).value.trim();
+  const mat=document.getElementById(matId).value;
+  const dur=document.getElementById(durId).value;
+  if(!file){showToast('Entrez un nom de fichier','warning');return;}
+  const job=SGI3D_DB.createPrintJob({fileName:file,printer,material:mat,duration:dur?dur+'min':'N/A'});
+  showToast('🖨️ Impression lancée : '+file+' sur '+printer,'success');
+  // Simuler fin après 5s
+  setTimeout(()=>{
+    SGI3D_DB.finishPrintJob(job.id, Math.random()>.15);
+  },5000);
+}
+
+// ── Three.js Ultimaker 2+ ──────────────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('canvas-ultimaker');
+  const W=canvas.parentElement.offsetWidth||480, H=300;
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  r.setSize(W,H); r.shadowMap.enabled=true;
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  scene.add(new THREE.PointLight(0x3498db,1.2,12));
+
+  function box(w,h,d,c,x,y,z){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80})); m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m; }
+  const base=box(2.2,.25,2.2,0x2c3e50,0,.12,0);
+  const c1=box(.12,3,.12,0x4a5568,-.95,1.6,-.95); const c2=box(.12,3,.12,0x4a5568,.95,1.6,-.95);
+  const c3=box(.12,3,.12,0x4a5568,-.95,1.6,.95);  const c4=box(.12,3,.12,0x4a5568,.95,1.6,.95);
+  const top=box(2.2,.1,2.2,0x3d5a80,0,3.1,0);
+  const plate=box(1.8,.06,1.8,0x546e7a,0,.5,0);
+  const yBar=box(2.2,.09,.14,0x607d8b,0,2.5,0);
+  const head=box(.22,.32,.22,0x263238,0,2.3,0);
+  const noz=box(.06,.14,.06,0xffd700,0,2.1,0);
+  const screen=box(.4,.28,.05,0x1565c0,.72,.9,-.97);
+  const spool=new THREE.Mesh(new THREE.TorusGeometry(.28,.09,8,24),new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; scene.add(spool);
+  const ledGeo=new THREE.SphereGeometry(.05,8,8);
+  const ledMat=new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:.6});
+  const led=new THREE.Mesh(ledGeo,ledMat); led.position.set(-.68,.9,-.97); scene.add(led);
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=.016;
+    scene.rotation.y=Math.sin(t*.25)*.4+.3;
+    head.position.x=Math.sin(t*1.4)*.75;
+    yBar.position.x=head.position.x;
+    plate.position.y=.44+Math.sin(t*.35)*.1;
+    spool.rotation.z+=.025;
+    ledMat.emissiveIntensity=.3+Math.abs(Math.sin(t*2.8))*.7;
+    r.render(scene,cam);
+  })();
+})();
+
+// ── Three.js Geeetech A20T ─────────────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('canvas-geeetech');
+  const W=canvas.parentElement.offsetWidth||480, H=300;
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  r.setSize(W,H); r.shadowMap.enabled=true;
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  scene.add(new THREE.PointLight(0xe74c3c,.8,12));
+
+  function box(w,h,d,c,x,y,z){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80})); m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m; }
+  box(2.4,.25,2.4,0x1a1a2e,0,.12,0); // base
+  box(.14,3.2,.14,0x2d2d2d,-1,1.7,-1); box(.14,3.2,.14,0x2d2d2d,1,1.7,-1);
+  box(.14,3.2,.14,0x2d2d2d,-1,1.7,1);  box(.14,3.2,.14,0x2d2d2d,1,1.7,1);
+  box(2.4,.1,2.4,0x1a1a3a,0,3.2,0);
+  const plate=box(2,.07,2,0x424242,0,.55,0);
+  const yBar=box(2.4,.09,.14,0x555,0,2.6,0);
+
+  // 3 têtes d'extrusion
+  const heads=[box(.18,.28,.18,0x111,-.3,2.4,0),box(.18,.28,.18,0x222,0,2.4,0),box(.18,.28,.18,0x111,.3,2.4,0)];
+  const nozColors=[0xe74c3c,0x3498db,0xf39c12];
+  heads.forEach((h,i)=>{
+    const n=new THREE.Mesh(new THREE.BoxGeometry(.06,.12,.06),new THREE.MeshPhongMaterial({color:nozColors[i]}));
+    n.position.set(-.3+i*.3,2.2,0); scene.add(n);
+  });
+  // 3 bobines
+  const spoolColors=[0xe74c3c,0x3498db,0xf39c12];
+  const spools=spoolColors.map((c,i)=>{
+    const s=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,8,20),new THREE.MeshPhongMaterial({color:c}));
+    s.position.set(-.5+i*.5,2.7,-.2); s.rotation.x=Math.PI/2; s.castShadow=true; scene.add(s); return s;
+  });
+  const screen=box(.42,.3,.05,0x1565c0,.8,1.,.97);
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=.016;
+    scene.rotation.y=Math.sin(t*.22)*.4+.3;
+    const hx=Math.sin(t*1.2)*.7;
+    heads.forEach(h=>h.position.x=hx);
+    yBar.position.x=hx;
+    plate.position.y=.5+Math.sin(t*.3)*.12;
+    spools.forEach(s=>s.rotation.z+=.02);
+    r.render(scene,cam);
+  })();
+})();
+
+function showToast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+</script>
 </body>
 </html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SGI3D – Alertes</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{padding-top:60px}
+  .filters{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem}
+  .filter-btn{
+    padding:.5rem 1.2rem;border-radius:20px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;
+    font-size:.85rem;font-family:var(--font);transition:all .2s;
+  }
+  .filter-btn.active{font-weight:700}
+  .filter-btn.all.active    {background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4);color:#fff}
+  .filter-btn.error.active  {background:rgba(231,76,60,.2);  border-color:#e74c3c;color:#e74c3c}
+  .filter-btn.warning.active{background:rgba(243,156,18,.2); border-color:#f39c12;color:#f39c12}
+  .filter-btn.info.active   {background:rgba(52,152,219,.2); border-color:#3498db;color:#3498db}
+  .filter-btn.resolved.active{background:rgba(46,204,113,.2);border-color:#2ecc71;color:#2ecc71}
+  .alerts-list{display:flex;flex-direction:column;gap:1rem}
+  .alert-item{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm);padding:1.2rem 1.5rem;
+    display:flex;gap:1rem;align-items:flex-start;
+    border-left-width:4px;transition:all .2s;
+  }
+  .alert-item.error  {border-left-color:#e74c3c}
+  .alert-item.warning{border-left-color:#f39c12}
+  .alert-item.info   {border-left-color:#3498db}
+  .alert-item.resolved{opacity:.6}
+  .alert-item-icon{font-size:1.5rem;flex-shrink:0;margin-top:.1rem}
+  .alert-item-body{flex:1}
+  .alert-item-body h3{font-size:.95rem;font-weight:700;margin-bottom:.3rem}
+  .alert-item-body p{font-size:.88rem;color:rgba(255,255,255,.7);margin-bottom:.5rem}
+  .alert-item-meta{font-size:.78rem;color:rgba(255,255,255,.4)}
+  .alert-actions{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;flex-shrink:0}
+  .sound-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.2rem}
+  .no-alerts{text-align:center;padding:3rem;color:rgba(255,255,255,.4)}
+  .no-alerts .na-icon{font-size:3rem;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html" class="active">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="s-section">Navigation</div>
+    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="printers.html"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <div class="s-section">Administration</div>
+    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <a href="alerts.html" class="active"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <div class="s-section">Compte</div>
+    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="#" onclick="SGI3D_DB.exportJSON()"><span class="s-icon">📤</span> Exporter JSON</a>
+    <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
+  </aside>
+
+  <main class="admin-content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+      <div>
+        <h1>🔔 Gestion des alertes</h1>
+        <p id="alert-summary">Chargement…</p>
+      </div>
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+        <button class="btn btn-danger btn-sm" onclick="showAddAlert()">➕ Nouvelle alerte</button>
+        <button class="btn btn-success btn-sm" onclick="resolveAll()">✅ Tout résoudre</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearResolved()">🗑️ Supprimer résolues</button>
+        <button class="sound-btn" onclick="toggleSound()" id="sound-toggle" title="Son des alertes">🔔</button>
+      </div>
+    </div>
+
+    <!-- Stats alertes -->
+    <div class="stats-grid" id="alert-stats" style="margin-bottom:1.5rem"></div>
+
+    <!-- Filtres -->
+    <div class="filters">
+      <button class="filter-btn all active" onclick="setFilter('all',this)">🔍 Toutes</button>
+      <button class="filter-btn error"    onclick="setFilter('error',this)">🔴 Erreurs</button>
+      <button class="filter-btn warning"  onclick="setFilter('warning',this)">🟡 Avertissements</button>
+      <button class="filter-btn info"     onclick="setFilter('info',this)">🔵 Informations</button>
+      <button class="filter-btn resolved" onclick="setFilter('resolved',this)">✅ Résolues</button>
+    </div>
+
+    <!-- Liste des alertes -->
+    <div class="alerts-list" id="alerts-list"></div>
+  </main>
+</div>
+
+<!-- Modal nouvelle alerte -->
+<div class="modal-overlay" id="addAlertModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('addAlertModal').classList.remove('open')">✕</button>
+    <h2>➕ Créer une alerte</h2>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="aa-type" class="form-control">
+        <option value="info">ℹ️ Information</option>
+        <option value="warning">⚠️ Avertissement</option>
+        <option value="error">🔴 Erreur critique</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Titre</label><input id="aa-title" class="form-control" placeholder="Ex: Filament épuisé"></div>
+    <div class="form-group"><label>Message détaillé</label><textarea id="aa-msg" class="form-control" rows="4" placeholder="Décrivez l'alerte en détail…" style="resize:vertical"></textarea></div>
+    <div class="form-group"><label>Source</label><input id="aa-src" class="form-control" placeholder="Ex: Ultimaker 2+, Capteur température…"></div>
+    <div style="display:flex;gap:1rem;margin-top:1.5rem">
+      <button class="btn btn-danger" onclick="doAddAlert()">🔔 Créer alerte</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('addAlertModal').classList.remove('open')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<audio id="alert-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." type="audio/wav">
+</audio>
+
+<script src="db.js"></script>
+<script>
+let currentFilter = 'all';
+let soundEnabled = true;
+
+function doLogout(){ SGI3D_DB.logout(); window.location.href='login.html'; }
+function showAddAlert(){ document.getElementById('addAlertModal').classList.add('open'); }
+function toggleSound(){ soundEnabled=!soundEnabled; document.getElementById('sound-toggle').textContent=soundEnabled?'🔔':'🔕'; showToast(soundEnabled?'Son activé':'Son désactivé','info'); }
+
+function setFilter(f, btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAlerts();
+}
+
+function renderStats(){
+  const all=SGI3D_DB.getAlerts();
+  const active=SGI3D_DB.getAlerts(false);
+  document.getElementById('alert-stats').innerHTML=`
+    <div class="stat-card red"><div class="s-val">${active.filter(a=>a.type==='error').length}</div><div class="s-label">Erreurs actives</div></div>
+    <div class="stat-card orange"><div class="s-val">${active.filter(a=>a.type==='warning').length}</div><div class="s-label">Avertissements</div></div>
+    <div class="stat-card blue"><div class="s-val">${active.filter(a=>a.type==='info').length}</div><div class="s-label">Informations</div></div>
+    <div class="stat-card green"><div class="s-val">${SGI3D_DB.getAlerts(true).length}</div><div class="s-label">Résolues</div></div>
+  `;
+  document.getElementById('sb-alerts').textContent=active.length;
+  document.getElementById('alert-summary').textContent=
+    `${all.length} alertes au total · ${active.length} non résolues · ${SGI3D_DB.getAlerts(true).length} résolues`;
+}
+
+function renderAlerts(){
+  let alerts = SGI3D_DB.getAlerts();
+  if(currentFilter==='resolved') alerts=alerts.filter(a=>a.resolved);
+  else if(currentFilter!=='all') alerts=alerts.filter(a=>a.type===currentFilter&&!a.resolved);
+
+  const list = document.getElementById('alerts-list');
+  if(!alerts.length){
+    list.innerHTML=`<div class="no-alerts"><div class="na-icon">${currentFilter==='resolved'?'✅':'🔕'}</div><p>${currentFilter==='resolved'?'Aucune alerte résolue':'Aucune alerte dans cette catégorie'}</p></div>`;
+    return;
+  }
+
+  const icon={error:'🔴',warning:'🟡',info:'🔵'};
+  list.innerHTML=alerts.map(a=>`
+    <div class="alert-item ${a.type} ${a.resolved?'resolved':''}" id="alert-${a.id}">
+      <div class="alert-item-icon">${icon[a.type]||'❓'}</div>
+      <div class="alert-item-body">
+        <h3>${a.title} ${a.resolved?'<span class="badge badge-success" style="font-size:.7rem">Résolu</span>':''}</h3>
+        <p>${a.message}</p>
+        <div class="alert-item-meta">
+          📅 ${SGI3D_DB.formatDate(a.createdAt)}
+          ${a.source?' · 📍 '+a.source:''}
+          ${a.resolved&&a.resolvedAt?' · ✅ Résolu : '+SGI3D_DB.formatDate(a.resolvedAt):''}
+        </div>
+      </div>
+      <div class="alert-actions">
+        ${!a.resolved?`<button class="btn btn-success btn-xs" onclick="resolveAlert(${a.id})">✅ Résoudre</button>`:''}
+        <button class="btn btn-danger btn-xs" onclick="deleteAlert(${a.id})">🗑️ Supprimer</button>
+        ${a.type==='error'&&!a.resolved?`<span class="badge badge-danger">⚡ URGENT</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function resolveAlert(id){
+  SGI3D_DB.resolveAlert(id);
+  renderAll(); showToast('✅ Alerte résolue','success');
+}
+
+function deleteAlert(id){
+  SGI3D_DB.deleteAlert(id);
+  renderAll(); showToast('🗑️ Alerte supprimée','warning');
+}
+
+function resolveAll(){
+  if(!confirm('Résoudre toutes les alertes actives ?'))return;
+  SGI3D_DB.getAlerts(false).forEach(a=>SGI3D_DB.resolveAlert(a.id));
+  renderAll(); showToast('✅ Toutes les alertes résolues','success');
+}
+
+function clearResolved(){
+  if(!confirm('Supprimer toutes les alertes résolues ?'))return;
+  const active=SGI3D_DB.getAlerts(false);
+  SGI3D_DB.set('alerts',active);
+  renderAll(); showToast('🗑️ Alertes résolues supprimées','warning');
+}
+
+function doAddAlert(){
+  const type=document.getElementById('aa-type').value;
+  const title=document.getElementById('aa-title').value.trim();
+  const msg=document.getElementById('aa-msg').value.trim();
+  const src=document.getElementById('aa-src').value.trim();
+  if(!title||!msg){showToast('Titre et message requis','warning');return;}
+  SGI3D_DB.addAlert({type,title,message:msg,source:src||(SGI3D_DB.getSession()?.name||'Admin')});
+  document.getElementById('addAlertModal').classList.remove('open');
+  renderAll(); showToast('🔔 Alerte créée','success');
+  if(soundEnabled && type==='error') playAlertSound();
+}
+
+function playAlertSound(){
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440,ctx.currentTime+0.3);
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.5);
+  } catch(e){}
+}
+
+function renderAll(){
+  renderStats(); renderAlerts();
+}
+
+function showToast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// Auto-simulation d'alertes système
+function autoAlert(){
+  const types=['warning','info','error'];
+  const sources=['Ultimaker 2+','Geeetech A20T','Capteur T°','Système','Caméra 1'];
+  const msgs=[
+    {type:'warning',title:'Température buse élevée',msg:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
+    {type:'info',   title:'Maintenance programmée',msg:'Calibration automatique dans 24h'},
+    {type:'error',  title:'Panne extrudeur',msg:'L\'extrudeur du Geeetech A20T ne répond plus'},
+    {type:'warning',title:'Filament presque épuisé',msg:'Niveau filament ABS < 5%'},
+    {type:'info',   title:'Impression terminée',msg:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
+  ];
+  const pick=msgs[Math.floor(Math.random()*msgs.length)];
+  SGI3D_DB.addAlert({...pick,message:pick.msg,source:sources[Math.floor(Math.random()*sources.length)]});
+  renderAll();
+  if(soundEnabled && pick.type==='error') playAlertSound();
+}
+
+renderAll();
+// Simuler une nouvelle alerte toutes les 45 secondes
+setInterval(autoAlert, 45000);
+</script>
+</body>
+</html>

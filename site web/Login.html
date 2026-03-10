@@ -1,334 +1,176 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGI3D - Connexion</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 30px;
-            transition: color 0.3s;
-        }
-
-        .back-button:hover {
-            color: #ffffff;
-        }
-
-        .back-button svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .login-box {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 50px 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo h1 {
-            font-size: 48px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 4px;
-            margin-bottom: 10px;
-        }
-
-        .logo p {
-            color: #666;
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #2a2a2a;
-            margin-bottom: 8px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            background: #ffffff;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #4a4a4a;
-            box-shadow: 0 0 0 4px rgba(74,74,74,0.1);
-        }
-
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .forgot-password {
-            color: #4a4a4a;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .forgot-password:hover {
-            color: #2a2a2a;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            letter-spacing: 1px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 30px 0;
-            color: #999;
-            font-size: 14px;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e0e0e0;
-        }
-
-        .divider::before {
-            margin-right: 15px;
-        }
-
-        .divider::after {
-            margin-left: 15px;
-        }
-
-        .alt-login {
-            display: flex;
-            gap: 15px;
-        }
-
-        .alt-login-btn {
-            flex: 1;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #2a2a2a;
-            background: #ffffff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .alt-login-btn:hover {
-            border-color: #4a4a4a;
-            background: #f9f9f9;
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 25px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .register-link a {
-            color: #2a2a2a;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .register-link a:hover {
-            color: #4a4a4a;
-        }
-
-        @media (max-width: 640px) {
-            .login-box {
-                padding: 40px 30px;
-            }
-
-            .logo h1 {
-                font-size: 36px;
-            }
-
-            .alt-login {
-                flex-direction: column;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGI3D – Connexion</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{display:flex;flex-direction:column;min-height:100vh;padding-top:60px}
+  .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+  .login-box{
+    background:var(--card-bg);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:3rem 2.5rem;width:100%;max-width:440px;color:#2c3e50;
+  }
+  .login-logo{text-align:center;margin-bottom:2rem}
+  .login-logo .logo-text{
+    font-size:3rem;font-weight:900;letter-spacing:5px;
+    background:var(--btn-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .login-logo p{color:#666;font-size:.9rem;margin-top:.3rem}
+  .login-box .form-group label{color:#444}
+  .login-box input{background:#f8f9fa;border:1.5px solid #e0e0e0;color:#2c3e50;border-radius:12px;padding:.85rem 1rem;width:100%;font-family:var(--font);font-size:.95rem;transition:border-color .2s}
+  .login-box input:focus{outline:none;border-color:var(--accent);background:#fff}
+  .remember-row{display:flex;align-items:center;justify-content:space-between;margin:1rem 0;font-size:.85rem;color:#555}
+  .remember-row label{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+  .remember-row a{color:var(--accent);text-decoration:none}
+  .btn-login{
+    width:100%;padding:1rem;border-radius:25px;border:none;cursor:pointer;
+    background:var(--btn-grad);color:#fff;font-size:1rem;font-weight:700;
+    font-family:var(--font);transition:all .3s;letter-spacing:.5px;
+  }
+  .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.25)}
+  .divider{text-align:center;margin:1.5rem 0;color:#aaa;font-size:.85rem;position:relative}
+  .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#e0e0e0}
+  .divider::before{left:0}.divider::after{right:0}
+  .oauth-row{display:flex;gap:1rem}
+  .btn-oauth{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:.6rem;
+    padding:.75rem;border-radius:var(--radius-sm);border:1.5px solid #e0e0e0;
+    background:#fff;cursor:pointer;font-size:.88rem;font-weight:600;color:#444;
+    font-family:var(--font);transition:all .2s;
+  }
+  .btn-oauth:hover{background:#f8f9fa;border-color:#ccc}
+  .login-links{text-align:center;margin-top:1.5rem;font-size:.85rem;color:#666}
+  .login-links a{color:var(--accent);text-decoration:none;font-weight:600}
+  .error-msg{background:#ffeaea;border:1px solid #f5c6cb;color:#721c24;padding:.75rem 1rem;border-radius:10px;font-size:.88rem;margin-bottom:1rem;display:none}
+  footer.site-footer{text-align:center;padding:1.5rem;color:rgba(255,255,255,.4);font-size:.8rem}
+  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
+</style>
 </head>
 <body>
-    <div class="login-container">
-        <a href="index.html" class="back-button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Retour à l'accueil
-        </a>
 
-        <div class="login-box">
-            <div class="logo">
-                <h1>SGI3D</h1>
-                <p>SUPERVISION ET GESTION</p>
-            </div>
+<!-- Navigation -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="login.html" class="active btn-nav">🔐 <span>Connexion</span></a>
+  </div>
+</nav>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">Adresse email</label>
-                    <input type="email" id="email" name="email" placeholder="votre.email@exemple.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required>
-                </div>
-
-                <div class="form-options">
-                    <label class="remember-me">
-                        <input type="checkbox" id="remember">
-                        <span>Se souvenir de moi</span>
-                    </label>
-                    <a href="#" class="forgot-password">Mot de passe oublié ?</a>
-                </div>
-
-                <button type="submit" class="submit-btn">SE CONNECTER</button>
-            </form>
-
-            <div class="divider">ou continuer avec</div>
-
-            <div class="alt-login">
-                <button class="alt-login-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Google
-                </button>
-                <button class="alt-login-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                    Facebook
-                </button>
-            </div>
-
-            <div class="register-link">
-                Pas encore de compte ? <a href="#">S'inscrire</a><br>
-                <a href="printers.html" style="color: #2a2a2a; font-weight: 600; margin-top: 10px; display: inline-block;">Découvrir nos imprimantes 3D</a>
-            </div>
-        </div>
+<div class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-text">SGI3D</div>
+      <p>Système de Gestion d'Impression 3D</p>
     </div>
 
-    <footer style="text-align: center; padding: 20px; color: rgba(255,255,255,0.6); font-size: 13px;">
-        <a href="sitemap.html" style="color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 600;">
-            📍 Plan du site
-        </a>
-    </footer>
+    <div class="error-msg" id="errorMsg">❌ Email ou mot de passe incorrect.</div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Simulation de connexion
-            if (email && password) {
-                alert('Connexion réussie ! Redirection vers le dashboard...');
-                // Ici vous pouvez rediriger vers la page dashboard
-                // window.location.href = 'dashboard.html';
-            }
-        });
-    </script>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Adresse email</label>
+        <input type="email" id="email" placeholder="admin@sgi3d.fr" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="remember-row">
+        <label><input type="checkbox" id="remember"> Se souvenir de moi</label>
+        <a href="#">Mot de passe oublié ?</a>
+      </div>
+      <button type="submit" class="btn-login">Se connecter →</button>
+    </form>
+
+    <div class="divider">ou continuer avec</div>
+    <div class="oauth-row">
+      <button class="btn-oauth" onclick="oauthNotice()">🔵 Google</button>
+      <button class="btn-oauth" onclick="oauthNotice()">📘 Facebook</button>
+    </div>
+
+    <div class="login-links">
+      <p>Pas encore de compte ? <a href="#" onclick="showRegister()">Créer un compte</a></p>
+      <p style="margin-top:.5rem"><a href="printers.html">🖨️ Voir nos imprimantes</a> · <a href="index.html">🏠 Accueil</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal inscription -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>✏️ Créer un compte</h2>
+    <div class="form-group">
+      <label>Nom complet</label>
+      <input type="text" id="regName" class="form-control" placeholder="Jean Dupont">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="regEmail" class="form-control" placeholder="jean@sgi3d.fr">
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="regPass" class="form-control" placeholder="••••••••">
+    </div>
+    <div style="display:flex;gap:1rem;margin-top:1.5rem">
+      <button class="btn btn-primary" onclick="doRegister()">✅ Créer</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+    </div>
+    <p id="regMsg" style="margin-top:1rem;font-size:.85rem"></p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a href="sitemap.html">🗺️ Plan du site</a> · <a href="index.html">Accueil</a> · <a href="printers.html">Imprimantes</a>
+</footer>
+
+<div id="toast-container"></div>
+<script src="db.js"></script>
+<script>
+// Rediriger si déjà connecté
+if(SGI3D_DB.isLoggedIn()){ window.location.href='dashboard.html'; }
+
+document.getElementById('loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const user     = SGI3D_DB.login(email, password);
+  if(user){
+    showToast('✅ Connexion réussie ! Bienvenue '+user.name,'success');
+    setTimeout(()=>{ window.location.href='dashboard.html'; },800);
+  } else {
+    document.getElementById('errorMsg').style.display='block';
+    document.getElementById('password').value='';
+  }
+});
+
+function showRegister(){ document.getElementById('registerModal').classList.add('open'); }
+function closeModal()  { document.getElementById('registerModal').classList.remove('open'); }
+function oauthNotice() { showToast('⚠️ OAuth non disponible en mode hors-ligne','warning'); }
+
+function doRegister(){
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  if(!name||!email||!pass){ document.getElementById('regMsg').textContent='Remplissez tous les champs.'; return; }
+  if(SGI3D_DB.getUserByEmail(email)){ document.getElementById('regMsg').textContent='Cet email est déjà utilisé.'; return; }
+  SGI3D_DB.createUser({name,email,password:pass,role:'operator',avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
+  document.getElementById('regMsg').style.color='#2ecc71';
+  document.getElementById('regMsg').textContent='✅ Compte créé ! Vous pouvez vous connecter.';
+  setTimeout(closeModal,1500);
+}
+
+function showToast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+</script>
 </body>
 </html>

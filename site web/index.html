@@ -1,679 +1,222 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGI3D - Système de Gestion d'Imprimantes 3D</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 60px;
-            position: relative;
-            z-index: 100;
-        }
-
-        h1 {
-            font-size: 72px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 8px;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 18px;
-            color: rgba(255,255,255,0.9);
-            letter-spacing: 2px;
-            font-weight: 300;
-        }
-
-        .main-layout {
-            display: flex;
-            gap: 60px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        /* 3D Canvas Container */
-        #canvas-container {
-            width: 600px;
-            height: 500px;
-            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #three-canvas {
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-        }
-
-        #three-canvas:active {
-            cursor: grabbing;
-        }
-
-        .canvas-hint {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.7);
-            font-size: 14px;
-            font-weight: 500;
-            text-align: center;
-            pointer-events: none;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        /* Action Cards */
-        .actions {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            width: 400px;
-        }
-
-        .action-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 16px;
-            padding: 40px 35px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255,255,255,0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .action-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s;
-        }
-
-        .action-card:hover::before {
-            left: 100%;
-        }
-
-        .action-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-        }
-
-        .action-card h2 {
-            font-size: 26px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-
-        .action-card p {
-            font-size: 15px;
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-        }
-
-        .card-icon svg {
-            width: 28px;
-            height: 28px;
-            stroke: white;
-            stroke-width: 2;
-            fill: none;
-        }
-
-        @media (max-width: 1200px) {
-            .main-layout {
-                flex-direction: column;
-            }
-
-            #canvas-container {
-                width: 100%;
-                max-width: 600px;
-            }
-
-            .actions {
-                width: 100%;
-                max-width: 500px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            h1 {
-                font-size: 48px;
-                letter-spacing: 4px;
-            }
-
-            .subtitle {
-                font-size: 14px;
-            }
-
-            #canvas-container {
-                height: 400px;
-            }
-
-            .action-card {
-                padding: 30px 25px;
-            }
-
-            .action-card h2 {
-                font-size: 22px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGI3D – Accueil</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{overflow-x:hidden}
+  /* ── Hero ── */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:80px 2rem 2rem;position:relative;
+  }
+  .hero-logo{
+    font-size:5rem;font-weight:900;letter-spacing:8px;
+    background:linear-gradient(135deg,#fff 30%,rgba(255,255,255,.4));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:.5rem;
+  }
+  .hero-sub{font-size:1.1rem;color:rgba(255,255,255,.6);letter-spacing:3px;text-transform:uppercase;margin-bottom:3rem}
+  #hero-canvas{
+    width:min(500px,90vw);height:min(400px,60vw);
+    border-radius:var(--radius);box-shadow:0 30px 60px rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.1);margin-bottom:3rem;
+  }
+  /* ── Action cards ── */
+  .action-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:1.5rem;width:100%;max-width:900px;
+  }
+  .action-card{
+    background:rgba(255,255,255,.07);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);
+    padding:2rem;text-align:center;text-decoration:none;color:#fff;
+    transition:all .3s;
+  }
+  .action-card:hover{transform:translateY(-8px);background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+  .action-card .ac-icon{font-size:2.5rem;margin-bottom:1rem}
+  .action-card h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}
+  .action-card p{font-size:.85rem;color:rgba(255,255,255,.6)}
+  /* ── Particules ── */
+  .particles{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .particle{
+    position:absolute;width:2px;height:2px;background:rgba(255,255,255,.5);border-radius:50%;
+    animation:float linear infinite;
+  }
+  @keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0}
+    10%{opacity:1}90%{opacity:1}100%{transform:translateY(-100px) translateX(30px);opacity:0}}
+  .hero,.action-grid,.hero-logo,.hero-sub{position:relative;z-index:1}
+  footer.site-footer{text-align:center;padding:2rem;color:rgba(255,255,255,.4);font-size:.8rem;z-index:1;position:relative}
+  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
+  footer.site-footer a:hover{color:#fff}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>SGI3D</h1>
-            <div class="subtitle">SYSTÈME DE GESTION D'IMPRIMANTES 3D</div>
-        </header>
 
-        <div class="main-layout">
-            <!-- 3D Canvas -->
-            <div id="canvas-container">
-                <canvas id="three-canvas"></canvas>
-                <div class="canvas-hint">🖱️ Glissez pour faire pivoter la scène</div>
-            </div>
+<!-- Navigation -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html" class="active">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="login.html" class="btn-nav">🔐 <span>Connexion</span></a>
+  </div>
+</nav>
 
-            <!-- Action Cards -->
-            <div class="actions">
-                <a href="printers.html" style="text-decoration: none;">
-                    <div class="action-card">
-                        <div class="card-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M3 3h18v18H3z"/>
-                                <path d="M9 9h6v6H9z"/>
-                            </svg>
-                        </div>
-                        <h2>Présentation des imprimantes</h2>
-                        <p>Découvrez nos imprimantes 3D et leurs caractéristiques techniques</p>
-                    </div>
-                </a>
+<!-- Particules de fond -->
+<div class="particles" id="particles"></div>
 
-                <a href="login.html" style="text-decoration: none;">
-                    <div class="action-card">
-                        <div class="card-icon">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                        </div>
-                        <h2>Se connecter</h2>
-                        <p>Accédez à l'interface de gestion et supervision des imprimantes</p>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </div>
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-logo">SGI3D</div>
+  <p class="hero-sub">Système de Gestion d'Impression 3D</p>
 
-    <footer style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.6); font-size: 14px;">
-        <a href="sitemap.html" style="color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 600; transition: color 0.3s;">
-            📍 Plan du site
-        </a>
-        <p style="margin-top: 10px;">© 2026 SGI3D - Système de Gestion d'Imprimantes 3D</p>
-    </footer>
+  <canvas id="hero-canvas"></canvas>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Configuration de la scène Three.js
-        const canvas = document.getElementById('three-canvas');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x2a2a2a);
-        scene.fog = new THREE.Fog(0x2a2a2a, 15, 30);
-        
-        const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-        camera.position.set(12, 6, 15);
-        camera.lookAt(0, 3, 0);
+  <div class="action-grid">
+    <a href="printers.html" class="action-card">
+      <div class="ac-icon">🖨️</div>
+      <h3>Nos Imprimantes</h3>
+      <p>Ultimaker 2+ &amp; Geeetech A20T – Spécifications et modèles 3D interactifs</p>
+    </a>
+    <a href="login.html" class="action-card">
+      <div class="ac-icon">🔐</div>
+      <h3>Se Connecter</h3>
+      <p>Accéder au tableau de bord, gérer les impressions et les utilisateurs</p>
+    </a>
+    <a href="cameras.html" class="action-card">
+      <div class="ac-icon">📷</div>
+      <h3>Surveillance</h3>
+      <p>Flux caméras en temps réel, détection de mouvement, monitoring atelier</p>
+    </a>
+    <a href="alerts.html" class="action-card">
+      <div class="ac-icon">🔔</div>
+      <h3>Alertes</h3>
+      <p>Notifications système, pannes, alertes filament et températures</p>
+    </a>
+    <a href="dashboard.html" class="action-card">
+      <div class="ac-icon">📊</div>
+      <h3>Dashboard</h3>
+      <p>Statistiques globales, journaux d'activité et gestion complète</p>
+    </a>
+    <a href="sitemap.html" class="action-card">
+      <div class="ac-icon">🗺️</div>
+      <h3>Plan du site</h3>
+      <p>Vue d'ensemble de toutes les pages et fonctionnalités disponibles</p>
+    </a>
+  </div>
+</section>
 
-        const renderer = new THREE.WebGLRenderer({ 
-            canvas: canvas, 
-            alpha: false,
-            antialias: true 
-        });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+<footer class="site-footer">
+  <p>© 2025 SGI3D – <a href="sitemap.html">Plan du site</a> · <a href="database.html">Base de données</a> · v3.0</p>
+</footer>
 
-        // Lumières
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
+<script src="db.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── Particules ──────────────────────────────────────────────
+(function(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<40;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;animation-delay:${Math.random()*8}s;animation-duration:${6+Math.random()*8}s`;
+    c.appendChild(p);
+  }
+})();
 
-        const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight1.position.set(5, 10, 7);
-        directionalLight1.castShadow = true;
-        directionalLight1.shadow.mapSize.width = 2048;
-        directionalLight1.shadow.mapSize.height = 2048;
-        scene.add(directionalLight1);
+// ── Three.js Imprimante Hero ──────────────────────────────────
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(W,H); renderer.setPixelRatio(devicePixelRatio);
+  renderer.shadowMap.enabled = true;
 
-        const directionalLight2 = new THREE.DirectionalLight(0xaaaaaa, 0.4);
-        directionalLight2.position.set(-5, 5, -5);
-        scene.add(directionalLight2);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  camera.position.set(3,4,6); camera.lookAt(0,1,0);
 
-        // Spotlight pour effet dramatique
-        const spotLight = new THREE.SpotLight(0xffffff, 1);
-        spotLight.position.set(0, 15, 0);
-        spotLight.angle = Math.PI / 6;
-        spotLight.penumbra = 0.3;
-        spotLight.decay = 2;
-        spotLight.distance = 30;
-        spotLight.castShadow = true;
-        spotLight.shadow.mapSize.width = 1024;
-        spotLight.shadow.mapSize.height = 1024;
-        scene.add(spotLight);
-        scene.add(spotLight.target);
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff,0.4));
+  const dl = new THREE.DirectionalLight(0xffffff,0.8);
+  dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  const pl = new THREE.PointLight(0x3498db,1,10);
+  pl.position.set(-2,3,2); scene.add(pl);
 
-        // === SOL AVEC GRILLE ===
-        const floorGeometry = new THREE.PlaneGeometry(40, 40);
-        const floorMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a1a,
-            metalness: 0.3,
-            roughness: 0.8
-        });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.1;
-        floor.receiveShadow = true;
-        scene.add(floor);
+  // Sol
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshLambertMaterial({color:0x1a1a2e}));
+  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 
-        // Grille du sol
-        const floorGrid = new THREE.GridHelper(40, 40, 0x333333, 0x222222);
-        floorGrid.position.y = 0;
-        scene.add(floorGrid);
+  function box(w,h,d,color,x,y,z){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color,shininess:60}));
+    m.position.set(x,y,z); m.castShadow=true; scene.add(m); return m;
+  }
 
-        // Groupe principal de l'imprimante 3D
-        const printerGroup = new THREE.Group();
+  // Imprimante stylisée
+  const base     = box(2,0.2,2,  0x2c3e50,0,0.1,0);
+  const col1     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6,-0.85);
+  const col2     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6,-0.85);
+  const col3     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6, 0.85);
+  const col4     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6, 0.85);
+  const topFrame = box(2,0.1,2,   0x3d5a80,0,3.1,0);
+  const plate    = box(1.6,0.06,1.6,0x546e7a,0,0.5,0);
+  const carriageY= box(2.0,0.1,0.15,0x607d8b,0,2.4,0);
+  const head     = box(0.25,0.35,0.25,0x263238,0,2.2,0);
+  const nozzle   = box(0.06,0.15,0.06,0xffd700,0,2.0,0);
+  const screen   = box(0.4,0.3,0.05,0x1565c0,0.7,0.9,-0.96);
+  const spool    = new THREE.Mesh(new THREE.TorusGeometry(.3,.1,8,20),new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; spool.castShadow=true; scene.add(spool);
 
-        // === BASE DE L'IMPRIMANTE ===
-        const baseGeometry = new THREE.BoxGeometry(6, 0.8, 5);
-        const baseMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a1a,
-            metalness: 0.8,
-            roughness: 0.2
-        });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        base.position.y = 0.4;
-        base.castShadow = true;
-        base.receiveShadow = true;
-        printerGroup.add(base);
+  // LED pulsante
+  const ledGeo = new THREE.SphereGeometry(0.05,8,8);
+  const ledMat = new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.5});
+  const led = new THREE.Mesh(ledGeo,ledMat);
+  led.position.set(-0.7,0.9,-0.96); scene.add(led);
 
-        // Pieds de la base
-        const footGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.5, 16);
-        const footMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x2a2a2a,
-            metalness: 0.6,
-            roughness: 0.4
-        });
-        const footPositions = [
-            [-2.5, 0.25, -2],
-            [2.5, 0.25, -2],
-            [-2.5, 0.25, 2],
-            [2.5, 0.25, 2]
-        ];
-        footPositions.forEach(pos => {
-            const foot = new THREE.Mesh(footGeometry, footMaterial);
-            foot.position.set(pos[0], pos[1], pos[2]);
-            foot.castShadow = true;
-            printerGroup.add(foot);
-        });
+  // Filament
+  const filPoints=[new THREE.Vector3(0,2.8,0),new THREE.Vector3(0.05,2.6,0.05),new THREE.Vector3(0,2.3,0),new THREE.Vector3(0,2.1,0)];
+  const filCurve=new THREE.CatmullRomCurve3(filPoints);
+  const filGeo=new THREE.TubeGeometry(filCurve,20,0.012,6,false);
+  const fil=new THREE.Mesh(filGeo,new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  scene.add(fil);
 
-        // === CADRE VERTICAL (COLONNES) ===
-        const columnGeometry = new THREE.BoxGeometry(0.25, 7, 0.25);
-        const columnMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x3a3a3a,
-            metalness: 0.9,
-            roughness: 0.1
-        });
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate); t+=0.015;
+    scene.rotation.y=Math.sin(t*.3)*.3+Math.PI*.15;
+    head.position.x=Math.sin(t*1.5)*.7;
+    carriageY.position.x=head.position.x;
+    plate.position.y=0.45+Math.sin(t*.4)*.08;
+    spool.rotation.z+=0.03;
+    ledMat.emissiveIntensity=0.3+Math.abs(Math.sin(t*3))*.7;
+    renderer.render(scene,camera);
+  }
+  animate();
 
-        const columnPositions = [
-            [-2.8, 4.3, -2.3],
-            [2.8, 4.3, -2.3],
-            [-2.8, 4.3, 2.3],
-            [2.8, 4.3, 2.3]
-        ];
+  window.addEventListener('resize',()=>{
+    const W2=canvas.clientWidth,H2=canvas.clientHeight;
+    renderer.setSize(W2,H2); camera.aspect=W2/H2; camera.updateProjectionMatrix();
+  });
+})();
 
-        columnPositions.forEach(pos => {
-            const column = new THREE.Mesh(columnGeometry, columnMaterial);
-            column.position.set(pos[0], pos[1], pos[2]);
-            column.castShadow = true;
-            printerGroup.add(column);
-        });
-
-        // === CADRE SUPÉRIEUR ===
-        const topFrameGeometry = new THREE.BoxGeometry(6, 0.3, 5);
-        const topFrame = new THREE.Mesh(topFrameGeometry, columnMaterial);
-        topFrame.position.y = 7.8;
-        topFrame.castShadow = true;
-        printerGroup.add(topFrame);
-
-        // === RAILS HORIZONTAUX ===
-        const railGeometry = new THREE.BoxGeometry(0.15, 0.15, 5);
-        const railMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x5a5a5a,
-            metalness: 0.95,
-            roughness: 0.05
-        });
-
-        const rail1 = new THREE.Mesh(railGeometry, railMaterial);
-        rail1.position.set(-2.8, 7.5, 0);
-        printerGroup.add(rail1);
-
-        const rail2 = new THREE.Mesh(railGeometry, railMaterial);
-        rail2.position.set(2.8, 7.5, 0);
-        printerGroup.add(rail2);
-
-        // === CHARIOT (X-AXIS) ===
-        const carriageGeometry = new THREE.BoxGeometry(1.2, 0.4, 0.6);
-        const carriageMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x4a4a4a,
-            metalness: 0.7,
-            roughness: 0.3
-        });
-        const carriage = new THREE.Mesh(carriageGeometry, carriageMaterial);
-        carriage.position.set(0, 7.5, 0);
-        carriage.castShadow = true;
-        printerGroup.add(carriage);
-
-        // === TÊTE D'IMPRESSION (EXTRUDEUSE) ===
-        const headGroup = new THREE.Group();
-        
-        // Corps principal de la tête
-        const headBodyGeometry = new THREE.BoxGeometry(0.8, 0.6, 0.8);
-        const headBodyMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x2a2a2a,
-            metalness: 0.8,
-            roughness: 0.2
-        });
-        const headBody = new THREE.Mesh(headBodyGeometry, headBodyMaterial);
-        headBody.castShadow = true;
-        headGroup.add(headBody);
-
-        // Ventilateur
-        const fanGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.1, 16);
-        const fanMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a1a,
-            metalness: 0.5,
-            roughness: 0.5
-        });
-        const fan = new THREE.Mesh(fanGeometry, fanMaterial);
-        fan.rotation.x = Math.PI / 2;
-        fan.position.set(0, 0, 0.45);
-        headGroup.add(fan);
-
-        // Buse (hotend)
-        const nozzleGeometry = new THREE.ConeGeometry(0.15, 0.4, 16);
-        const nozzleMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xc0c0c0,
-            metalness: 0.95,
-            roughness: 0.05,
-            emissive: 0xff4400,
-            emissiveIntensity: 0.5
-        });
-        const nozzle = new THREE.Mesh(nozzleGeometry, nozzleMaterial);
-        nozzle.position.y = -0.5;
-        nozzle.castShadow = true;
-        headGroup.add(nozzle);
-
-        // LED d'indicateur
-        const ledGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-        const ledMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xff0000,
-            emissive: 0xff0000,
-            emissiveIntensity: 1
-        });
-        const led = new THREE.Mesh(ledGeometry, ledMaterial);
-        led.position.set(0.35, 0.25, 0.35);
-        headGroup.add(led);
-
-        headGroup.position.set(0, 6.8, 0);
-        printerGroup.add(headGroup);
-
-        // === PLATEAU D'IMPRESSION (BUILD PLATE) ===
-        const buildPlateGeometry = new THREE.BoxGeometry(4.5, 0.2, 4);
-        const buildPlateMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x3a3a3a,
-            metalness: 0.6,
-            roughness: 0.3
-        });
-        const buildPlate = new THREE.Mesh(buildPlateGeometry, buildPlateMaterial);
-        buildPlate.position.y = 2;
-        buildPlate.castShadow = true;
-        buildPlate.receiveShadow = true;
-        printerGroup.add(buildPlate);
-
-        // Grille sur le plateau
-        const gridHelper = new THREE.GridHelper(4, 20, 0x555555, 0x333333);
-        gridHelper.position.y = 2.11;
-        gridHelper.rotation.y = Math.PI / 4;
-        printerGroup.add(gridHelper);
-
-        // === SUPPORTS DU PLATEAU ===
-        const supportGeometry = new THREE.CylinderGeometry(0.15, 0.15, 1.2, 16);
-        const supportMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x4a4a4a,
-            metalness: 0.7,
-            roughness: 0.3
-        });
-
-        const supportPositions = [
-            [-2, 1.4, -1.8],
-            [2, 1.4, -1.8],
-            [-2, 1.4, 1.8],
-            [2, 1.4, 1.8]
-        ];
-
-        supportPositions.forEach(pos => {
-            const support = new THREE.Mesh(supportGeometry, supportMaterial);
-            support.position.set(pos[0], pos[1], pos[2]);
-            support.castShadow = true;
-            printerGroup.add(support);
-        });
-
-        // === PANNEAU DE CONTRÔLE ===
-        const controlPanelGeometry = new THREE.BoxGeometry(2, 1.5, 0.15);
-        const controlPanelMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a1a,
-            metalness: 0.5,
-            roughness: 0.4
-        });
-        const controlPanel = new THREE.Mesh(controlPanelGeometry, controlPanelMaterial);
-        controlPanel.position.set(2.5, 2, -2.4);
-        controlPanel.rotation.y = -Math.PI / 6;
-        controlPanel.castShadow = true;
-        printerGroup.add(controlPanel);
-
-        // Écran LCD
-        const screenGeometry = new THREE.BoxGeometry(1.6, 1, 0.05);
-        const screenMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x000000,
-            emissive: 0x00ff88,
-            emissiveIntensity: 0.3
-        });
-        const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-        screen.position.set(2.55, 2, -2.35);
-        screen.rotation.y = -Math.PI / 6;
-        printerGroup.add(screen);
-
-        // Boutons
-        for (let i = 0; i < 3; i++) {
-            const buttonGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.05, 16);
-            const buttonMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xff3333,
-                emissive: 0xff0000,
-                emissiveIntensity: 0.2
-            });
-            const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
-            button.position.set(2.4 + i * 0.25, 1.2, -2.5);
-            button.rotation.x = Math.PI / 2;
-            button.rotation.z = -Math.PI / 6;
-            printerGroup.add(button);
-        }
-
-        // === BOBINE DE FILAMENT ===
-        const spoolGroup = new THREE.Group();
-        
-        // Support de bobine
-        const spoolHolderGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 16);
-        const spoolHolder = new THREE.Mesh(spoolHolderGeometry, columnMaterial);
-        spoolHolder.position.set(-3.5, 5, 0);
-        spoolHolder.rotation.z = Math.PI / 2;
-        printerGroup.add(spoolHolder);
-
-        // Bobine
-        const spoolGeometry = new THREE.TorusGeometry(0.8, 0.3, 16, 32);
-        const spoolMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x6a6a6a,
-            metalness: 0.3,
-            roughness: 0.7
-        });
-        const spool = new THREE.Mesh(spoolGeometry, spoolMaterial);
-        spool.position.set(-4.5, 5, 0);
-        spool.rotation.y = Math.PI / 2;
-        spool.castShadow = true;
-        printerGroup.add(spool);
-
-        // Filament visible
-        const filamentCurve = new THREE.QuadraticBezierCurve3(
-            new THREE.Vector3(-4, 5, 0),
-            new THREE.Vector3(-2, 6, 0),
-            new THREE.Vector3(0, 6.5, 0)
-        );
-        const filamentPoints = filamentCurve.getPoints(50);
-        const filamentGeometry = new THREE.BufferGeometry().setFromPoints(filamentPoints);
-        const filamentMaterial = new THREE.LineBasicMaterial({ 
-            color: 0x888888,
-            linewidth: 3
-        });
-        const filament = new THREE.Line(filamentGeometry, filamentMaterial);
-        printerGroup.add(filament);
-
-        scene.add(printerGroup);
-
-        // Animation
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetRotationX = 0;
-        let targetRotationY = 0;
-        let time = 0;
-
-        canvas.addEventListener('mousemove', (event) => {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            
-            targetRotationY = mouseX * 0.5;
-            targetRotationX = mouseY * 0.3;
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-
-            // Rotation douce de la scène entière
-            printerGroup.rotation.y += (targetRotationY - printerGroup.rotation.y) * 0.05;
-            printerGroup.rotation.x += (targetRotationX - printerGroup.rotation.x) * 0.05;
-
-            // Animation de la tête d'impression (mouvement X et Z)
-            headGroup.position.x = Math.sin(time * 0.8) * 1.5;
-            headGroup.position.z = Math.cos(time * 0.8) * 1.2;
-
-            // Spotlight suit la tête d'impression
-            const worldPos = new THREE.Vector3();
-            headGroup.getWorldPosition(worldPos);
-            spotLight.target.position.copy(worldPos);
-            spotLight.target.updateMatrixWorld();
-
-            // Animation du plateau (monte et descend légèrement)
-            buildPlate.position.y = 2 + Math.sin(time * 0.5) * 0.3;
-
-            // Rotation de la bobine de filament
-            spool.rotation.x += 0.02;
-
-            // Animation de la LED (pulsation)
-            led.material.emissiveIntensity = 0.5 + Math.sin(time * 3) * 0.5;
-
-            // Animation des boutons (pulsation aléatoire)
-            printerGroup.children.forEach((child, index) => {
-                if (child.geometry && child.geometry.type === 'CylinderGeometry' && child.material.color.r > 0.5) {
-                    child.material.emissiveIntensity = 0.2 + Math.sin(time * 2 + index) * 0.2;
-                }
-            });
-
-            // Rotation du ventilateur
-            fan.rotation.z += 0.1;
-
-            // Animation de la grille
-            gridHelper.rotation.y += 0.001;
-
-            // Effet de lumière sur l'écran LCD
-            screen.material.emissiveIntensity = 0.3 + Math.sin(time * 1.5) * 0.1;
-
-            // Légère rotation automatique pour montrer tous les angles
-            printerGroup.rotation.y += 0.002;
-
-            // Animation de la caméra (légère oscillation)
-            camera.position.y = 6 + Math.sin(time * 0.3) * 0.5;
-
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Responsive
-        window.addEventListener('resize', () => {
-            const width = canvas.clientWidth;
-            const height = canvas.clientHeight;
-            renderer.setSize(width, height);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        });
-    </script>
+// ── Accueil : afficher nom si connecté ──────────────────────
+(function(){
+  const s = SGI3D_DB.getSession();
+  if(s){
+    const nav = document.querySelector('.nav-links');
+    const loginLink = nav.querySelector('a[href="login.html"]');
+    if(loginLink){
+      loginLink.innerHTML='👤 '+s.name.split(' ')[0];
+      loginLink.href='dashboard.html';
+    }
+  }
+})();
+</script>
 </body>
 </html>
