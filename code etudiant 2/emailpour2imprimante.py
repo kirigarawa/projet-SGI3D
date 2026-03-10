@@ -30,10 +30,10 @@ EMAIL_RECEIVERS = [
 # - api_key : clé d'API OctoPrint propre à chaque instance
 printers = [
     {
-        "name": "Ultimaker_1",
+        "name": "Ultimaker 2+",
         "url": "http://localhost:5000/api/printer",
         "job_url": "http://localhost:5000/api/job",
-        "api_key": "API_KEY_1"
+        "api_key": "GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8"
     },
     {
         "name": "Ultimaker_2",
