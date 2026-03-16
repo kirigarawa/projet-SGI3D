@@ -1,12 +1,27 @@
+#!/usr/bin/env python3
 # Bibliothèques utilisées :
 # - requests : pour faire des appels HTTP vers l'API OctoPrint des imprimantes
 # - time     : pour la pause entre chaque vérification
 # - smtplib  : pour envoyer des emails via le protocole SMTP
 # - MIMEText : pour formater le contenu de l'email
+# - twilio   : pour envoyer des SMS d'alerte (pip install twilio)
+# - logging  : pour écrire les logs dans un fichier (utile en service systemd)
 import requests
 import time
 import smtplib
+import logging
 from email.mime.text import MIMEText
+from twilio.rest import Client
+
+# ─── LOGS ────────────────────────────────────────────────────────────────────
+# Sur Raspberry Pi en service systemd, il n'y a pas de terminal.
+# Les logs sont écrits dans /home/pi/sgi3d_alertes.log
+logging.basicConfig(
+    filename="/home/pi/sgi3d_alertes.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 # ─── CONFIGURATION EMAIL ────────────────────────────────────────────────────
 # Adresse Gmail qui envoie les alertes
@@ -20,6 +35,19 @@ EMAIL_RECEIVERS = [
     "matthieumondor15@gmail.com",
     "jolan.schambourg972@gmail.com",
     "vaubienkevens@gmail.com"
+]
+
+# ─── CONFIGURATION SMS (Twilio) ──────────────────────────────────────────────
+# Créer un compte gratuit sur https://www.twilio.com pour obtenir ces identifiants
+TWILIO_ACCOUNT_SID = "VOTRE_ACCOUNT_SID"   # Ex : ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN  = "VOTRE_AUTH_TOKEN"    # Trouvé dans le tableau de bord Twilio
+TWILIO_FROM        = "+1XXXXXXXXXX"        # Numéro Twilio qui envoie le SMS
+
+# Liste des numéros qui recevront les alertes SMS (format international : +33XXXXXXXXX)
+SMS_RECEIVERS = [
+    "+33XXXXXXXXX",   # Matthieu
+    "+33XXXXXXXXX",   # Jolan
+    "+33XXXXXXXXX",   # Vaubien
 ]
 
 # ─── CONFIGURATION IMPRIMANTES ──────────────────────────────────────────────
@@ -53,6 +81,24 @@ TEMP_MIN = 150  # Température minimale acceptable (°C)
 last_progress = {}
 
 
+def attendre_reseau(max_tentatives=20, delai=10):
+    """Attend que le réseau soit disponible avant de démarrer.
+
+    Sur Raspberry Pi, le script peut démarrer avant que le Wi-Fi ou l'Ethernet
+    soit connecté. Cette fonction attend jusqu'à ce que Google soit joignable.
+    """
+    for tentative in range(1, max_tentatives + 1):
+        try:
+            requests.get("https://www.google.com", timeout=5)
+            logging.info("Réseau disponible, démarrage du monitoring.")
+            return
+        except Exception:
+            logging.warning(f"Réseau indisponible, nouvelle tentative dans {delai}s ({tentative}/{max_tentatives})...")
+            time.sleep(delai)
+
+    logging.error("Réseau toujours indisponible après toutes les tentatives. Le programme continue quand même.")
+
+
 def envoyer_email(message):
     """Envoie un email d'alerte à tous les destinataires configurés."""
 
@@ -73,10 +119,35 @@ def envoyer_email(message):
             server.sendmail(EMAIL_SENDER, receiver, msg.as_string())
 
         server.quit()  # Fermeture propre de la connexion SMTP
+        logging.info(f"Email envoyé : {message}")
 
     except Exception as e:
-        # En cas d'échec, affiche l'erreur dans la console sans planter le programme
-        print("Erreur email :", e)
+        logging.error(f"Erreur email : {e}")
+
+
+def envoyer_sms(message):
+    """Envoie un SMS d'alerte à tous les numéros configurés via Twilio."""
+
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+        for numero in SMS_RECEIVERS:
+            client.messages.create(
+                body=message,
+                from_=TWILIO_FROM,
+                to=numero
+            )
+
+        logging.info(f"SMS envoyé : {message}")
+
+    except Exception as e:
+        logging.error(f"Erreur SMS : {e}")
+
+
+def envoyer_alerte(message):
+    """Envoie l'alerte par email ET par SMS."""
+    envoyer_email(message)
+    envoyer_sms(message)
 
 
 def verifier_imprimante(printer):
@@ -94,17 +165,17 @@ def verifier_imprimante(printer):
 
     try:
         # ── 1. Vérification de la température ───────────────────────────────
-        r = requests.get(printer["url"], headers=headers)
+        r = requests.get(printer["url"], headers=headers, timeout=10)
         data = r.json()
 
         # Récupération de la température actuelle de la buse (outil 0)
         temp = data["temperature"]["tool0"]["actual"]
 
         if temp > TEMP_MAX or temp < TEMP_MIN:
-            envoyer_email(f"⚠️ Température anormale sur {printer['name']} : {temp}°C")
+            envoyer_alerte(f"⚠️ Température anormale sur {printer['name']} : {temp}°C")
 
         # ── 2. Vérification de l'état du travail en cours ───────────────────
-        r = requests.get(printer["job_url"], headers=headers)
+        r = requests.get(printer["job_url"], headers=headers, timeout=10)
         job = r.json()
 
         state = job["state"]                        # Ex : "Printing", "Paused", "Error"
@@ -112,7 +183,7 @@ def verifier_imprimante(printer):
 
         # Alerte si l'impression est mise en pause ou en erreur
         if state == "Paused" or state == "Error":
-            envoyer_email(f"⚠️ Impression arrêtée sur {printer['name']}")
+            envoyer_alerte(f"⚠️ Impression arrêtée sur {printer['name']}")
 
         # ── 3. Détection d'un blocage (progression figée) ───────────────────
         if printer["name"] not in last_progress:
@@ -121,16 +192,23 @@ def verifier_imprimante(printer):
         else:
             # Si la progression n'a pas bougé depuis le dernier contrôle, alerte
             if progress == last_progress[printer["name"]]:
-                envoyer_email(f"⚠️ Imprimante bloquée : {printer['name']}")
+                envoyer_alerte(f"⚠️ Imprimante bloquée : {printer['name']}")
 
         # Mise à jour de la progression pour la prochaine vérification
         last_progress[printer["name"]] = progress
 
-    except:
+    except Exception as e:
         # ── 4. Imprimante injoignable ────────────────────────────────────────
         # Une exception réseau (timeout, connexion refusée...) déclenche une alerte
-        envoyer_email(f"⚠️ Impossible de contacter {printer['name']}")
+        logging.warning(f"Impossible de contacter {printer['name']} : {e}")
+        envoyer_alerte(f"⚠️ Impossible de contacter {printer['name']}")
 
+
+# ─── DÉMARRAGE ───────────────────────────────────────────────────────────────
+logging.info("=== Démarrage du monitoring imprimantes 3D ===")
+
+# Attendre que le réseau soit prêt (important au boot du Raspberry Pi)
+attendre_reseau()
 
 # ─── BOUCLE PRINCIPALE ──────────────────────────────────────────────────────
 # Le programme tourne indéfiniment et vérifie chaque imprimante toutes les 60 secondes

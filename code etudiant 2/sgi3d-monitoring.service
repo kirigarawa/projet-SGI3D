@@ -1,0 +1,20 @@
+[Unit]
+Description=Monitoring imprimantes 3D SGI3D
+# Démarre seulement quand le réseau est opérationnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Utilisateur sous lequel tourne le script
+User=pi
+# Chemin du script sur le Raspberry Pi
+ExecStart=/usr/bin/python3 /home/pi/sgi3d/emailpour2imprimante.py
+# Redémarre automatiquement si le script plante
+Restart=always
+RestartSec=10
+# Redirige les print() résiduels vers le journal systemd
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
