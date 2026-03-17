@@ -136,13 +136,13 @@
 // Rediriger si déjà connecté
 if(SGI3D_DB.isLoggedIn()){ window.location.href='dashboard.html'; }
 
-document.getElementById('loginForm').addEventListener('submit',function(e){
+document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const user     = SGI3D_DB.login(email, password);
+  const user     = await SGI3D_DB.login(email, password);
   if(user){
-    showToast('✅ Connexion réussie ! Bienvenue '+user.name,'success');
+    showToast('✅ Connexion réussie ! Bienvenue '+user.nom,'success');
     setTimeout(()=>{ window.location.href='dashboard.html'; },800);
   } else {
     document.getElementById('errorMsg').style.display='block';
@@ -154,13 +154,14 @@ function showRegister(){ document.getElementById('registerModal').classList.add(
 function closeModal()  { document.getElementById('registerModal').classList.remove('open'); }
 function oauthNotice() { showToast('⚠️ OAuth non disponible en mode hors-ligne','warning'); }
 
-function doRegister(){
+async function doRegister(){
   const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
   if(!name||!email||!pass){ document.getElementById('regMsg').textContent='Remplissez tous les champs.'; return; }
-  if(SGI3D_DB.getUserByEmail(email)){ document.getElementById('regMsg').textContent='Cet email est déjà utilisé.'; return; }
-  SGI3D_DB.createUser({name,email,password:pass,role:'operator',avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
+  const existing = await SGI3D_DB.getUserByEmail(email);
+  if(existing){ document.getElementById('regMsg').textContent='Cet email est déjà utilisé.'; return; }
+  await SGI3D_DB.createUser({nom:name,email,mot_de_passe:pass,role:'operateur',avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
   document.getElementById('regMsg').style.color='#2ecc71';
   document.getElementById('regMsg').textContent='✅ Compte créé ! Vous pouvez vous connecter.';
   setTimeout(closeModal,1500);

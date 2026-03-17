@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SGI3D – Nos Imprimantes</title>
+<!-- Feuille de style globale partagée par toutes les pages -->
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Décalage vers le bas pour ne pas passer sous la barre de navigation fixe */
+  body{padding-top:60px}
+
+  /* Section hero en haut de page : titre centré + sous-titre */
+  .printers-hero{text-align:center;padding:3rem 2rem 1.5rem}
+
+  /* Titre principal avec dégradé appliqué sur le texte (blanc → blanc atténué).
+     -webkit-background-clip + -webkit-text-fill-color : compatibilité Safari/Chrome.
+     background-clip:text : version standard CSS pour Firefox et navigateurs modernes. */
+  .printers-hero h1{font-size:2.5rem;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#fff,rgba(255,255,255,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* Sous-titre atténué sous le titre */
+  .printers-hero p{color:rgba(255,255,255,.6);margin-top:.5rem}
+
+  /* Grille des cartes imprimantes : 2 colonnes adaptatives (min 480 px par carte)
+     Centrée avec une largeur max de 1200 px */
+  .printers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:2rem;padding:1.5rem 2rem 3rem;max-width:1200px;margin:0 auto}
+
+  /* Carte d'une imprimante : fond blanc, coins arrondis, ombre portée */
+  .printer-card{background:rgba(255,255,255,.95);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;color:#2c3e50}
+
+  /* En-tête de la carte : dégradé de couleur (défini dans style.css via --btn-grad),
+     affiche le nom de l'imprimante à gauche et le badge de disponibilité à droite */
+  .printer-card-header{background:var(--btn-grad);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between}
+  .printer-card-header h2{font-size:1.3rem;font-weight:900;letter-spacing:2px}
+
+  /* Badge "🟢 Disponible" sur fond semi-transparent dans l'en-tête */
+  .printer-card-header .badge-printer{background:rgba(255,255,255,.2);padding:.3rem .8rem;border-radius:20px;font-size:.8rem}
+
+  /* Zone du canvas Three.js : fond noir, hauteur fixe 300 px */
+  .printer-canvas-wrap{background:#111;display:flex;align-items:center;justify-content:center;height:300px}
+  .printer-canvas{width:100%;height:300px}
+
+  /* Zone de contenu sous le canvas (specs, features, formulaire) */
+  .printer-body{padding:2rem}
+
+  /* Grille des spécifications techniques : 2 colonnes */
+  .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
+
+  /* Tuile individuelle de spécification : fond gris clair, coins arrondis */
+  .spec-item{background:#f8f9fa;border-radius:10px;padding:.8rem 1rem}
+
+  /* Libellé de la spécification (ex: "Volume de build") : petite casse grise */
+  .spec-label{font-size:.72rem;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+
+  /* Valeur de la spécification (ex: "223×223×205 mm") : texte foncé en gras */
+  .spec-value{font-size:.95rem;font-weight:700;color:#2c3e50;margin-top:.2rem}
+
+  /* Liste des fonctionnalités : chaque item précédé d'un ✅ via pseudo-élément ::before */
+  .features-list{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+  .features-list li{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#555}
+  .features-list li::before{content:'✅';font-size:.8rem}
+
+  /* Rangée de tags de matériaux compatibles (ex: PLA, ABS, TPU…) */
+  .materials-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+
+  /* Tag individuel de matériau : fond bleu-gris clair, texte bleu foncé */
+  .mat-tag{background:#eef2f7;border:1px solid #d0dbe8;border-radius:8px;padding:.25rem .7rem;font-size:.8rem;font-weight:600;color:#3d5a80}
+
+  /* Formulaire de lancement d'impression : fond gris très clair, encadré */
+  .print-form{background:#f8f9fa;border-radius:var(--radius-sm);padding:1.5rem;margin-top:1.5rem}
+  .print-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem;color:#2c3e50}
+  .print-form .form-group label{color:#555}
+
+  /* Champs et selects du formulaire : fond blanc, bordure fine grise */
+  .print-form input,.print-form select{background:#fff;border:1.5px solid #e0e0e0;color:#2c3e50;border-radius:10px;padding:.7rem 1rem;width:100%;font-family:var(--font);font-size:.9rem}
+  .print-form input:focus,.print-form select:focus{outline:none;border-color:var(--accent)}
+
+  /* Pied de page : centré, liens discrets */
+  footer.site-footer{text-align:center;padding:2rem;color:rgba(255,255,255,.4);font-size:.8rem}
+  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
+  footer.site-footer a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION PRINCIPALE (barre fixe en haut)
+     Le lien #nav-auth ("Connexion") est remplacé dynamiquement
+     par le prénom de l'utilisateur s'il est déjà connecté.
+     ════════════════════════════════════════════════════════ -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html" class="active">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <!-- id="nav-auth" : modifié en JS si l'utilisateur est connecté -->
+    <a href="login.html" class="btn-nav" id="nav-auth">🔐 <span>Connexion</span></a>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     SECTION HERO
+     Titre de la page et sous-titre descriptif.
+     ════════════════════════════════════════════════════════ -->
+<div class="printers-hero">
+  <h1>NOS IMPRIMANTES 3D</h1>
+  <p>Parc machines SGI3D · Technologie FDM haute précision</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     GRILLE DES IMPRIMANTES
+     Contient une carte par imprimante du parc.
+     Chaque carte comporte :
+       - un en-tête coloré (nom + badge disponibilité)
+       - un canvas Three.js avec la scène 3D animée
+       - les spécifications techniques
+       - la liste des fonctionnalités
+       - les matériaux compatibles
+       - le formulaire de lancement d'impression
+     ════════════════════════════════════════════════════════ -->
+<div class="printers-grid">
+
+  <!-- ════════════════════════════════════════════════════
+       CARTE : ULTIMAKER 2+
+       Imprimante FDM monocouleur professionnelle.
+       Canvas id="canvas-ultimaker" → scène Three.js dédiée.
+       Formulaire ids : ult-file, ult-mat, ult-dur
+       ════════════════════════════════════════════════════ -->
+  <div class="printer-card">
+
+    <!-- En-tête : nom de l'imprimante + badge de disponibilité -->
+    <div class="printer-card-header">
+      <div>
+        <h2>ULTIMAKER 2+</h2>
+        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression FDM Professionnelle</div>
+      </div>
+      <span class="badge-printer">🟢 Disponible</span>
+    </div>
+
+    <!-- Zone du canvas Three.js : scène 3D animée de l'Ultimaker 2+ -->
+    <div class="printer-canvas-wrap">
+      <canvas id="canvas-ultimaker" class="printer-canvas"></canvas>
+    </div>
+
+    <div class="printer-body">
+
+      <!-- Grille des 6 spécifications techniques clés -->
+      <div class="specs-grid">
+        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">223×223×205 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm (0.25–0.8)</div></div>
+        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.02–0.6 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">24 mm³/s</div></div>
+        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">260 °C</div></div>
+        <div class="spec-item"><div class="spec-label">Précision XYZ</div><div class="spec-value">12.5/12.5/5 µm</div></div>
+      </div>
+
+      <!-- Liste des fonctionnalités notables (✅ injecté via CSS ::before) -->
+      <ul class="features-list">
+        <li>Extrusion directe haute précision</li>
+        <li>Plateau chauffant jusqu'à 100°C</li>
+        <li>Écran tactile couleur intégré</li>
+        <li>Détection automatique matériau</li>
+        <li>Connectivité USB &amp; carte SD</li>
+        <li>Nivellement automatique du plateau</li>
+        <li>Refroidissement optimisé dual fan</li>
+      </ul>
+
+      <!-- Tags des matériaux compatibles -->
+      <div style="margin-top:1rem">
+        <strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
+        <div class="materials-row">
+          <span class="mat-tag">PLA</span><span class="mat-tag">ABS</span>
+          <span class="mat-tag">CPE</span><span class="mat-tag">Nylon</span><span class="mat-tag">PVA</span>
+        </div>
+      </div>
+
+      <!-- Formulaire de lancement d'une impression sur l'Ultimaker 2+.
+           La fonction launchPrint() vérifie la session, crée le travail
+           en base et simule sa fin après 5 secondes. -->
+      <div class="print-form">
+        <h3>🖨️ Lancer une impression</h3>
+        <div class="form-group">
+          <label>Nom du fichier</label>
+          <input type="text" id="ult-file" placeholder="piece_v2.stl">
+        </div>
+        <div class="form-group" style="display:flex;gap:1rem">
+          <div style="flex:1"><label>Matière</label>
+            <select id="ult-mat"><option>PLA</option><option>ABS</option><option>CPE</option><option>Nylon</option><option>PVA</option></select>
+          </div>
+          <div style="flex:1"><label>Durée (min)</label>
+            <input type="number" id="ult-dur" placeholder="90" min="1">
+          </div>
+        </div>
+        <!-- Passe les ids des champs à launchPrint() pour lecture des valeurs -->
+        <button class="btn btn-primary" onclick="launchPrint('Ultimaker 2+','ult-file','ult-mat','ult-dur')">▶️ Lancer l'impression</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       CARTE : GEEETECH A20T
+       Imprimante FDM tri-couleur (3 extrudeurs en 1 buse).
+       Canvas id="canvas-geeetech" → scène Three.js dédiée.
+       Formulaire ids : gee-file, gee-mat, gee-dur
+       ════════════════════════════════════════════════════ -->
+  <div class="printer-card">
+
+    <!-- En-tête : nom + badge disponibilité -->
+    <div class="printer-card-header">
+      <div>
+        <h2>GEEETECH A20T</h2>
+        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression tri-couleur FDM</div>
+      </div>
+      <span class="badge-printer">🟢 Disponible</span>
+    </div>
+
+    <!-- Zone du canvas Three.js : scène 3D animée de la Geeetech A20T
+         (3 têtes d'extrusion et 3 bobines colorées distinctes) -->
+    <div class="printer-canvas-wrap">
+      <canvas id="canvas-geeetech" class="printer-canvas"></canvas>
+    </div>
+
+    <div class="printer-body">
+
+      <!-- Grille des 6 spécifications techniques clés -->
+      <div class="specs-grid">
+        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">250×250×250 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.1–0.4 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">60 mm/s</div></div>
+        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">250 °C</div></div>
+        <!-- Spécificité A20T : 3 extrudeurs pour impression tri-couleur -->
+        <div class="spec-item"><div class="spec-label">Extrudeurs</div><div class="spec-value">3 (tri-couleur)</div></div>
+      </div>
+
+      <!-- Liste des fonctionnalités notables -->
+      <ul class="features-list">
+        <li>Extrusion 3-en-1 tri-couleur</li>
+        <li>Impression multi-couleur native</li>
+        <li>Plateau chauffant jusqu'à 80°C</li>
+        <li>Écran tactile 3.5 pouces</li>
+        <li>Reprise après coupure de courant</li>
+        <li>Détection de fin de filament</li>
+        <li>Châssis aluminium robuste</li>
+      </ul>
+
+      <!-- Tags des matériaux compatibles (filaments supportés par la A20T) -->
+      <div style="margin-top:1rem">
+        <strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
+        <div class="materials-row">
+          <span class="mat-tag">PLA</span><span class="mat-tag">ABS</span>
+          <span class="mat-tag">TPU</span><span class="mat-tag">Wood</span>
+        </div>
+      </div>
+
+      <!-- Formulaire de lancement d'une impression sur la Geeetech A20T -->
+      <div class="print-form">
+        <h3>🖨️ Lancer une impression</h3>
+        <div class="form-group">
+          <label>Nom du fichier</label>
+          <input type="text" id="gee-file" placeholder="objet_tricolor.stl">
+        </div>
+        <div class="form-group" style="display:flex;gap:1rem">
+          <div style="flex:1"><label>Matière</label>
+            <select id="gee-mat"><option>PLA</option><option>ABS</option><option>TPU</option><option>Wood</option></select>
+          </div>
+          <div style="flex:1"><label>Durée (min)</label>
+            <input type="number" id="gee-dur" placeholder="60" min="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="launchPrint('Geeetech A20T','gee-file','gee-mat','gee-dur')">▶️ Lancer l'impression</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- fin .printers-grid -->
+
+<!-- Pied de page avec liens rapides -->
+<footer class="site-footer">
+  <a href="index.html">🏠 Accueil</a> · <a href="login.html">🔐 Connexion</a> · <a href="dashboard.html">📊 Dashboard</a> · <a href="sitemap.html">🗺️ Plan du site</a>
+  <p style="margin-top:.5rem">© 2025 SGI3D v3.0</p>
+</footer>
+
+<!-- Conteneur des notifications toast (injectées dynamiquement par showToast()) -->
+<div id="toast-container"></div>
+
+<!-- db.js : objet global SGI3D_DB (session, createPrintJob, finishPrintJob…) -->
+<script src="db.js"></script>
+<!-- Three.js r128 : bibliothèque de rendu 3D WebGL pour les deux scènes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  PERSONNALISATION DE LA NAV SI CONNECTÉ
+//  Si une session active est détectée, remplace le bouton
+//  "Connexion" par le prénom de l'utilisateur connecté
+//  et redirige vers le Dashboard au clic.
+// ════════════════════════════════════════════════════════
+(function(){
+  const s=SGI3D_DB.getSession();
+  if(s){
+    const a=document.getElementById('nav-auth');
+    // Affiche uniquement le prénom (premier mot du nom complet)
+    a.href='dashboard.html'; a.innerHTML='👤 <span>'+s.name.split(' ')[0]+'</span>';
+  }
+})();
+
+// ════════════════════════════════════════════════════════
+//  LANCEMENT D'UNE IMPRESSION
+//  printer  : nom de l'imprimante (ex: "Ultimaker 2+")
+//  fileId   : id de l'<input> contenant le nom du fichier
+//  matId    : id du <select> de la matière
+//  durId    : id de l'<input> de la durée estimée
+//
+//  Vérifie que l'utilisateur est connecté (sinon redirige
+//  vers login.html après 1,5 s).
+//  Crée le travail en base via SGI3D_DB.createPrintJob(),
+//  puis simule automatiquement la fin après 5 secondes
+//  (80 % de succès, 15 % d'erreur selon Math.random()).
+// ════════════════════════════════════════════════════════
+function launchPrint(printer, fileId, matId, durId){
+  // Garde : impression impossible sans être connecté
+  if(!SGI3D_DB.isLoggedIn()){
+    showToast('⚠️ Connectez-vous pour lancer une impression','warning');
+    setTimeout(()=>window.location.href='login.html',1500);
+    return;
+  }
+  const file=document.getElementById(fileId).value.trim();
+  const mat=document.getElementById(matId).value;
+  const dur=document.getElementById(durId).value;
+  if(!file){showToast('Entrez un nom de fichier','warning');return;}
+  // Création du travail d'impression (statut "en_cours")
+  const job=SGI3D_DB.createPrintJob({fileName:file,printer,material:mat,duration:dur?dur+'min':'N/A'});
+  showToast('🖨️ Impression lancée : '+file+' sur '+printer,'success');
+  // Simulation de fin d'impression après 5 secondes
+  // Math.random() > 0.15 → 85 % de chance de succès
+  setTimeout(()=>{
+    SGI3D_DB.finishPrintJob(job.id, Math.random()>.15);
+  },5000);
+}
+
+// ════════════════════════════════════════════════════════
+//  SCÈNE THREE.JS – ULTIMAKER 2+
+//  Imprimante monocouleur avec 4 colonnes, plateau, chariot,
+//  tête d'impression, buse dorée, écran LCD et bobine rouge.
+//  La tête se déplace sur l'axe X et la bobine tourne en continu.
+// ════════════════════════════════════════════════════════
+(function(){
+  const canvas=document.getElementById('canvas-ultimaker');
+  const W=canvas.parentElement.offsetWidth||480, H=300;
+
+  // Renderer WebGL avec antialiasing et fond transparent
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  r.setSize(W,H); r.shadowMap.enabled=true;
+
+  const scene=new THREE.Scene();
+
+  // Caméra perspective : vue légèrement en hauteur et en retrait
+  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
+
+  // Lumières : ambiante douce + directionnelle principale + point bleuté
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.9);
+  dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  scene.add(new THREE.PointLight(0x3498db,1.2,12)); // Lumière bleue décorative
+
+  // Helper : crée une boîte colorée à la position (x,y,z) et l'ajoute à la scène
+  function box(w,h,d,c,x,y,z){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80}));
+    m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m;
+  }
+
+  // ── Structure Ultimaker 2+ ───────────────────────────────
+  const base =box(2.2,.25,2.2,0x2c3e50,0,.12,0);       // Socle
+  const c1=box(.12,3,.12,0x4a5568,-.95,1.6,-.95);       // 4 colonnes verticales
+  const c2=box(.12,3,.12,0x4a5568,.95,1.6,-.95);
+  const c3=box(.12,3,.12,0x4a5568,-.95,1.6,.95);
+  const c4=box(.12,3,.12,0x4a5568,.95,1.6,.95);
+  const top  =box(2.2,.1,2.2,0x3d5a80,0,3.1,0);        // Cadre supérieur
+  const plate=box(1.8,.06,1.8,0x546e7a,0,.5,0);         // Plateau d'impression (animé)
+  const yBar =box(2.2,.09,.14,0x607d8b,0,2.5,0);        // Chariot axe X (animé)
+  const head =box(.22,.32,.22,0x263238,0,2.3,0);         // Tête d'impression (animée)
+  const noz  =box(.06,.14,.06,0xffd700,0,2.1,0);         // Buse (dorée)
+  const screen=box(.4,.28,.05,0x1565c0,.72,.9,-.97);     // Écran LCD
+  // Bobine de filament rouge (torus)
+  const spool=new THREE.Mesh(new THREE.TorusGeometry(.28,.09,8,24),new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; scene.add(spool);
+  // LED verte clignotante (indicateur d'état)
+  const ledGeo=new THREE.SphereGeometry(.05,8,8);
+  const ledMat=new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:.6});
+  const led=new THREE.Mesh(ledGeo,ledMat); led.position.set(-.68,.9,-.97); scene.add(led);
+
+  // ── Boucle d'animation ───────────────────────────────────
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=.016;
+    scene.rotation.y=Math.sin(t*.25)*.4+.3;       // Rotation oscillante de la scène
+    head.position.x=Math.sin(t*1.4)*.75;           // Déplacement tête sur axe X
+    yBar.position.x=head.position.x;               // Le chariot suit la tête
+    plate.position.y=.44+Math.sin(t*.35)*.1;       // Descente progressive du plateau
+    spool.rotation.z+=.025;                         // Rotation continue de la bobine
+    ledMat.emissiveIntensity=.3+Math.abs(Math.sin(t*2.8))*.7; // Pulsation LED
+    r.render(scene,cam);
+  })();
+})();
+
+// ════════════════════════════════════════════════════════
+//  SCÈNE THREE.JS – GEEETECH A20T
+//  Imprimante tri-couleur avec 3 têtes d'extrusion et
+//  3 bobines de couleurs différentes (rouge, bleu, orange).
+//  Les 3 têtes se déplacent ensemble sur l'axe X.
+// ════════════════════════════════════════════════════════
+(function(){
+  const canvas=document.getElementById('canvas-geeetech');
+  const W=canvas.parentElement.offsetWidth||480, H=300;
+
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  r.setSize(W,H); r.shadowMap.enabled=true;
+
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
+
+  // Lumières : ambiante + directionnelle + point rouge (couleur distinctive de la A20T)
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const dl=new THREE.DirectionalLight(0xffffff,0.9);
+  dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  scene.add(new THREE.PointLight(0xe74c3c,.8,12)); // Point rouge
+
+  function box(w,h,d,c,x,y,z){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80}));
+    m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m;
+  }
+
+  // ── Structure Geeetech A20T ──────────────────────────────
+  box(2.4,.25,2.4,0x1a1a2e,0,.12,0);                    // Socle (plus grand que l'Ultimaker)
+  box(.14,3.2,.14,0x2d2d2d,-1,1.7,-1);                  // 4 colonnes (couleur sombre)
+  box(.14,3.2,.14,0x2d2d2d,1,1.7,-1);
+  box(.14,3.2,.14,0x2d2d2d,-1,1.7,1);
+  box(.14,3.2,.14,0x2d2d2d,1,1.7,1);
+  box(2.4,.1,2.4,0x1a1a3a,0,3.2,0);                     // Cadre supérieur
+  const plate=box(2,.07,2,0x424242,0,.55,0);             // Plateau d'impression (animé)
+  const yBar=box(2.4,.09,.14,0x555,0,2.6,0);            // Chariot axe X (animé)
+
+  // ── 3 têtes d'extrusion (spécificité tri-couleur) ────────
+  // Positionnées côte à côte sur l'axe X : -0.3, 0, +0.3
+  const heads=[
+    box(.18,.28,.18,0x111,-.3,2.4,0),
+    box(.18,.28,.18,0x222, 0, 2.4,0),
+    box(.18,.28,.18,0x111, .3,2.4,0)
+  ];
+  // Buses colorées sous chaque tête : rouge, bleu, orange
+  const nozColors=[0xe74c3c,0x3498db,0xf39c12];
+  heads.forEach((h,i)=>{
+    const n=new THREE.Mesh(new THREE.BoxGeometry(.06,.12,.06),new THREE.MeshPhongMaterial({color:nozColors[i]}));
+    n.position.set(-.3+i*.3,2.2,0); scene.add(n);
+  });
+
+  // ── 3 bobines de filament (une par couleur) ──────────────
+  const spoolColors=[0xe74c3c,0x3498db,0xf39c12]; // Rouge, bleu, orange
+  const spools=spoolColors.map((c,i)=>{
+    const s=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,8,20),new THREE.MeshPhongMaterial({color:c}));
+    // Bobines légèrement décalées en X et légèrement en retrait en Z
+    s.position.set(-.5+i*.5,2.7,-.2); s.rotation.x=Math.PI/2; s.castShadow=true; scene.add(s); return s;
+  });
+
+  // Écran LCD de l'A20T (plus grand, à droite du châssis)
+  const screen=box(.42,.3,.05,0x1565c0,.8,1.,.97);
+
+  // ── Boucle d'animation ───────────────────────────────────
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=.016;
+    scene.rotation.y=Math.sin(t*.22)*.4+.3;         // Rotation oscillante de la scène
+    const hx=Math.sin(t*1.2)*.7;                    // Position X commune des 3 têtes
+    heads.forEach(h=>h.position.x=hx);              // Les 3 têtes bougent ensemble
+    yBar.position.x=hx;                             // Le chariot suit les têtes
+    plate.position.y=.5+Math.sin(t*.3)*.12;         // Descente progressive du plateau
+    spools.forEach(s=>s.rotation.z+=.02);            // Rotation des 3 bobines
+    r.render(scene,cam);
+  })();
+})();
+
+// ════════════════════════════════════════════════════════
+//  NOTIFICATIONS TOAST
+//  Crée une bulle temporaire (disparaît après 4 s).
+//  Types : 'info' | 'success' | 'warning' | 'error'
+// ════════════════════════════════════════════════════════
+function showToast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+</script>
+</body>
+</html>

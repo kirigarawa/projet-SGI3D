@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- ============================================================
+     MÉTADONNÉES & LIENS EXTERNES
+     Encodage, viewport responsive, titre de la page,
+     et chargement de la feuille de style globale du site.
+     ============================================================ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SGI3D – Alertes</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- ============================================================
+     STYLES SPÉCIFIQUES À LA PAGE ALERTES
+     Tous les styles ci-dessous sont propres à cette page
+     et complètent style.css sans le modifier.
+     ============================================================ -->
+<style>
+  /* Décalage du contenu vers le bas pour ne pas être masqué par la nav fixe */
+  body{padding-top:60px}
+
+  /* Barre de filtres : disposition horizontale avec retour à la ligne automatique */
+  .filters{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem}
+
+  /* Apparence de base d'un bouton de filtre (style "pill" arrondi) */
+  .filter-btn{
+    padding:.5rem 1.2rem;border-radius:20px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;
+    font-size:.85rem;font-family:var(--font);transition:all .2s;
+  }
+  /* Bouton actif : texte en gras */
+  .filter-btn.active{font-weight:700}
+
+  /* Couleurs d'activation selon le type de filtre */
+  .filter-btn.all.active    {background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4);color:#fff}
+  .filter-btn.error.active  {background:rgba(231,76,60,.2);  border-color:#e74c3c;color:#e74c3c}
+  .filter-btn.warning.active{background:rgba(243,156,18,.2); border-color:#f39c12;color:#f39c12}
+  .filter-btn.info.active   {background:rgba(52,152,219,.2); border-color:#3498db;color:#3498db}
+  .filter-btn.resolved.active{background:rgba(46,204,113,.2);border-color:#2ecc71;color:#2ecc71}
+
+  /* Conteneur de la liste : cartes empilées verticalement */
+  .alerts-list{display:flex;flex-direction:column;gap:1rem}
+
+  /* Carte d'une alerte individuelle :
+     fond semi-transparent, bordure gauche colorée selon le type */
+  .alert-item{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm);padding:1.2rem 1.5rem;
+    display:flex;gap:1rem;align-items:flex-start;
+    border-left-width:4px;transition:all .2s;
+  }
+
+  /* Couleur de la bordure gauche selon la sévérité */
+  .alert-item.error  {border-left-color:#e74c3c}
+  .alert-item.warning{border-left-color:#f39c12}
+  .alert-item.info   {border-left-color:#3498db}
+
+  /* Alertes résolues : atténuées visuellement */
+  .alert-item.resolved{opacity:.6}
+
+  /* Icône à gauche de la carte */
+  .alert-item-icon{font-size:1.5rem;flex-shrink:0;margin-top:.1rem}
+
+  /* Zone de texte (titre, message, méta) : prend tout l'espace restant */
+  .alert-item-body{flex:1}
+  .alert-item-body h3{font-size:.95rem;font-weight:700;margin-bottom:.3rem}
+  .alert-item-body p{font-size:.88rem;color:rgba(255,255,255,.7);margin-bottom:.5rem}
+
+  /* Informations secondaires : date, source, date de résolution */
+  .alert-item-meta{font-size:.78rem;color:rgba(255,255,255,.4)}
+
+  /* Boutons d'action alignés à droite de la carte */
+  .alert-actions{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;flex-shrink:0}
+
+  /* Bouton muet/son : sans fond ni bordure */
+  .sound-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.2rem}
+
+  /* Message affiché quand aucune alerte ne correspond au filtre */
+  .no-alerts{text-align:center;padding:3rem;color:rgba(255,255,255,.4)}
+  .no-alerts .na-icon{font-size:3rem;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     BARRE DE NAVIGATION PRINCIPALE (en haut, fixe)
+     Liens vers les sections du site + bouton de déconnexion.
+     ============================================================ -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html" class="active">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     MISE EN PAGE ADMIN : SIDEBAR + CONTENU PRINCIPAL
+     ============================================================ -->
+<div class="admin-layout">
+
+  <!-- ---- SIDEBAR : navigation secondaire latérale ---- -->
+  <aside class="sidebar">
+    <div class="s-section">Navigation</div>
+    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="printers.html"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <div class="s-section">Administration</div>
+    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <!-- Badge dynamique affichant le nombre d'alertes non résolues -->
+    <a href="alerts.html" class="active"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <div class="s-section">Compte</div>
+    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="#" onclick="SGI3D_DB.exportJSON()"><span class="s-icon">📤</span> Exporter JSON</a>
+    <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
+  </aside>
+
+  <!-- ---- CONTENU PRINCIPAL ---- -->
+  <main class="admin-content">
+
+    <!-- En-tête de page : titre, résumé textuel et boutons d'action globaux -->
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+      <div>
+        <h1>🔔 Gestion des alertes</h1>
+        <!-- Résumé mis à jour dynamiquement (total / non résolues / résolues) -->
+        <p id="alert-summary">Chargement…</p>
+      </div>
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+        <!-- Ouvre la modale de création d'alerte manuelle -->
+        <button class="btn btn-danger btn-sm" onclick="showAddAlert()">➕ Nouvelle alerte</button>
+        <!-- Résout d'un coup toutes les alertes actives -->
+        <button class="btn btn-success btn-sm" onclick="resolveAll()">✅ Tout résoudre</button>
+        <!-- Supprime définitivement les alertes déjà résolues -->
+        <button class="btn btn-ghost btn-sm" onclick="clearResolved()">🗑️ Supprimer résolues</button>
+        <!-- Bascule le son des alertes critiques -->
+        <button class="sound-btn" onclick="toggleSound()" id="sound-toggle" title="Son des alertes">🔔</button>
+      </div>
+    </div>
+
+    <!-- Statistiques rapides : compteurs par type (mis à jour par renderStats) -->
+    <div class="stats-grid" id="alert-stats" style="margin-bottom:1.5rem"></div>
+
+    <!-- Boutons de filtre : affiche toutes les alertes ou filtre par type/état -->
+    <div class="filters">
+      <button class="filter-btn all active" onclick="setFilter('all',this)">🔍 Toutes</button>
+      <button class="filter-btn error"    onclick="setFilter('error',this)">🔴 Erreurs</button>
+      <button class="filter-btn warning"  onclick="setFilter('warning',this)">🟡 Avertissements</button>
+      <button class="filter-btn info"     onclick="setFilter('info',this)">🔵 Informations</button>
+      <button class="filter-btn resolved" onclick="setFilter('resolved',this)">✅ Résolues</button>
+    </div>
+
+    <!-- Zone de rendu dynamique : les cartes d'alertes sont injectées ici par renderAlerts() -->
+    <div class="alerts-list" id="alerts-list"></div>
+  </main>
+</div>
+
+<!-- ============================================================
+     MODALE : CRÉER UNE NOUVELLE ALERTE MANUELLEMENT
+     Champs : type, titre, message détaillé, source.
+     Masquée par défaut, ouverte par showAddAlert().
+     ============================================================ -->
+<div class="modal-overlay" id="addAlertModal">
+  <div class="modal">
+    <!-- Bouton de fermeture -->
+    <button class="modal-close" onclick="document.getElementById('addAlertModal').classList.remove('open')">✕</button>
+    <h2>➕ Créer une alerte</h2>
+
+    <!-- Sélecteur de sévérité -->
+    <div class="form-group">
+      <label>Type</label>
+      <select id="aa-type" class="form-control">
+        <option value="info">ℹ️ Information</option>
+        <option value="warning">⚠️ Avertissement</option>
+        <option value="error">🔴 Erreur critique</option>
+      </select>
+    </div>
+
+    <!-- Titre court de l'alerte -->
+    <div class="form-group"><label>Titre</label><input id="aa-title" class="form-control" placeholder="Ex: Filament épuisé"></div>
+
+    <!-- Description détaillée -->
+    <div class="form-group"><label>Message détaillé</label><textarea id="aa-msg" class="form-control" rows="4" placeholder="Décrivez l'alerte en détail…" style="resize:vertical"></textarea></div>
+
+    <!-- Origine de l'alerte (imprimante, capteur, etc.) -->
+    <div class="form-group"><label>Source</label><input id="aa-src" class="form-control" placeholder="Ex: Ultimaker 2+, Capteur température…"></div>
+
+    <div style="display:flex;gap:1rem;margin-top:1.5rem">
+      <!-- Valide et enregistre l'alerte en base -->
+      <button class="btn btn-danger" onclick="doAddAlert()">🔔 Créer alerte</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('addAlertModal').classList.remove('open')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Conteneur des notifications temporaires (toasts) -->
+<div id="toast-container"></div>
+
+<!-- Élément audio de secours (non utilisé : le son est généré par Web Audio API) -->
+<audio id="alert-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." type="audio/wav">
+</audio>
+
+<!-- Chargement de la couche d'accès aux données (IndexedDB / localStorage) -->
+<script src="db.js"></script>
+<script>
+/* ============================================================
+   ÉTAT GLOBAL
+   - currentFilter : filtre actif sur la liste des alertes
+   - soundEnabled  : indique si le son d'alerte est activé
+   ============================================================ */
+let currentFilter = 'all';
+let soundEnabled = true;
+
+/* ---- Déconnexion : efface la session et redirige vers la page de login ---- */
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+
+/* ---- Ouvre la modale de création d'alerte ---- */
+function showAddAlert(){ document.getElementById('addAlertModal').classList.add('open'); }
+
+/* ---- Active/désactive le son et met à jour l'icône du bouton ---- */
+function toggleSound(){ soundEnabled=!soundEnabled; document.getElementById('sound-toggle').textContent=soundEnabled?'🔔':'🔕'; showToast(soundEnabled?'Son activé':'Son désactivé','info'); }
+
+/* ============================================================
+   setFilter(f, btn)
+   Change le filtre actif, met en surbrillance le bouton cliqué
+   et rafraîchit la liste des alertes.
+   ============================================================ */
+function setFilter(f, btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAlerts();
+}
+
+/* ============================================================
+   renderStats()
+   Récupère toutes les alertes depuis la base, calcule les
+   compteurs par type et met à jour :
+   - les 4 cartes de statistiques (#alert-stats)
+   - le badge de la sidebar (#sb-alerts)
+   - le résumé textuel sous le titre (#alert-summary)
+   ============================================================ */
+async function renderStats(){
+  const all    = await SGI3D_DB.getAlerts();
+  const active = await SGI3D_DB.getAlerts(false);
+  const resolved = await SGI3D_DB.getAlerts(true);
+  document.getElementById('alert-stats').innerHTML=`
+    <div class="stat-card red"><div class="s-val">${active.filter(a=>a.type==='erreur').length}</div><div class="s-label">Erreurs actives</div></div>
+    <div class="stat-card orange"><div class="s-val">${active.filter(a=>a.type==='avertissement').length}</div><div class="s-label">Avertissements</div></div>
+    <div class="stat-card blue"><div class="s-val">${active.filter(a=>a.type==='info').length}</div><div class="s-label">Informations</div></div>
+    <div class="stat-card green"><div class="s-val">${resolved.length}</div><div class="s-label">Résolues</div></div>
+  `;
+  document.getElementById('sb-alerts').textContent=active.length;
+  document.getElementById('alert-summary').textContent=
+    `${all.length} alertes au total · ${active.length} non résolues · ${resolved.length} résolues`;
+}
+
+/* ============================================================
+   renderAlerts()
+   Récupère les alertes selon le filtre courant, puis génère
+   le HTML de chaque carte et l'injecte dans #alerts-list.
+   Affiche un message vide si aucune alerte ne correspond.
+   ============================================================ */
+async function renderAlerts(){
+  let alerts;
+  if(currentFilter==='resolved')    alerts = await SGI3D_DB.getAlerts(true);   // uniquement résolues
+  else if(currentFilter==='all')    alerts = await SGI3D_DB.getAlerts();        // toutes
+  else {
+    const all = await SGI3D_DB.getAlerts(false);
+    alerts = all.filter(a=>a.type===currentFilter);                             // filtre par type
+  }
+
+  const list = document.getElementById('alerts-list');
+
+  /* Message affiché quand la liste est vide */
+  if(!alerts.length){
+    list.innerHTML=`<div class="no-alerts"><div class="na-icon">${currentFilter==='resolved'?'✅':'🔕'}</div><p>${currentFilter==='resolved'?'Aucune alerte résolue':'Aucune alerte dans cette catégorie'}</p></div>`;
+    return;
+  }
+
+  /* Correspondance type interne → icône emoji */
+  const icon={erreur:'🔴',avertissement:'🟡',info:'🔵'};
+
+  /* Génération du HTML de chaque carte d'alerte */
+  list.innerHTML=alerts.map(a=>`
+    <div class="alert-item ${a.type==='erreur'?'error':a.type==='avertissement'?'warning':'info'} ${a.resolue?'resolved':''}" id="alert-${a.id}">
+      <div class="alert-item-icon">${icon[a.type]||'❓'}</div>
+      <div class="alert-item-body">
+        <h3>${a.titre} ${a.resolue?'<span class="badge badge-success" style="font-size:.7rem">Résolu</span>':''}</h3>
+        <p>${a.message}</p>
+        <div class="alert-item-meta">
+          📅 ${SGI3D_DB.formatDate(a.cree_le)}
+          ${a.source?' · 📍 '+a.source:''}
+          ${a.resolue&&a.resolue_le?' · ✅ Résolu : '+SGI3D_DB.formatDate(a.resolue_le):''}
+        </div>
+      </div>
+      <div class="alert-actions">
+        ${!a.resolue?`<button class="btn btn-success btn-xs" onclick="resolveAlert(${a.id})">✅ Résoudre</button>`:''}
+        <button class="btn btn-danger btn-xs" onclick="deleteAlert(${a.id})">🗑️ Supprimer</button>
+        ${a.type==='erreur'&&!a.resolue?`<span class="badge badge-danger">⚡ URGENT</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+/* ---- Marque une alerte individuelle comme résolue ---- */
+async function resolveAlert(id){
+  await SGI3D_DB.resolveAlert(id);
+  renderAll(); showToast('✅ Alerte résolue','success');
+}
+
+/* ---- Supprime définitivement une alerte par son id ---- */
+async function deleteAlert(id){
+  await SGI3D_DB.deleteAlert(id);
+  renderAll(); showToast('🗑️ Alerte supprimée','warning');
+}
+
+/* ---- Résout toutes les alertes actives en une seule action ---- */
+async function resolveAll(){
+  if(!confirm('Résoudre toutes les alertes actives ?'))return;
+  await SGI3D_DB.resolveAllAlerts();
+  renderAll(); showToast('✅ Toutes les alertes résolues','success');
+}
+
+/* ---- Supprime en masse toutes les alertes déjà résolues ---- */
+async function clearResolved(){
+  if(!confirm('Supprimer toutes les alertes résolues ?'))return;
+  await SGI3D_DB.deleteResolvedAlerts();
+  renderAll(); showToast('🗑️ Alertes résolues supprimées','warning');
+}
+
+/* ============================================================
+   doAddAlert()
+   Lit les valeurs du formulaire de la modale, valide les champs
+   obligatoires, enregistre l'alerte en base, ferme la modale
+   et joue le son si c'est une erreur critique.
+   ============================================================ */
+async function doAddAlert(){
+  const type=document.getElementById('aa-type').value;
+  const title=document.getElementById('aa-title').value.trim();
+  const msg=document.getElementById('aa-msg').value.trim();
+  const src=document.getElementById('aa-src').value.trim();
+
+  /* Validation : titre et message sont obligatoires */
+  if(!title||!msg){showToast('Titre et message requis','warning');return;}
+
+  await SGI3D_DB.addAlert({type,titre:title,message:msg,source:src||(SGI3D_DB.getSession()?.name||'Admin')});
+  document.getElementById('addAlertModal').classList.remove('open');
+  renderAll(); showToast('🔔 Alerte créée','success');
+
+  /* Son uniquement pour les erreurs critiques (si activé) */
+  if(soundEnabled && type==='erreur') playAlertSound();
+}
+
+/* ============================================================
+   playAlertSound()
+   Génère un bip descendant (880 Hz → 440 Hz en 0,3 s) via
+   l'API Web Audio. Utilisé pour les alertes de type "erreur".
+   ============================================================ */
+function playAlertSound(){
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440,ctx.currentTime+0.3);
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.5);
+  } catch(e){}
+}
+
+/* ---- Raccourci pour actualiser stats + liste en même temps ---- */
+function renderAll(){
+  renderStats(); renderAlerts();
+}
+
+/* ============================================================
+   showToast(msg, type)
+   Affiche une notification temporaire en bas de l'écran.
+   Elle disparaît automatiquement après 3,5 secondes.
+   ============================================================ */
+function showToast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+/* ============================================================
+   autoAlert()
+   Simulation automatique d'alertes système : choisit
+   aléatoirement un scénario prédéfini et l'insère en base.
+   Appelé toutes les 45 secondes pour démontrer le flux temps réel.
+   ============================================================ */
+function autoAlert(){
+  const types=['warning','info','error'];
+  const sources=['Ultimaker 2+','Geeetech A20T','Capteur T°','Système','Caméra 1'];
+  const msgs=[
+    {type:'warning',title:'Température buse élevée',msg:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
+    {type:'info',   title:'Maintenance programmée',msg:'Calibration automatique dans 24h'},
+    {type:'error',  title:'Panne extrudeur',msg:'L\'extrudeur du Geeetech A20T ne répond plus'},
+    {type:'warning',title:'Filament presque épuisé',msg:'Niveau filament ABS < 5%'},
+    {type:'info',   title:'Impression terminée',msg:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
+  ];
+  const pick=msgs[Math.floor(Math.random()*msgs.length)];
+  SGI3D_DB.addAlert({...pick,message:pick.msg,source:sources[Math.floor(Math.random()*sources.length)]});
+  renderAll();
+  if(soundEnabled && pick.type==='error') playAlertSound();
+}
+
+/* ---- Initialisation : affichage immédiat au chargement de la page ---- */
+renderAll();
+/* ---- Déclenchement de la simulation automatique toutes les 45 secondes ---- */
+setInterval(autoAlert, 45000);
+</script>
+</body>
+</html>
