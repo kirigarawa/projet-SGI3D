@@ -81,7 +81,7 @@ body{font-family:var(--font);background:var(--bg-grad);min-height:100vh;color:#f
    Même technique que les titres : background-clip:text */
 .site-nav .nav-logo{
   font-size:1.4rem;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(135deg,#fff,#aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background:linear-gradient(135deg,#fff,#aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   text-decoration:none;
 }
 
