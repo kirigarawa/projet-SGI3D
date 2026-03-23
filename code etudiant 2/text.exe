@@ -1,0 +1,13 @@
+[Unit]
+Description=Surveillance Imprimantes 3D
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/alerte\ mail2.py
+WorkingDirectory=/home/pi
+Restart=always
+RestartSec=10
+User=pi
+
+[Install]
+WantedBy=multi-user.target

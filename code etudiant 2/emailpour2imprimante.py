@@ -25,10 +25,10 @@ logging.basicConfig(
 
 # ─── CONFIGURATION EMAIL ────────────────────────────────────────────────────
 # Adresse Gmail qui envoie les alertes
-EMAIL_SENDER = "sgi3d.alert@gmail.com"
+EMAIL_SENDER = "matthieumondor15@gmail.com"
 # Mot de passe d'application Gmail (à générer dans les paramètres du compte Google,
 # rubrique "Sécurité > Mots de passe des applications")
-EMAIL_PASSWORD = "MOT_DE_PASSE_APPLICATION"
+EMAIL_PASSWORD = "jfuv ezrl bheo aitl"
 
 # Liste des destinataires qui recevront toutes les alertes
 EMAIL_RECEIVERS = [
