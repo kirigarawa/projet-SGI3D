@@ -364,20 +364,20 @@ function showToast(msg,type='info'){
 
 /* ── Simulation d'alertes automatiques ──
    Génère une alerte aléatoire parmi un ensemble prédéfini (à des fins de démonstration). */
-function autoAlert(){
+async function autoAlert(){
   const types=['warning','info','error'];
-  const sources=['Ultimaker 2+','Geeetech A20T','Capteur T°','Système','Caméra 1'];
+  const sources=['Ultimaker 2+','Creality Ender V2 Neo','Capteur T°','Système','Caméra 1'];
   const msgs=[
-    {type:'warning',title:'Température buse élevée',msg:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
-    {type:'info',   title:'Maintenance programmée',msg:'Calibration automatique dans 24h'},
-    {type:'error',  title:'Panne extrudeur',msg:'L\'extrudeur du Geeetech A20T ne répond plus'},
-    {type:'warning',title:'Filament presque épuisé',msg:'Niveau filament ABS < 5%'},
-    {type:'info',   title:'Impression terminée',msg:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
+    {type:'avertissement',titre:'Température buse élevée',message:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
+    {type:'info',   titre:'Maintenance programmée',message:'Calibration automatique dans 24h'},
+    {type:'erreur',  titre:'Panne extrudeur',message:'L\'extrudeur de la Creality Ender V2 Neo ne répond plus'},
+    {type:'avertissement',titre:'Filament presque épuisé',message:'Niveau filament ABS < 5%'},
+    {type:'info',   titre:'Impression terminée',message:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
   ];
   const pick=msgs[Math.floor(Math.random()*msgs.length)];
-  SGI3D_DB.addAlert({...pick,message:pick.msg,source:sources[Math.floor(Math.random()*sources.length)]});
+  await SGI3D_DB.addAlert({...pick,source:sources[Math.floor(Math.random()*sources.length)]});
   renderAll();
-  if(soundEnabled && pick.type==='error') playAlertSound();
+  if(soundEnabled && pick.type==='erreur') playAlertSound();
 }
 
 /* ============================================================

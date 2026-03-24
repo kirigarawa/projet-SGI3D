@@ -342,7 +342,7 @@ async function renderCameras(){
         </div>
       </div>
       <div class="cam-footer">
-        <button class="btn btn-ghost btn-xs" onclick="toggleCamStatus(${c.id})">${c.statut==='en_ligne'?'🔴 Désactiver':'🟢 Activer'}</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleCam(${c.id})">${c.statut==='en_ligne'?'🔴 Désactiver':'🟢 Activer'}</button>
         <button class="btn btn-accent btn-xs" onclick="goFullscreen(${c.id})">⛶ Plein écran</button>
         ${c.detection_mvt?`<span class="badge badge-info" style="font-size:.7rem">🎯 Détection mvt</span>`:`<span class="badge badge-neutral" style="font-size:.7rem">Pas de détection</span>`}
         <button class="btn btn-danger btn-xs" style="margin-left:auto" onclick="deleteCam(${c.id})">🗑️</button>
@@ -396,17 +396,20 @@ function scheduleMotionAlert(camId){
 // ── ACTIONS SUR LES CAMÉRAS ──────────────────────────────
 
 // Bascule le statut d'une caméra entre "en_ligne" et "offline"
-function toggleCamStatus(id){
-  const c=SGI3D_DB.getCameras().find(c=>c.id===id);
-  if(!c)return;
-  SGI3D_DB.updateCamera(id,{status:c.statut==='en_ligne'?'offline':'online'});
+async function toggleCam(id) {
+  const cams = await SGI3D_DB.getCameras();
+  const cam = cams.find(c => c.id === id);
+  if (!cam) return;
+  await SGI3D_DB.updateCamera(id, { statut: cam.statut === 'en_ligne' ? 'hors_ligne' : 'en_ligne' });
   renderCameras();
 }
 
 // Supprime définitivement une caméra après confirmation utilisateur
-async function deleteCam(id){
-  if(!confirm('Supprimer cette caméra ?'))return;
-  await SGI3D_DB.deleteCamera(id); renderCameras(); showToast('📷 Caméra supprimée','warning');
+async function deleteCam(id) {
+  if (!confirm('Supprimer cette caméra ?')) return;
+  await SGI3D_DB.deleteCamera(id);
+  renderCameras();
+  showToast('📷 Caméra supprimée', 'warning');
 }
 
 // Passe le canvas en plein écran via l'API Fullscreen du navigateur
@@ -418,10 +421,10 @@ function goFullscreen(id){
 
 // Active ou désactive la détection de mouvement sur TOUTES les caméras.
 // Si toutes sont déjà actives → désactive tout ; sinon → active tout.
-function toggleAllMotion(){
-  const cams=SGI3D_DB.getCameras();
-  const allOn=cams.every(c=>c.detection_mvt);
-  cams.forEach(c=>SGI3D_DB.updateCamera(c.id,{motionDetect:!allOn}));
+async function toggleAllMotion(){
+  const cams = await SGI3D_DB.getCameras();
+  const allOn = cams.every(c=>c.detection_mvt==1);
+  for(const cam of cams) await SGI3D_DB.updateCamera(cam.id,{detection_mvt: allOn?0:1});
   renderCameras();
   showToast(allOn?'🎯 Détection mouvement désactivée':'🎯 Détection mouvement activée','info');
 }

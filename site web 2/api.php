@@ -37,13 +37,17 @@ try {
         case 'getUserById':
             $st = $db->prepare('SELECT * FROM utilisateurs WHERE id = ?');
             $st->execute([$data['id']]);
-            $result = $st->fetch() ?: null;
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false && !empty($row)) { unset($row['mot_de_passe']); $result = $row; }
+            else { $result = null; }
             break;
 
         case 'getUserByEmail':
             $st = $db->prepare('SELECT * FROM utilisateurs WHERE email = ?');
             $st->execute([$data['email']]);
-            $result = $st->fetch() ?: null;
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false && !empty($row)) { unset($row['mot_de_passe']); $result = $row; }
+            else { $result = null; }
             break;
 
         case 'createUser':
@@ -342,6 +346,15 @@ try {
         case 'octoprintStartPrint':
             $sync   = new OctoPrintSync($db);
             $result = $sync->startPrint(
+                (int)($data['printer_id'] ?? 0),
+                $data['filename'] ?? '',
+                $data['location'] ?? 'local'
+            );
+            break;
+
+        case 'octoprintGcode':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->getGcodeFile(
                 (int)($data['printer_id'] ?? 0),
                 $data['filename'] ?? '',
                 $data['location'] ?? 'local'

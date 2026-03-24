@@ -255,16 +255,16 @@ async function renderLoginFeed(){
 // ── FLUX IMPRESSIONS ─────────────────────────────────────
 // Affiche les 8 derniers travaux d'impression 3D.
 // Icône : ✅ terminé | ❌ erreur | 🔄 en cours
-function renderPrintFeed(){
-  const jobs = SGI3D_DB.getPrintJobs(8);
+async function renderPrintFeed(){
+  const jobs = await SGI3D_DB.getPrintJobs(8);
   const el = document.getElementById('print-feed');
   if(!jobs.length){ el.innerHTML='<p style="color:rgba(255,255,255,.4);font-size:.85rem">Aucun travail d\'impression</p>'; return; }
-  const statusIcon = s => s==='terminé'?'✅':s==='erreur'?'❌':'🔄';
+  const statusIcon = s => s==='termine'?'✅':s==='erreur'?'❌':'🔄';
   el.innerHTML = jobs.map(j=>`
     <div class="feed-item">
-      <div class="feed-icon print">${statusIcon(j.status)}</div>
-      <div><strong>${j.fileName||'Impression'}</strong> – ${j.printer||'N/A'}<br>
-      <div class="feed-meta">${j.userName} · ${SGI3D_DB.timeAgo(j.startedAt)} · <span class="badge badge-${j.status==='terminé'?'success':j.status==='erreur'?'danger':'info'}">${j.status}</span></div></div>
+      <div class="feed-icon print">${statusIcon(j.statut)}</div>
+      <div><strong>${j.nom_fichier||'Impression'}</strong><br>
+      <div class="feed-meta">${j.nom_utilisateur||'—'} · ${SGI3D_DB.timeAgo(j.demarre_le)} · <span class="badge badge-${j.statut==='termine'?'success':j.statut==='erreur'?'danger':'info'}">${j.statut}</span></div></div>
     </div>`).join('');
 }
 

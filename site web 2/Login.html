@@ -257,21 +257,36 @@ async function doRegister(){
   const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
+  const msg   = document.getElementById('regMsg');
+  const btn   = document.querySelector('#registerModal .btn-primary');
 
-  // Validation : tous les champs sont obligatoires
-  if(!name||!email||!pass){ document.getElementById('regMsg').textContent='Remplissez tous les champs.'; return; }
+  msg.style.color = '#e74c3c';
+  msg.textContent = '';
 
-  // Vérification de l'unicité de l'email (évite les doublons en base)
-  const existing = await SGI3D_DB.getUserByEmail(email);
-  if(existing){ document.getElementById('regMsg').textContent='Cet email est déjà utilisé.'; return; }
+  if(!name||!email||!pass){ msg.textContent='Remplissez tous les champs.'; return; }
+  if(pass.length < 4){ msg.textContent='Mot de passe trop court (min. 4 car.).'; return; }
 
-  // Création du compte avec initiales comme avatar (max 2 caractères, majuscules)
-  await SGI3D_DB.createUser({nom:name,email,mot_de_passe:pass,role:'operateur',avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
+  btn.textContent = '⏳ Vérification…';
+  btn.disabled = true;
 
-  // Feedback visuel de succès en vert + fermeture automatique de la modal
-  document.getElementById('regMsg').style.color='#2ecc71';
-  document.getElementById('regMsg').textContent='✅ Compte créé ! Vous pouvez vous connecter.';
-  setTimeout(closeModal,1500);
+  try {
+    const existing = await SGI3D_DB.getUserByEmail(email);
+    if(existing){ msg.textContent='❌ Cet email est déjà utilisé.'; return; }
+
+    await SGI3D_DB.createUser({
+      nom: name, email, mot_de_passe: pass, role: 'operateur',
+      avatar: name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+    });
+
+    msg.style.color = '#2ecc71';
+    msg.textContent = '✅ Compte créé ! Vous pouvez vous connecter.';
+    setTimeout(closeModal, 1500);
+  } catch(e) {
+    msg.textContent = '❌ Erreur : ' + (e.message || 'Impossible de créer le compte.');
+  } finally {
+    btn.textContent = '✅ Créer';
+    btn.disabled = false;
+  }
 }
 
 // ── Affichage d'une notification toast ──────────────────────────────────

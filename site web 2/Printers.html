@@ -89,6 +89,17 @@ body{padding-top:60px}
 .gcode-ctrl input[type=range]{flex:1;min-width:60px;accent-color:#3498db}
 .gcode-lbl{font-size:.7rem;color:rgba(255,255,255,.35);font-family:monospace;white-space:nowrap}
 .gcode-status{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:.4rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cost-section{padding:.8rem 1.4rem 1rem;border-top:1px solid rgba(255,255,255,.07)}
+.cost-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin-bottom:.7rem}
+.cost-field{display:flex;flex-direction:column;gap:.2rem}
+.cost-field label{font-size:.62rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px}
+.cost-field input{padding:.28rem .5rem;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:monospace;outline:none;width:100%;box-sizing:border-box}
+.cost-field input:focus{border-color:#f39c12}
+.cost-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-top:.7rem}
+.cost-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.55rem .85rem}
+.cost-card-lbl{font-size:.62rem;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.5px}
+.cost-card-val{font-size:.98rem;font-weight:700;font-family:monospace;color:#2ecc71;margin-top:.12rem}
+.cost-card.total .cost-card-val{color:#f39c12;font-size:1.15rem}
 .print-section{padding:.75rem 1.4rem;border-top:1px solid rgba(255,255,255,.07)}
 .print-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .fsel{flex:1;min-width:120px;padding:.3rem .6rem;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:inherit;outline:none;cursor:pointer}
@@ -239,6 +250,7 @@ function renderCard(p, s) {
       ${moveHtml(p.id)}
       ${fanHtml(p.id)}
       ${gcodeHtml(p.id)}
+      ${costHtml(p.id)}
     </div>`;
 }
 
@@ -486,6 +498,99 @@ async function startPrint(pid) {
   }
 }
 
+// ── Coût d'impression ────────────────────────────────────────
+const COST_DATA = {};
+
+function costHtml(pid) {
+  const hasData = !!COST_DATA[pid];
+  return `
+    <div class="cost-section" id="cost-section-${pid}"${hasData?'':' style="display:none"'}>
+      <div class="sect-title">💰 Coût d'impression</div>
+      <div class="cost-inputs">
+        <div class="cost-field"><label>Prix filament (€/kg)</label><input id="ci-kg-${pid}"  type="number" value="25"   min="0" step="1"></div>
+        <div class="cost-field"><label>Prix élec. (€/kWh)</label>  <input id="ci-kwh-${pid}" type="number" value="0.20" min="0" step="0.01"></div>
+        <div class="cost-field"><label>Puissance (W)</label>        <input id="ci-pow-${pid}" type="number" value="200"  min="0" step="10"></div>
+        <div class="cost-field"><label>Diamètre fil. (mm)</label>   <input id="ci-dia-${pid}" type="number" value="1.75" min="0.1" step="0.05"></div>
+        <div class="cost-field"><label>Densité (g/cm³)</label>      <input id="ci-den-${pid}" type="number" value="1.24" min="0.1" step="0.01"></div>
+      </div>
+      <button class="tbtn" onclick="calcCost(${pid})">💰 Calculer</button>
+      <div class="cost-results" id="cost-results-${pid}" style="display:none">
+        <div class="cost-card"><div class="cost-card-lbl">Filament utilisé</div><div class="cost-card-val" id="cr-fil-${pid}">—</div></div>
+        <div class="cost-card"><div class="cost-card-lbl">Temps estimé</div>    <div class="cost-card-val" id="cr-tps-${pid}">—</div></div>
+        <div class="cost-card"><div class="cost-card-lbl">Coût filament</div>   <div class="cost-card-val" id="cr-cfl-${pid}">—</div></div>
+        <div class="cost-card"><div class="cost-card-lbl">Coût électricité</div><div class="cost-card-val" id="cr-cel-${pid}">—</div></div>
+        <div class="cost-card total"><div class="cost-card-lbl">Total estimé</div><div class="cost-card-val" id="cr-tot-${pid}">—</div></div>
+      </div>
+    </div>`;
+}
+
+function parseCostMetrics(text) {
+  let totalE=0, e=0, eAbs=true, f=3000;
+  let x=0, y=0, z=0, abs=true, totalTime=0;
+
+  for (const raw of text.split('\n')) {
+    const line = raw.split(';')[0].trim();
+    if (!line) continue;
+    const tok = line.toUpperCase().split(/\s+/);
+    const cmd = tok[0];
+
+    if (cmd==='G90'){abs=true;continue;}
+    if (cmd==='G91'){abs=false;continue;}
+    if (cmd==='M82'){eAbs=true;continue;}
+    if (cmd==='M83'){eAbs=false;continue;}
+    if (cmd==='G92'){
+      const p={};
+      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
+      if(p.E!==undefined) e=p.E;
+      continue;
+    }
+    if(cmd==='G0'||cmd==='G1'){
+      const p={};
+      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
+      if(p.F!==undefined) f=p.F;
+      const nx=p.X!==undefined?(abs?p.X:x+p.X):x;
+      const ny=p.Y!==undefined?(abs?p.Y:y+p.Y):y;
+      const nz=p.Z!==undefined?(abs?p.Z:z+p.Z):z;
+      const de=p.E!==undefined?(eAbs?p.E-e:p.E):0;
+      if(p.E!==undefined) e=eAbs?p.E:e+p.E;
+      if(de>0) totalE+=de;
+      const dist=Math.sqrt((nx-x)**2+(ny-y)**2+(nz-z)**2);
+      if(dist>0&&f>0) totalTime+=dist/(f/60);
+      x=nx;y=ny;z=nz;
+    }
+  }
+  return {totalExtrusion:totalE, estimatedTime:totalTime};
+}
+
+function calcCost(pid) {
+  const d = COST_DATA[pid];
+  if (!d) { toast('Chargez d\'abord un G-code', 'warning'); return; }
+
+  const priceKg  = parseFloat(document.getElementById('ci-kg-'+pid).value)  || 25;
+  const priceKwh = parseFloat(document.getElementById('ci-kwh-'+pid).value) || 0.20;
+  const power    = parseFloat(document.getElementById('ci-pow-'+pid).value) || 200;
+  const diameter = parseFloat(document.getElementById('ci-dia-'+pid).value) || 1.75;
+  const density  = parseFloat(document.getElementById('ci-den-'+pid).value) || 1.24;
+
+  const volumeMm3   = d.totalExtrusion * Math.PI * (diameter/2)**2;
+  const weightG     = (volumeMm3 / 1000) * density;
+  const filCost     = (weightG / 1000) * priceKg;
+  const elecCost    = (power / 1000) * (d.estimatedTime / 3600) * priceKwh;
+  const totalCost   = filCost + elecCost;
+
+  const s = Math.round(d.estimatedTime);
+  const timeStr = s>=3600
+    ? Math.floor(s/3600)+'h '+String(Math.floor((s%3600)/60)).padStart(2,'0')+'m'
+    : Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
+
+  document.getElementById('cr-fil-'+pid).textContent = weightG.toFixed(1)+'g / '+(d.totalExtrusion/1000).toFixed(2)+'m';
+  document.getElementById('cr-tps-'+pid).textContent = timeStr;
+  document.getElementById('cr-cfl-'+pid).textContent = filCost.toFixed(3)+' €';
+  document.getElementById('cr-cel-'+pid).textContent = elecCost.toFixed(3)+' €';
+  document.getElementById('cr-tot-'+pid).textContent = totalCost.toFixed(2)+' €';
+  document.getElementById('cost-results-'+pid).style.display = '';
+}
+
 // ── G-code Viewer ────────────────────────────────────────────
 const GCODE_DATA = {};
 
@@ -551,6 +656,7 @@ async function loadGcode(pid) {
   setTimeout(() => {
     const parsed = parseGcode(j.data.content);
     GCODE_DATA[pid] = parsed;
+    COST_DATA[pid]  = parseCostMetrics(j.data.content);
     const sl = document.getElementById('gcode-sl-'+pid);
     sl.max   = Math.max(0, parsed.layers.length - 1);
     sl.value = sl.max;
@@ -558,6 +664,8 @@ async function loadGcode(pid) {
     st.textContent = j.data.filename
       + ' — ' + parsed.layers.length + ' couche(s)'
       + (j.data.truncated ? ' (aperçu 500 Ko)' : '');
+    const cs = document.getElementById('cost-section-'+pid);
+    if (cs) cs.style.display = '';
   }, 10);
 }
 
@@ -579,6 +687,12 @@ function parseGcode(text) {
     if (cmd==='G91'){abs=false;continue;}
     if (cmd==='M82'){eAbs=true;continue;}
     if (cmd==='M83'){eAbs=false;continue;}
+    if (cmd==='G92'){
+      const p={};
+      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
+      if(p.E!==undefined) e=p.E;
+      continue;
+    }
 
     if (cmd==='G0'||cmd==='G1') {
       const p={};
