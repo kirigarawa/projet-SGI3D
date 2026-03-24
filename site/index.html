@@ -157,7 +157,7 @@
       <input type="range" id="gv-slider" min="0" max="0" value="0" disabled
         oninput="gvRender(+this.value)">
       <span class="gv-lbl" id="gv-lbl">—</span>
-      <button class="btn btn-ghost btn-sm" id="gv-btn-all" onclick="gvToggleAll()" style="display:none">Vue complète</button>
+      <button id="gv-btn-all" onclick="gvToggleAll()" style="display:none;padding:.25rem .8rem;font-size:.75rem;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);cursor:pointer">Vue complète</button>
     </div>
 
     <div class="gv-stats" id="gv-stats" style="display:none">
@@ -216,32 +216,31 @@
   }
 
   // Imprimante stylisée
-  const base     = box(2,0.2,2,  0x2c3e50,0,0.1,0);
-  const col1     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6,-0.85);
-  const col2     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6,-0.85);
-  const col3     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6, 0.85);
-  const col4     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6, 0.85);
-  const topFrame = box(2,0.1,2,   0x3d5a80,0,3.1,0);
+  box(2,0.2,2,    0x2c3e50,0,0.1,0);
+  box(0.12,3,0.12,0x4a4a4a,-0.85,1.6,-0.85);
+  box(0.12,3,0.12,0x4a4a4a, 0.85,1.6,-0.85);
+  box(0.12,3,0.12,0x4a4a4a,-0.85,1.6, 0.85);
+  box(0.12,3,0.12,0x4a4a4a, 0.85,1.6, 0.85);
+  box(2,0.1,2,    0x3d5a80,0,3.1,0);
   const plate    = box(1.6,0.06,1.6,0x546e7a,0,0.5,0);
   const carriageY= box(2.0,0.1,0.15,0x607d8b,0,2.4,0);
   const head     = box(0.25,0.35,0.25,0x263238,0,2.2,0);
-  const nozzle   = box(0.06,0.15,0.06,0xffd700,0,2.0,0);
-  const screen   = box(0.4,0.3,0.05,0x1565c0,0.7,0.9,-0.96);
+  box(0.06,0.15,0.06,0xffd700,0,2.0,0);
+  box(0.4,0.3,0.05,0x1565c0,0.7,0.9,-0.96);
   const spool    = new THREE.Mesh(new THREE.TorusGeometry(.3,.1,8,20),new THREE.MeshPhongMaterial({color:0xe74c3c}));
   spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; spool.castShadow=true; scene.add(spool);
 
   // LED pulsante
-  const ledGeo = new THREE.SphereGeometry(0.05,8,8);
   const ledMat = new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.5});
-  const led = new THREE.Mesh(ledGeo,ledMat);
-  led.position.set(-0.7,0.9,-0.96); scene.add(led);
+  const ledMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8), ledMat);
+  ledMesh.position.set(-0.7,0.9,-0.96); scene.add(ledMesh);
 
   // Filament
-  const filPoints=[new THREE.Vector3(0,2.8,0),new THREE.Vector3(0.05,2.6,0.05),new THREE.Vector3(0,2.3,0),new THREE.Vector3(0,2.1,0)];
-  const filCurve=new THREE.CatmullRomCurve3(filPoints);
-  const filGeo=new THREE.TubeGeometry(filCurve,20,0.012,6,false);
-  const fil=new THREE.Mesh(filGeo,new THREE.MeshPhongMaterial({color:0xe74c3c}));
-  scene.add(fil);
+  const filCurve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0,2.8,0),new THREE.Vector3(0.05,2.6,0.05),
+    new THREE.Vector3(0,2.3,0),new THREE.Vector3(0,2.1,0)
+  ]);
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(filCurve,20,0.012,6,false),new THREE.MeshPhongMaterial({color:0xe74c3c})));
 
   let t=0;
   function animate(){
@@ -314,7 +313,7 @@
   function parseGcode(text) {
     const layers=[[]], zH=[0];
     let x=0,y=0,z=0,e=0,abs=true,eAbs=true,path=[];
-    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=0,maxZ=0;
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity,maxZ=-Infinity;
 
     for (const raw of text.split('\n')) {
       const line = raw.split(';')[0].trim();
@@ -324,6 +323,16 @@
       if(cmd==='G91'){abs=false;continue;}
       if(cmd==='M82'){eAbs=true;continue;}
       if(cmd==='M83'){eAbs=false;continue;}
+      // G92 : réinitialisation de position (très courant pour E0)
+      if(cmd==='G92'){
+        const p={};
+        for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
+        if(p.E!==undefined) e=p.E;
+        if(p.X!==undefined) x=p.X;
+        if(p.Y!==undefined) y=p.Y;
+        if(p.Z!==undefined) z=p.Z;
+        continue;
+      }
       if(cmd==='G0'||cmd==='G1'){
         const p={};
         for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
@@ -335,7 +344,7 @@
         if(nz!==z){
           if(path.length>1)layers[layers.length-1].push([...path]);
           path=[];layers.push([]);zH.push(nz);
-          maxZ=Math.max(maxZ,nz);z=nz;
+          minZ=Math.min(minZ,nz);maxZ=Math.max(maxZ,nz);z=nz;
         }
         if(de>0){
           if(!path.length)path.push({x,y});
@@ -350,6 +359,9 @@
       }
     }
     if(path.length>1)layers[layers.length-1].push([...path]);
+    // Sécurité si aucun mouvement trouvé
+    if(minX===Infinity){minX=0;maxX=1;minY=0;maxY=1;}
+    if(minZ===Infinity){minZ=0;maxZ=0;}
     return {layers,zH,bounds:{minX,maxX,minY,maxY,minZ,maxZ}};
   }
 
