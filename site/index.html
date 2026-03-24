@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGI3D – Accueil</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{overflow-x:hidden}
+  /* ── Hero ── */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:80px 2rem 2rem;position:relative;
+  }
+  .hero-logo{
+    font-size:5rem;font-weight:900;letter-spacing:8px;
+    background:linear-gradient(135deg,#fff 30%,rgba(255,255,255,.4));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:.5rem;
+  }
+  .hero-sub{font-size:1.1rem;color:rgba(255,255,255,.6);letter-spacing:3px;text-transform:uppercase;margin-bottom:3rem}
+  #hero-canvas{
+    width:min(500px,90vw);height:min(400px,60vw);
+    border-radius:var(--radius);box-shadow:0 30px 60px rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.1);margin-bottom:3rem;
+  }
+  /* ── Action cards ── */
+  .action-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:1.5rem;width:100%;max-width:900px;
+  }
+  .action-card{
+    background:rgba(255,255,255,.07);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);
+    padding:2rem;text-align:center;text-decoration:none;color:#fff;
+    transition:all .3s;
+  }
+  .action-card:hover{transform:translateY(-8px);background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+  .action-card .ac-icon{font-size:2.5rem;margin-bottom:1rem}
+  .action-card h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}
+  .action-card p{font-size:.85rem;color:rgba(255,255,255,.6)}
+  /* ── Particules ── */
+  .particles{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .particle{
+    position:absolute;width:2px;height:2px;background:rgba(255,255,255,.5);border-radius:50%;
+    animation:float linear infinite;
+  }
+  @keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0}
+    10%{opacity:1}90%{opacity:1}100%{transform:translateY(-100px) translateX(30px);opacity:0}}
+  .hero,.action-grid,.hero-logo,.hero-sub{position:relative;z-index:1}
+  footer.site-footer{text-align:center;padding:2rem;color:rgba(255,255,255,.4);font-size:.8rem;z-index:1;position:relative}
+  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
+  footer.site-footer a:hover{color:#fff}
+  /* ── G-code Viewer ── */
+  .gv-section{width:100%;max-width:960px;margin:4rem auto 0;padding:0 1.5rem;position:relative;z-index:1}
+  .gv-card{background:rgba(255,255,255,.06);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:2rem}
+  .gv-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+  .gv-title{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:.6rem}
+  .gv-badge{font-size:.72rem;color:rgba(255,255,255,.4);font-family:monospace;padding:.2rem .7rem;border:1px solid rgba(255,255,255,.15);border-radius:20px}
+  .gv-drop{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.38);margin-bottom:1.2rem;user-select:none}
+  .gv-drop:hover,.gv-drop.over{border-color:#3498db;background:rgba(52,152,219,.07);color:#3498db}
+  .gv-drop .gv-icon{font-size:2.2rem;margin-bottom:.5rem}
+  .gv-drop p{font-size:.85rem;margin:.2rem 0}
+  .gv-canvas-wrap{position:relative;border-radius:10px;overflow:hidden;background:#0d1117;margin-bottom:1rem}
+  .gv-canvas{width:100%;height:360px;display:block;cursor:crosshair}
+  .gv-empty-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.18);font-size:.9rem;pointer-events:none}
+  .gv-controls{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+  .gv-controls input[type=range]{flex:1;min-width:80px;accent-color:#3498db}
+  .gv-lbl{font-size:.72rem;color:rgba(255,255,255,.35);font-family:monospace;white-space:nowrap}
+  .gv-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.6rem;margin-top:1.2rem}
+  .gv-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem .9rem}
+  .gv-stat-label{font-size:.65rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.6px}
+  .gv-stat-value{font-size:1rem;font-weight:700;font-family:monospace;color:#3498db;margin-top:.15rem}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html" class="active">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="login.html" class="btn-nav">🔐 <span>Connexion</span></a>
+  </div>
+</nav>
+
+<!-- Particules de fond -->
+<div class="particles" id="particles"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-logo">SGI3D</div>
+  <p class="hero-sub">Système de Gestion d'Impression 3D</p>
+
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="action-grid">
+    <a href="printers.html" class="action-card">
+      <div class="ac-icon">🖨️</div>
+      <h3>Nos Imprimantes</h3>
+      <p>Ultimaker 2+ &amp; Geeetech A20T – Spécifications et modèles 3D interactifs</p>
+    </a>
+    <a href="login.html" class="action-card">
+      <div class="ac-icon">🔐</div>
+      <h3>Se Connecter</h3>
+      <p>Accéder au tableau de bord, gérer les impressions et les utilisateurs</p>
+    </a>
+    <a href="cameras.html" class="action-card">
+      <div class="ac-icon">📷</div>
+      <h3>Surveillance</h3>
+      <p>Flux caméras en temps réel, détection de mouvement, monitoring atelier</p>
+    </a>
+    <a href="alerts.html" class="action-card">
+      <div class="ac-icon">🔔</div>
+      <h3>Alertes</h3>
+      <p>Notifications système, pannes, alertes filament et températures</p>
+    </a>
+    <a href="dashboard.html" class="action-card">
+      <div class="ac-icon">📊</div>
+      <h3>Dashboard</h3>
+      <p>Statistiques globales, journaux d'activité et gestion complète</p>
+    </a>
+    <a href="sitemap.html" class="action-card">
+      <div class="ac-icon">🗺️</div>
+      <h3>Plan du site</h3>
+      <p>Vue d'ensemble de toutes les pages et fonctionnalités disponibles</p>
+    </a>
+  </div>
+</section>
+
+<!-- G-code Viewer -->
+<section class="gv-section">
+  <div class="gv-card">
+    <div class="gv-head">
+      <div class="gv-title">📄 G-code Viewer</div>
+      <span class="gv-badge" id="gv-badge">Aucun fichier chargé</span>
+    </div>
+
+    <div class="gv-drop" id="gv-drop" onclick="document.getElementById('gv-file').click()">
+      <div class="gv-icon">📂</div>
+      <p><strong>Glissez un fichier .gcode ici</strong></p>
+      <p style="font-size:.78rem">ou cliquez pour sélectionner</p>
+      <input type="file" id="gv-file" accept=".gcode,.gc,.g,.gco" style="display:none">
+    </div>
+
+    <div class="gv-canvas-wrap">
+      <canvas class="gv-canvas" id="gv-canvas"></canvas>
+      <div class="gv-empty-msg" id="gv-empty">Chargez un fichier G-code pour visualiser</div>
+    </div>
+
+    <div class="gv-controls">
+      <span class="gv-lbl">Couche</span>
+      <input type="range" id="gv-slider" min="0" max="0" value="0" disabled
+        oninput="gvRender(+this.value)">
+      <span class="gv-lbl" id="gv-lbl">—</span>
+      <button class="btn btn-ghost btn-sm" id="gv-btn-all" onclick="gvToggleAll()" style="display:none">Vue complète</button>
+    </div>
+
+    <div class="gv-stats" id="gv-stats" style="display:none">
+      <div class="gv-stat"><div class="gv-stat-label">Couches</div><div class="gv-stat-value" id="gs-layers">—</div></div>
+      <div class="gv-stat"><div class="gv-stat-label">Largeur</div><div class="gv-stat-value" id="gs-w">—</div></div>
+      <div class="gv-stat"><div class="gv-stat-label">Profondeur</div><div class="gv-stat-value" id="gs-d">—</div></div>
+      <div class="gv-stat"><div class="gv-stat-label">Hauteur</div><div class="gv-stat-value" id="gs-h">—</div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>© 2025 SGI3D – <a href="sitemap.html">Plan du site</a> · <a href="database.html">Base de données</a> · v3.0</p>
+</footer>
+
+<script src="db.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── Particules ──────────────────────────────────────────────
+(function(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<40;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;animation-delay:${Math.random()*8}s;animation-duration:${6+Math.random()*8}s`;
+    c.appendChild(p);
+  }
+})();
+
+// ── Three.js Imprimante Hero ──────────────────────────────────
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(W,H); renderer.setPixelRatio(devicePixelRatio);
+  renderer.shadowMap.enabled = true;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40,W/H,0.1,100);
+  camera.position.set(3,4,6); camera.lookAt(0,1,0);
+
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff,0.4));
+  const dl = new THREE.DirectionalLight(0xffffff,0.8);
+  dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
+  const pl = new THREE.PointLight(0x3498db,1,10);
+  pl.position.set(-2,3,2); scene.add(pl);
+
+  // Sol
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshLambertMaterial({color:0x1a1a2e}));
+  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+
+  function box(w,h,d,color,x,y,z){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color,shininess:60}));
+    m.position.set(x,y,z); m.castShadow=true; scene.add(m); return m;
+  }
+
+  // Imprimante stylisée
+  const base     = box(2,0.2,2,  0x2c3e50,0,0.1,0);
+  const col1     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6,-0.85);
+  const col2     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6,-0.85);
+  const col3     = box(0.12,3,0.12,0x4a4a4a,-0.85,1.6, 0.85);
+  const col4     = box(0.12,3,0.12,0x4a4a4a, 0.85,1.6, 0.85);
+  const topFrame = box(2,0.1,2,   0x3d5a80,0,3.1,0);
+  const plate    = box(1.6,0.06,1.6,0x546e7a,0,0.5,0);
+  const carriageY= box(2.0,0.1,0.15,0x607d8b,0,2.4,0);
+  const head     = box(0.25,0.35,0.25,0x263238,0,2.2,0);
+  const nozzle   = box(0.06,0.15,0.06,0xffd700,0,2.0,0);
+  const screen   = box(0.4,0.3,0.05,0x1565c0,0.7,0.9,-0.96);
+  const spool    = new THREE.Mesh(new THREE.TorusGeometry(.3,.1,8,20),new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; spool.castShadow=true; scene.add(spool);
+
+  // LED pulsante
+  const ledGeo = new THREE.SphereGeometry(0.05,8,8);
+  const ledMat = new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.5});
+  const led = new THREE.Mesh(ledGeo,ledMat);
+  led.position.set(-0.7,0.9,-0.96); scene.add(led);
+
+  // Filament
+  const filPoints=[new THREE.Vector3(0,2.8,0),new THREE.Vector3(0.05,2.6,0.05),new THREE.Vector3(0,2.3,0),new THREE.Vector3(0,2.1,0)];
+  const filCurve=new THREE.CatmullRomCurve3(filPoints);
+  const filGeo=new THREE.TubeGeometry(filCurve,20,0.012,6,false);
+  const fil=new THREE.Mesh(filGeo,new THREE.MeshPhongMaterial({color:0xe74c3c}));
+  scene.add(fil);
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate); t+=0.015;
+    scene.rotation.y=Math.sin(t*.3)*.3+Math.PI*.15;
+    head.position.x=Math.sin(t*1.5)*.7;
+    carriageY.position.x=head.position.x;
+    plate.position.y=0.45+Math.sin(t*.4)*.08;
+    spool.rotation.z+=0.03;
+    ledMat.emissiveIntensity=0.3+Math.abs(Math.sin(t*3))*.7;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    const W2=canvas.clientWidth,H2=canvas.clientHeight;
+    renderer.setSize(W2,H2); camera.aspect=W2/H2; camera.updateProjectionMatrix();
+  });
+})();
+
+// ── G-code Viewer ────────────────────────────────────────────
+(function(){
+  let GV = null;       // {layers, zH, bounds}
+  let showAll = false;
+
+  const drop   = document.getElementById('gv-drop');
+  const input  = document.getElementById('gv-file');
+  const canvas = document.getElementById('gv-canvas');
+  const slider = document.getElementById('gv-slider');
+  const lbl    = document.getElementById('gv-lbl');
+  const badge  = document.getElementById('gv-badge');
+  const empty  = document.getElementById('gv-empty');
+  const stats  = document.getElementById('gv-stats');
+  const btnAll = document.getElementById('gv-btn-all');
+
+  // Drag & drop
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f) readFile(f);
+  });
+  input.addEventListener('change', () => { if(input.files[0]) readFile(input.files[0]); });
+
+  function readFile(file) {
+    badge.textContent = '⏳ Analyse…';
+    const reader = new FileReader();
+    reader.onload = e => {
+      GV = parseGcode(e.target.result);
+      showAll = false;
+      slider.max   = Math.max(0, GV.layers.length - 1);
+      slider.value = slider.max;
+      slider.disabled = false;
+      empty.style.display = 'none';
+      btnAll.style.display = '';
+      badge.textContent = file.name;
+      const b = GV.bounds;
+      document.getElementById('gs-layers').textContent = GV.layers.length;
+      document.getElementById('gs-w').textContent = (b.maxX-b.minX).toFixed(1)+' mm';
+      document.getElementById('gs-d').textContent = (b.maxY-b.minY).toFixed(1)+' mm';
+      document.getElementById('gs-h').textContent = (b.maxZ-b.minZ).toFixed(1)+' mm';
+      stats.style.display = '';
+      initCanvas();
+      gvRender(+slider.value);
+    };
+    reader.readAsText(file);
+  }
+
+  function parseGcode(text) {
+    const layers=[[]], zH=[0];
+    let x=0,y=0,z=0,e=0,abs=true,eAbs=true,path=[];
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=0,maxZ=0;
+
+    for (const raw of text.split('\n')) {
+      const line = raw.split(';')[0].trim();
+      if(!line) continue;
+      const tok=line.toUpperCase().split(/\s+/), cmd=tok[0];
+      if(cmd==='G90'){abs=true;continue;}
+      if(cmd==='G91'){abs=false;continue;}
+      if(cmd==='M82'){eAbs=true;continue;}
+      if(cmd==='M83'){eAbs=false;continue;}
+      if(cmd==='G0'||cmd==='G1'){
+        const p={};
+        for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
+        const nx=p.X!==undefined?(abs?p.X:x+p.X):x;
+        const ny=p.Y!==undefined?(abs?p.Y:y+p.Y):y;
+        const nz=p.Z!==undefined?(abs?p.Z:z+p.Z):z;
+        const de=p.E!==undefined?(eAbs?p.E-e:p.E):0;
+        if(p.E!==undefined) e=eAbs?p.E:e+p.E;
+        if(nz!==z){
+          if(path.length>1)layers[layers.length-1].push([...path]);
+          path=[];layers.push([]);zH.push(nz);
+          maxZ=Math.max(maxZ,nz);z=nz;
+        }
+        if(de>0){
+          if(!path.length)path.push({x,y});
+          path.push({x:nx,y:ny});
+          minX=Math.min(minX,nx);maxX=Math.max(maxX,nx);
+          minY=Math.min(minY,ny);maxY=Math.max(maxY,ny);
+        } else {
+          if(path.length>1)layers[layers.length-1].push([...path]);
+          path=[];
+        }
+        x=nx;y=ny;
+      }
+    }
+    if(path.length>1)layers[layers.length-1].push([...path]);
+    return {layers,zH,bounds:{minX,maxX,minY,maxY,minZ,maxZ}};
+  }
+
+  function initCanvas() {
+    const dpr = window.devicePixelRatio||1;
+    canvas.width  = canvas.offsetWidth  * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+  }
+
+  window.gvRender = function(idx) {
+    if(!GV) return;
+    slider.value = idx;
+    const ctx=canvas.getContext('2d'), W=canvas.width, H=canvas.height;
+    const {layers,zH,bounds:{minX,maxX,minY,maxY}}=GV;
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    const pad=24*(window.devicePixelRatio||1);
+    const bw=maxX-minX||1, bh=maxY-minY||1;
+    const sc=Math.min((W-pad*2)/bw,(H-pad*2)/bh);
+    const ox=pad+(W-pad*2-bw*sc)/2, oy=pad+(H-pad*2-bh*sc)/2;
+    const tx=v=>ox+(v-minX)*sc, ty=v=>H-oy-(v-minY)*sc;
+
+    const total = showAll ? layers.length-1 : idx;
+    for(let li=0;li<total;li++){
+      ctx.strokeStyle='rgba(52,152,219,.1)'; ctx.lineWidth=.8;
+      for(const path of layers[li]){
+        if(path.length<2)continue;
+        ctx.beginPath();ctx.moveTo(tx(path[0].x),ty(path[0].y));
+        for(let i=1;i<path.length;i++)ctx.lineTo(tx(path[i].x),ty(path[i].y));
+        ctx.stroke();
+      }
+    }
+    ctx.strokeStyle=showAll?'rgba(52,152,219,.6)':'#3498db'; ctx.lineWidth=1.4;
+    for(const path of (layers[total]||[])){
+      if(path.length<2)continue;
+      ctx.beginPath();ctx.moveTo(tx(path[0].x),ty(path[0].y));
+      for(let i=1;i<path.length;i++)ctx.lineTo(tx(path[i].x),ty(path[i].y));
+      ctx.stroke();
+    }
+    lbl.textContent='Couche '+(idx+1)+'/'+layers.length+(zH[idx]!==undefined?' · Z='+zH[idx].toFixed(2)+'mm':'');
+  };
+
+  window.gvToggleAll = function() {
+    showAll=!showAll;
+    btnAll.textContent=showAll?'Vue couche':'Vue complète';
+    if(GV) gvRender(+slider.value);
+  };
+
+  window.addEventListener('resize',()=>{ if(GV){initCanvas();gvRender(+slider.value);} });
+})();
+
+// ── Accueil : afficher nom si connecté ──────────────────────
+(function(){
+  const s = SGI3D_DB.getSession();
+  if(s){
+    const nav = document.querySelector('.nav-links');
+    const loginLink = nav.querySelector('a[href="login.html"]');
+    if(loginLink){
+      loginLink.innerHTML='👤 '+s.name.split(' ')[0];
+      loginLink.href='dashboard.html';
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SGI3D – Base de données</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+/* ═══════════════════════════════════════════════
+   LAYOUT PRINCIPAL – corrections complètes
+═══════════════════════════════════════════════ */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg-grad);
+  font-family: var(--font);
+  color: #fff;
+}
+
+body {
+  padding-top: 60px; /* hauteur navbar fixe */
+}
+
+/* Wrapper global admin */
+.db-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+/* ─── Sidebar fixe ─── */
+.db-sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  background: rgba(10, 15, 25, 0.97);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  position: fixed;
+  top: 60px;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 1rem 0 2rem;
+}
+
+.db-sidebar .s-section {
+  padding: .5rem 1.2rem .3rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  margin-top: .8rem;
+}
+
+.db-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem 1.4rem;
+  color: rgba(255,255,255,.65);
+  text-decoration: none;
+  font-size: .86rem;
+  transition: all .18s;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+}
+.db-sidebar a:hover {
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  border-left-color: rgba(255,255,255,.25);
+}
+.db-sidebar a.active {
+  background: rgba(52,152,219,.14);
+  color: #3498db;
+  border-left-color: #3498db;
+  font-weight: 600;
+}
+.db-sidebar .s-icon { font-size: 1rem; width: 18px; text-align: center; }
+.s-badge {
+  margin-left: auto;
+  background: #e74c3c;
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ─── Zone de contenu principale ─── */
+.db-content {
+  margin-left: 230px;
+  flex: 1;
+  padding: 2rem 2rem 3rem;
+  min-width: 0; /* empêche débordement flex */
+  box-sizing: border-box;
+}
+
+/* ─── En-tête de page ─── */
+.db-page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.db-page-header h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 0 0 .3rem;
+}
+.db-page-header p {
+  color: rgba(255,255,255,.5);
+  font-size: .9rem;
+  margin: 0;
+}
+
+/* ─── Barre d'onglets ─── */
+.tab-bar {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  padding: .4rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tab-btn {
+  padding: .55rem 1.2rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  font-size: .86rem;
+  font-family: var(--font);
+  font-weight: 500;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.tab-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
+.tab-btn.active {
+  background: rgba(52,152,219,.25);
+  color: #60b8f0;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(52,152,219,.4);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Barre d'actions / export ─── */
+.action-bar {
+  display: flex;
+  gap: .7rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+/* ─── Barre de recherche ─── */
+.search-bar {
+  display: flex;
+  gap: .8rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.search-bar input {
+  flex: 1;
+  min-width: 220px;
+  max-width: 400px;
+  padding: .6rem 1.1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  font-family: var(--font);
+  font-size: .88rem;
+  transition: border-color .2s, background .2s;
+}
+.search-bar input:focus {
+  outline: none;
+  border-color: #3498db;
+  background: rgba(255,255,255,.11);
+}
+.search-bar input::placeholder { color: rgba(255,255,255,.35); }
+
+/* ─── Card tableau ─── */
+.table-card {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* force scroll horizontal plutôt que compression */
+}
+
+table thead tr {
+  background: rgba(255,255,255,.06);
+}
+
+table th {
+  padding: .75rem 1rem;
+  text-align: left;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: rgba(255,255,255,.5);
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+table td {
+  padding: .7rem 1rem;
+  font-size: .86rem;
+  color: rgba(255,255,255,.85);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  vertical-align: middle;
+}
+
+table tbody tr:last-child td { border-bottom: none; }
+table tbody tr:hover td { background: rgba(255,255,255,.04); }
+
+/* Colonnes avec largeur fixe */
+td.col-id   { width: 80px;  }
+td.col-date { width: 150px; white-space: nowrap; }
+td.col-actions {
+  width: 160px;
+  white-space: nowrap;
+}
+td.col-status { width: 110px; }
+
+/* Cellule message tronquée */
+td.col-msg {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Avatar rond dans table */
+.t-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#4a4a4a,#2a2a2a);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ─── État vide ─── */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: rgba(255,255,255,.35);
+}
+.empty-state .es-icon { font-size: 2.5rem; margin-bottom: .6rem; }
+.empty-state p { font-size: .9rem; margin: 0; }
+
+/* ─── Compteur de résultats ─── */
+.row-count {
+  font-size: .8rem;
+  color: rgba(255,255,255,.4);
+  margin-bottom: .5rem;
+}
+
+/* ─── Modals ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: linear-gradient(135deg,#253040,#191f28);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  color: #fff;
+  position: relative;
+  box-shadow: 0 30px 60px rgba(0,0,0,.5);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-box h2 { margin: 0 0 1.5rem; font-size: 1.15rem; font-weight: 700; }
+.modal-close-btn {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: rgba(255,255,255,.7);
+  font-size: 1rem;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.modal-close-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+.modal-footer {
+  display: flex;
+  gap: .8rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Champs dans modal */
+.modal-box .form-group { margin-bottom: 1rem; }
+.modal-box .form-group label {
+  display: block;
+  font-size: .83rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+  color: rgba(255,255,255,.8);
+}
+.modal-box input,
+.modal-box select,
+.modal-box textarea {
+  width: 100%;
+  padding: .7rem .95rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-family: var(--font);
+  font-size: .9rem;
+  box-sizing: border-box;
+  transition: border-color .2s;
+}
+.modal-box input::placeholder,
+.modal-box textarea::placeholder { color: rgba(255,255,255,.3); }
+.modal-box input:focus,
+.modal-box select:focus,
+.modal-box textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  background: rgba(255,255,255,.11);
+}
+.modal-box select option { background: #253040; color: #fff; }
+.modal-box textarea { resize: vertical; min-height: 80px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .db-sidebar { width: 190px; }
+  .db-content  { margin-left: 190px; padding: 1rem; }
+}
+@media (max-width: 600px) {
+  .db-sidebar { transform: translateX(-100%); transition: transform .3s; }
+  .db-sidebar.open { transform: translateX(0); }
+  .db-content { margin-left: 0; padding: .8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════ -->
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">SGI3D</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 <span>Accueil</span></a>
+    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
+  </div>
+</nav>
+
+<!-- ═══ LAYOUT PRINCIPAL ═════════════════════════════════════════════════ -->
+<div class="db-layout">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="db-sidebar" id="db-sidebar">
+    <div class="s-section">Navigation</div>
+    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="printers.html"><span class="s-icon">🖨️</span> Imprimantes</a>
+
+    <div class="s-section">Administration</div>
+    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="database.html" class="active"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <a href="alerts.html"><span class="s-icon">🔔</span> Alertes
+      <span class="s-badge" id="sb-alerts">0</span>
+    </a>
+
+    <div class="s-section">Export USB</div>
+    <a href="#" onclick="SGI3D_DB.exportJSON();return false;"><span class="s-icon">📤</span> Exporter JSON</a>
+    <a href="#" onclick="importFile();return false;"><span class="s-icon">📥</span> Importer JSON</a>
+    <a href="#" onclick="SGI3D_DB.exportCSV('login_logs');return false;"><span class="s-icon">📊</span> CSV Connexions</a>
+    <a href="#" onclick="SGI3D_DB.exportCSV('print_jobs');return false;"><span class="s-icon">📊</span> CSV Impressions</a>
+
+    <div class="s-section">Compte</div>
+    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="#" onclick="doLogout();return false;"><span class="s-icon">🚪</span> Déconnexion</a>
+  </aside>
+
+  <!-- ─── Contenu ─── -->
+  <main class="db-content">
+
+    <!-- En-tête -->
+    <div class="db-page-header">
+      <h1>🗄️ Base de données</h1>
+      <p id="db-subtitle">Consultez et gérez toutes les données enregistrées par SGI3D</p>
+    </div>
+
+    <!-- Onglets -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tbtn-users"   onclick="switchTab('users',   this)">👥 Utilisateurs</button>
+      <button class="tab-btn"        id="tbtn-logins"  onclick="switchTab('logins',  this)">🔐 Connexions</button>
+      <button class="tab-btn"        id="tbtn-prints"  onclick="switchTab('prints',  this)">🖨️ Impressions</button>
+      <button class="tab-btn"        id="tbtn-cameras" onclick="switchTab('cameras', this)">📷 Caméras</button>
+      <button class="tab-btn"        id="tbtn-alerts"  onclick="switchTab('alerts',  this)">🔔 Alertes</button>
+    </div>
+
+    <!-- ══ PANEL : UTILISATEURS ══════════════════════════════════════════ -->
+    <div id="tab-users" class="tab-panel active">
+      <div class="action-bar">
+        <button class="btn btn-success btn-sm" onclick="openModal('addUserModal')">➕ Ajouter utilisateur</button>
+        <button class="btn btn-accent  btn-sm" onclick="SGI3D_DB.exportCSV('users')">📊 CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="SGI3D_DB.exportJSON()">📤 JSON complet</button>
+      </div>
+      <div class="row-count" id="rc-users"></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="t-users">
+            <thead>
+              <tr>
+                <th>Avatar</th>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Créé le</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tb-users"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL : CONNEXIONS ════════════════════════════════════════════ -->
+    <div id="tab-logins" class="tab-panel">
+      <div class="action-bar">
+        <button class="btn btn-accent btn-sm" onclick="SGI3D_DB.exportCSV('login_logs')">📊 CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="clearTable('login_logs')">🗑️ Vider les logs</button>
+      </div>
+      <div class="search-bar">
+        <input id="s-login" type="text" placeholder="🔍 Filtrer par nom ou email…" oninput="renderLogins()">
+      </div>
+      <div class="row-count" id="rc-logins"></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="t-logins">
+            <thead>
+              <tr>
+                <th>Date / Heure</th>
+                <th>Utilisateur</th>
+                <th>Email</th>
+                <th>Résultat</th>
+                <th>Adresse IP</th>
+              </tr>
+            </thead>
+            <tbody id="tb-logins"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL : IMPRESSIONS ═══════════════════════════════════════════ -->
+    <div id="tab-prints" class="tab-panel">
+      <div class="action-bar">
+        <button class="btn btn-success btn-sm" onclick="openModal('addJobModal')">➕ Nouveau travail</button>
+        <button class="btn btn-accent  btn-sm" onclick="SGI3D_DB.exportCSV('print_jobs')">📊 CSV</button>
+      </div>
+      <div class="search-bar">
+        <input id="s-print" type="text" placeholder="🔍 Filtrer par fichier, utilisateur ou imprimante…" oninput="renderPrints()">
+      </div>
+      <div class="row-count" id="rc-prints"></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="t-prints">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Fichier</th>
+                <th>Utilisateur</th>
+                <th>Imprimante</th>
+                <th>Matière</th>
+                <th>Durée</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tb-prints"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL : CAMÉRAS ═══════════════════════════════════════════════ -->
+    <div id="tab-cameras" class="tab-panel">
+      <div class="action-bar">
+        <button class="btn btn-success btn-sm" onclick="openModal('addCamModal')">➕ Ajouter caméra</button>
+        <a href="cameras.html" class="btn btn-accent btn-sm">📷 Vue live</a>
+      </div>
+      <div class="row-count" id="rc-cameras"></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="t-cameras">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Emplacement</th>
+                <th>Statut</th>
+                <th>Détection mvt</th>
+                <th>Ajoutée le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tb-cameras"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL : ALERTES ═══════════════════════════════════════════════ -->
+    <div id="tab-alerts" class="tab-panel">
+      <div class="action-bar">
+        <button class="btn btn-danger  btn-sm" onclick="openModal('addAlertModal')">➕ Créer alerte</button>
+        <button class="btn btn-accent  btn-sm" onclick="SGI3D_DB.exportCSV('alerts')">📊 CSV</button>
+        <a href="alerts.html" class="btn btn-warning btn-sm">🔔 Page alertes</a>
+      </div>
+      <div class="row-count" id="rc-alerts"></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="t-alerts">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Titre</th>
+                <th>Message</th>
+                <th>Source</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tb-alerts"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main><!-- /db-content -->
+</div><!-- /db-layout -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Modal : Ajouter utilisateur -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('addUserModal')">✕</button>
+    <h2>➕ Ajouter un utilisateur</h2>
+    <div class="form-group">
+      <label>Nom complet</label>
+      <input id="au-name" type="text" placeholder="Jean Dupont">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input id="au-email" type="email" placeholder="jean@sgi3d.fr">
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input id="au-pass" type="password" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Rôle</label>
+      <select id="au-role">
+        <option value="operator">Opérateur</option>
+        <option value="admin">Administrateur</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" onclick="doAddUser()">✅ Créer</button>
+      <button class="btn btn-ghost"   onclick="closeModal('addUserModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Nouveau travail d'impression -->
+<div class="modal-overlay" id="addJobModal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('addJobModal')">✕</button>
+    <h2>🖨️ Nouveau travail d'impression</h2>
+    <div class="form-group">
+      <label>Nom du fichier</label>
+      <input id="aj-file" type="text" placeholder="piece_v2.stl">
+    </div>
+    <div class="form-group">
+      <label>Imprimante</label>
+      <select id="aj-printer">
+        <option>Ultimaker 2+</option>
+        <option>Geeetech A20T</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Matière</label>
+      <select id="aj-mat">
+        <option>PLA</option><option>ABS</option><option>TPU</option><option>Nylon</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Durée estimée</label>
+      <input id="aj-dur" type="text" placeholder="90min">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" onclick="doAddJob()">▶️ Lancer</button>
+      <button class="btn btn-ghost"   onclick="closeModal('addJobModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Ajouter caméra -->
+<div class="modal-overlay" id="addCamModal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('addCamModal')">✕</button>
+    <h2>📷 Ajouter une caméra</h2>
+    <div class="form-group">
+      <label>Nom de la caméra</label>
+      <input id="ac-name" type="text" placeholder="Caméra Atelier 3">
+    </div>
+    <div class="form-group">
+      <label>Emplacement</label>
+      <input id="ac-loc" type="text" placeholder="Zone impression">
+    </div>
+    <div class="form-group">
+      <label>URL du flux <small style="opacity:.5">(optionnel)</small></label>
+      <input id="ac-url" type="text" placeholder="http://192.168.1.100/stream">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" onclick="doAddCam()">✅ Ajouter</button>
+      <button class="btn btn-ghost"   onclick="closeModal('addCamModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Créer une alerte -->
+<div class="modal-overlay" id="addAlertModal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('addAlertModal')">✕</button>
+    <h2>🔔 Créer une alerte</h2>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="aa-type">
+        <option value="info">ℹ️ Information</option>
+        <option value="warning">⚠️ Avertissement</option>
+        <option value="error">🔴 Erreur critique</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Titre</label>
+      <input id="aa-title" type="text" placeholder="Ex: Filament épuisé">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="aa-msg" placeholder="Description détaillée de l'alerte…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="doAddAlert()">🔔 Créer</button>
+      <button class="btn btn-ghost"  onclick="closeModal('addAlertModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Input import fichier -->
+<input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════════════════════ -->
+<script src="db.js"></script>
+<script>
+'use strict';
+
+/* ── Auth ─────────────────────────────────────────────────────────────── */
+if (!SGI3D_DB.isLoggedIn()) {
+  window.location.href = 'login.html';
+}
+const _session = SGI3D_DB.getSession();
+if (_session) {
+  document.getElementById('db-subtitle').textContent =
+    'Connecté en tant que ' + _session.name + ' (' + _session.role + ')';
+}
+
+function doLogout() {
+  SGI3D_DB.logout();
+  window.location.href = 'login.html';
+}
+
+/* ── Modals ───────────────────────────────────────────────────────────── */
+function openModal(id)  { document.getElementById(id).classList.add('open');    }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Fermer modal en cliquant sur l'overlay
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
+
+/* ── Onglets ──────────────────────────────────────────────────────────── */
+let _activeTab = 'users';
+
+function switchTab(name, btn) {
+  // Masquer tous les panels
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  // Désactiver tous les boutons
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // Activer le panel et le bouton cibles
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn)   btn.classList.add('active');
+  _activeTab = name;
+  // Rendre le contenu
+  renderTab(name);
+}
+
+function renderTab(name) {
+  const map = {
+    users:   renderUsers,
+    logins:  renderLogins,
+    prints:  renderPrints,
+    cameras: renderCamerasTbl,
+    alerts:  renderAlertsTbl,
+  };
+  if (map[name]) map[name]();
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────────── */
+function fmtId(id) {
+  // Afficher seulement les 6 derniers chiffres si c'est un timestamp
+  const s = String(id);
+  return s.length > 6 ? '…' + s.slice(-6) : s;
+}
+
+function emptyRow(cols, msg) {
+  return `<tr><td colspan="${cols}">
+    <div class="empty-state">
+      <div class="es-icon">📭</div>
+      <p>${msg}</p>
+    </div>
+  </td></tr>`;
+}
+
+function setRowCount(elId, n, total) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (n === total) el.textContent = n + ' enregistrement' + (n > 1 ? 's' : '');
+  else             el.textContent = n + ' résultat' + (n > 1 ? 's' : '') + ' sur ' + total;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TABLE : UTILISATEURS
+───────────────────────────────────────────────────────────────────────── */
+function renderUsers() {
+  const users = SGI3D_DB.getUsers();
+  setRowCount('rc-users', users.length, users.length);
+
+  if (!users.length) {
+    document.getElementById('tb-users').innerHTML = emptyRow(7, 'Aucun utilisateur enregistré');
+    return;
+  }
+
+  document.getElementById('tb-users').innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:.7rem">
+          <div class="t-avatar">${u.avatar || u.name[0]}</div>
+          <span>${u.name}</span>
+        </div>
+      </td>
+      <td>${u.email}</td>
+      <td>
+        <span class="badge badge-${u.role === 'admin' ? 'info' : 'neutral'}">
+          ${u.role === 'admin' ? '👑 Admin' : '👤 Opérateur'}
+        </span>
+      </td>
+      <td class="col-date">${SGI3D_DB.formatDate(u.createdAt)}</td>
+      <td>
+        <span class="badge badge-${u.active ? 'success' : 'danger'}">
+          ${u.active ? '✅ Actif' : '⛔ Inactif'}
+        </span>
+      </td>
+      <td class="col-actions">
+        <button class="btn btn-warning btn-xs" onclick="toggleUser(${u.id})">
+          ${u.active ? '⏸ Désactiver' : '▶ Activer'}
+        </button>
+        <button class="btn btn-danger btn-xs" onclick="deleteUser(${u.id})" style="margin-left:.3rem">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function doAddUser() {
+  const n = document.getElementById('au-name').value.trim();
+  const e = document.getElementById('au-email').value.trim();
+  const p = document.getElementById('au-pass').value;
+  const r = document.getElementById('au-role').value;
+  if (!n || !e || !p) { showToast('Remplissez tous les champs', 'warning'); return; }
+  if (SGI3D_DB.getUserByEmail(e)) { showToast('Cet email est déjà utilisé', 'warning'); return; }
+  SGI3D_DB.createUser({
+    name: n, email: e, password: p, role: r,
+    avatar: n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  });
+  closeModal('addUserModal');
+  // Vider les champs
+  ['au-name','au-email','au-pass'].forEach(id => document.getElementById(id).value = '');
+  renderUsers();
+  showToast('✅ Utilisateur créé avec succès', 'success');
+}
+
+function toggleUser(id) {
+  const u = SGI3D_DB.getUserById(id);
+  if (!u) return;
+  SGI3D_DB.updateUser(id, { active: !u.active });
+  renderUsers();
+  showToast(u.active ? '⏸ Utilisateur désactivé' : '✅ Utilisateur activé', 'info');
+}
+
+function deleteUser(id) {
+  const u = SGI3D_DB.getUserById(id);
+  if (!u) return;
+  if (!confirm('Supprimer l\'utilisateur "' + u.name + '" ?')) return;
+  SGI3D_DB.deleteUser(id);
+  renderUsers();
+  showToast('🗑️ Utilisateur supprimé', 'warning');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TABLE : CONNEXIONS
+───────────────────────────────────────────────────────────────────────── */
+function renderLogins() {
+  const q = (document.getElementById('s-login').value || '').toLowerCase().trim();
+  const allLogs = SGI3D_DB.getLoginLogs();
+  const logs = q
+    ? allLogs.filter(l =>
+        (l.userName || '').toLowerCase().includes(q) ||
+        (l.email    || '').toLowerCase().includes(q))
+    : allLogs;
+
+  setRowCount('rc-logins', Math.min(logs.length, 200), allLogs.length);
+
+  const badgeRes = s => {
+    if (s === true)     return '<span class="badge badge-success">✅ Succès</span>';
+    if (s === 'logout') return '<span class="badge badge-neutral">🚪 Déco.</span>';
+    return '<span class="badge badge-danger">❌ Échec</span>';
+  };
+
+  const rows = logs.slice(0, 200);
+  if (!rows.length) {
+    document.getElementById('tb-logins').innerHTML = emptyRow(5, 'Aucun journal de connexion');
+    return;
+  }
+
+  document.getElementById('tb-logins').innerHTML = rows.map(l => `
+    <tr>
+      <td class="col-date">${SGI3D_DB.formatDate(l.timestamp)}</td>
+      <td><strong>${l.userName || '—'}</strong></td>
+      <td><code style="font-size:.82rem;opacity:.8">${l.email || '—'}</code></td>
+      <td>${badgeRes(l.success)}</td>
+      <td><code style="font-size:.8rem;opacity:.7">${l.ip || '—'}</code></td>
+    </tr>`).join('');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TABLE : IMPRESSIONS
+───────────────────────────────────────────────────────────────────────── */
+function renderPrints() {
+  const q = (document.getElementById('s-print').value || '').toLowerCase().trim();
+  const allJobs = SGI3D_DB.getPrintJobs();
+  const jobs = q
+    ? allJobs.filter(j =>
+        (j.fileName || '').toLowerCase().includes(q) ||
+        (j.userName || '').toLowerCase().includes(q) ||
+        (j.printer  || '').toLowerCase().includes(q))
+    : allJobs;
+
+  setRowCount('rc-prints', Math.min(jobs.length, 200), allJobs.length);
+
+  const sBadge = s =>
+    s === 'terminé' ? '<span class="badge badge-success">✅ Terminé</span>' :
+    s === 'erreur'  ? '<span class="badge badge-danger">❌ Erreur</span>' :
+                      '<span class="badge badge-info">🔄 En cours</span>';
+
+  const rows = jobs.slice(0, 200);
+  if (!rows.length) {
+    document.getElementById('tb-prints').innerHTML = emptyRow(8, 'Aucun travail d\'impression');
+    return;
+  }
+
+  document.getElementById('tb-prints').innerHTML = rows.map(j => `
+    <tr>
+      <td class="col-date">${SGI3D_DB.formatDate(j.startedAt)}</td>
+      <td><strong>${j.fileName || '—'}</strong></td>
+      <td>${j.userName || '—'}</td>
+      <td>${j.printer  || '—'}</td>
+      <td><span class="badge badge-neutral">${j.material || '—'}</span></td>
+      <td>${j.duration || '—'}</td>
+      <td>${sBadge(j.status)}</td>
+      <td class="col-actions">
+        ${j.status === 'en_cours'
+          ? `<button class="btn btn-success btn-xs" onclick="finJob(${j.id},true)">✅</button>
+             <button class="btn btn-warning btn-xs" onclick="finJob(${j.id},false)" style="margin-left:.2rem">❌</button>`
+          : ''}
+        <button class="btn btn-danger btn-xs" onclick="delJob(${j.id})" style="margin-left:.2rem">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function doAddJob() {
+  const f = document.getElementById('aj-file').value.trim();
+  const p = document.getElementById('aj-printer').value;
+  const m = document.getElementById('aj-mat').value;
+  const d = document.getElementById('aj-dur').value.trim();
+  if (!f) { showToast('Le nom de fichier est requis', 'warning'); return; }
+  SGI3D_DB.createPrintJob({ fileName: f, printer: p, material: m, duration: d || 'N/A' });
+  closeModal('addJobModal');
+  document.getElementById('aj-file').value = '';
+  document.getElementById('aj-dur').value  = '';
+  renderPrints();
+  showToast('🖨️ Travail d\'impression créé', 'success');
+}
+
+function finJob(id, ok) {
+  SGI3D_DB.finishPrintJob(id, ok);
+  renderPrints();
+  showToast(ok ? '✅ Impression terminée' : '❌ Impression en erreur', ok ? 'success' : 'error');
+}
+
+function delJob(id) {
+  if (!confirm('Supprimer ce travail ?')) return;
+  const jobs = SGI3D_DB.getPrintJobs().filter(j => j.id !== id);
+  SGI3D_DB.set('print_jobs', jobs);
+  renderPrints();
+  showToast('🗑️ Travail supprimé', 'warning');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TABLE : CAMÉRAS
+───────────────────────────────────────────────────────────────────────── */
+function renderCamerasTbl() {
+  const cams = SGI3D_DB.getCameras();
+  setRowCount('rc-cameras', cams.length, cams.length);
+
+  if (!cams.length) {
+    document.getElementById('tb-cameras').innerHTML = emptyRow(6, 'Aucune caméra configurée');
+    return;
+  }
+
+  document.getElementById('tb-cameras').innerHTML = cams.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.location}</td>
+      <td>
+        <span class="badge badge-${c.status === 'online' ? 'success' : 'danger'}">
+          ${c.status === 'online' ? '🟢 En ligne' : '🔴 Hors ligne'}
+        </span>
+      </td>
+      <td>
+        ${c.motionDetect
+          ? '<span class="badge badge-info">🎯 Actif</span>'
+          : '<span class="badge badge-neutral">—</span>'}
+      </td>
+      <td class="col-date">${SGI3D_DB.formatDate(c.addedAt)}</td>
+      <td class="col-actions">
+        <button class="btn btn-warning btn-xs" onclick="toggleCam(${c.id})">
+          ${c.status === 'online' ? '⏸' : '▶'} ${c.status === 'online' ? 'Désactiver' : 'Activer'}
+        </button>
+        <button class="btn btn-danger btn-xs" onclick="deleteCam(${c.id})" style="margin-left:.3rem">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function doAddCam() {
+  const n = document.getElementById('ac-name').value.trim();
+  const l = document.getElementById('ac-loc').value.trim();
+  const u = document.getElementById('ac-url').value.trim();
+  if (!n || !l) { showToast('Nom et emplacement requis', 'warning'); return; }
+  SGI3D_DB.addCamera({ name: n, location: l, url: u, motionDetect: true });
+  closeModal('addCamModal');
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-loc').value  = '';
+  document.getElementById('ac-url').value  = '';
+  renderCamerasTbl();
+  showToast('📷 Caméra ajoutée', 'success');
+}
+
+function toggleCam(id) {
+  const c = SGI3D_DB.getCameras().find(c => c.id === id);
+  if (!c) return;
+  SGI3D_DB.updateCamera(id, { status: c.status === 'online' ? 'offline' : 'online' });
+  renderCamerasTbl();
+}
+
+function deleteCam(id) {
+  if (!confirm('Supprimer cette caméra ?')) return;
+  SGI3D_DB.deleteCamera(id);
+  renderCamerasTbl();
+  showToast('🗑️ Caméra supprimée', 'warning');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TABLE : ALERTES
+───────────────────────────────────────────────────────────────────────── */
+function renderAlertsTbl() {
+  const alerts = SGI3D_DB.getAlerts();
+  const unresolvedCount = SGI3D_DB.getAlerts(false).length;
+  document.getElementById('sb-alerts').textContent = unresolvedCount;
+  setRowCount('rc-alerts', alerts.length, alerts.length);
+
+  if (!alerts.length) {
+    document.getElementById('tb-alerts').innerHTML = emptyRow(7, 'Aucune alerte enregistrée');
+    return;
+  }
+
+  const typeIcon = t => t === 'error' ? '🔴' : t === 'warning' ? '🟡' : '🔵';
+  const typeName = t => t === 'error' ? 'Erreur' : t === 'warning' ? 'Avertissement' : 'Info';
+
+  document.getElementById('tb-alerts').innerHTML = alerts.map(a => `
+    <tr>
+      <td class="col-date">${SGI3D_DB.formatDate(a.createdAt)}</td>
+      <td>
+        <span class="badge badge-${a.type === 'error' ? 'danger' : a.type === 'warning' ? 'warning' : 'info'}">
+          ${typeIcon(a.type)} ${typeName(a.type)}
+        </span>
+      </td>
+      <td><strong>${a.title}</strong></td>
+      <td class="col-msg" title="${a.message}">${a.message}</td>
+      <td>${a.source || '—'}</td>
+      <td>
+        <span class="badge badge-${a.resolved ? 'success' : 'danger'}">
+          ${a.resolved ? '✅ Résolu' : '⚠️ Actif'}
+        </span>
+      </td>
+      <td class="col-actions">
+        ${!a.resolved
+          ? `<button class="btn btn-success btn-xs" onclick="resolveAlert(${a.id})">✅ Résoudre</button>`
+          : ''}
+        <button class="btn btn-danger btn-xs" onclick="deleteAlert(${a.id})" style="margin-left:.3rem">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function doAddAlert() {
+  const t  = document.getElementById('aa-type').value;
+  const ti = document.getElementById('aa-title').value.trim();
+  const m  = document.getElementById('aa-msg').value.trim();
+  if (!ti || !m) { showToast('Titre et message requis', 'warning'); return; }
+  const session = SGI3D_DB.getSession();
+  SGI3D_DB.addAlert({
+    type: t, title: ti, message: m,
+    source: session ? session.name : 'Admin'
+  });
+  closeModal('addAlertModal');
+  document.getElementById('aa-title').value = '';
+  document.getElementById('aa-msg').value   = '';
+  renderAlertsTbl();
+  showToast('🔔 Alerte créée', 'success');
+}
+
+function resolveAlert(id) {
+  SGI3D_DB.resolveAlert(id);
+  renderAlertsTbl();
+  showToast('✅ Alerte résolue', 'success');
+}
+
+function deleteAlert(id) {
+  if (!confirm('Supprimer cette alerte ?')) return;
+  SGI3D_DB.deleteAlert(id);
+  renderAlertsTbl();
+  showToast('🗑️ Alerte supprimée', 'warning');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   IMPORT / EXPORT
+───────────────────────────────────────────────────────────────────────── */
+function clearTable(tableName) {
+  const labels = { login_logs: 'les journaux de connexion', print_jobs: 'les travaux d\'impression' };
+  if (!confirm('Vider ' + (labels[tableName] || tableName) + ' ?')) return;
+  SGI3D_DB.set(tableName, []);
+  renderTab(_activeTab);
+  showToast('🗑️ Table vidée', 'warning');
+}
+
+function importFile() {
+  document.getElementById('importInput').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const ok = SGI3D_DB.importJSON(ev.target.result);
+    if (ok) {
+      renderTab(_activeTab);
+      showToast('✅ Import réussi — données restaurées', 'success');
+    } else {
+      showToast('❌ Erreur lors de l\'import', 'error');
+    }
+  };
+  reader.readAsText(file);
+  // Reset pour permettre re-import du même fichier
+  e.target.value = '';
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────────────────────────────────── */
+function showToast(msg, type) {
+  type = type || 'info';
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(110%)';
+    toast.style.transition = 'all .3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   INITIALISATION
+───────────────────────────────────────────────────────────────────────── */
+// Mettre à jour le badge alertes dans la sidebar
+document.getElementById('sb-alerts').textContent = SGI3D_DB.getAlerts(false).length;
+
+// Charger le premier onglet
+renderUsers();
+</script>
+</body>
+</html>

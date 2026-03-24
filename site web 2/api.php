@@ -20,7 +20,7 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
 
 // Fusionner GET + POST + body JSON
-$data = array_merge($_GET, $_POST, $body);
+$data = [...$_GET, ...$_POST, ...$body];
 $action = $data['action'] ?? '';
 
 try {
@@ -285,6 +285,67 @@ try {
                 'cameras'    => $db->query('SELECT * FROM cameras')->fetchAll(),
                 'alerts'     => $db->query('SELECT * FROM alertes ORDER BY cree_le DESC')->fetchAll(),
             ];
+            break;
+
+        // ── OCTOPRINT : ÉTAT ───────────────────────────────
+        case 'syncOctoPrint':
+            $sync   = new OctoPrintSync($db);
+            $result = ['results' => $sync->syncAll(), 'synced_at' => date('c')];
+            break;
+
+        case 'octoprintState':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->getFullState((int)($data['printer_id'] ?? 0));
+            break;
+
+        // ── OCTOPRINT : CONTRÔLE ───────────────────────────
+        case 'octoprintJobControl':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->controlJob((int)($data['printer_id'] ?? 0), $data['command'] ?? '');
+            break;
+
+        case 'octoprintSetTemp':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->setTemperature((int)($data['printer_id'] ?? 0), $data['heater'] ?? 'tool0', (float)($data['temp'] ?? 0));
+            break;
+
+        case 'octoprintConnection':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->setConnection((int)($data['printer_id'] ?? 0), $data['action'] ?? 'connect');
+            break;
+
+        case 'octoprintJog':
+            $sync = new OctoPrintSync($db);
+            $axes = [];
+            if (isset($data['x'])) $axes['x'] = (float)$data['x'];
+            if (isset($data['y'])) $axes['y'] = (float)$data['y'];
+            if (isset($data['z'])) $axes['z'] = (float)$data['z'];
+            $result = $sync->jogPrinthead((int)($data['printer_id'] ?? 0), $axes);
+            break;
+
+        case 'octoprintHome':
+            $sync  = new OctoPrintSync($db);
+            $axes  = is_array($data['axes'] ?? null) ? $data['axes'] : ['x','y','z'];
+            $result = $sync->homePrinthead((int)($data['printer_id'] ?? 0), $axes);
+            break;
+
+        case 'octoprintFan':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->setFanSpeed((int)($data['printer_id'] ?? 0), (int)($data['speed'] ?? 0));
+            break;
+
+        case 'octoprintFiles':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->getFiles((int)($data['printer_id'] ?? 0));
+            break;
+
+        case 'octoprintStartPrint':
+            $sync   = new OctoPrintSync($db);
+            $result = $sync->startPrint(
+                (int)($data['printer_id'] ?? 0),
+                $data['filename'] ?? '',
+                $data['location'] ?? 'local'
+            );
             break;
 
         default:

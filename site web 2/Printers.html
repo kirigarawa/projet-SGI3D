@@ -3,74 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SGI3D – Nos Imprimantes</title>
-<!-- Feuille de styles globale (tokens CSS, nav, cards, boutons…) -->
+<title>SGI3D – Imprimantes</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  /* ── Décalage pour la navbar fixe ── */
-  body{padding-top:60px}
-
-  /* ── Bandeau héros centré ── */
-  .printers-hero{text-align:center;padding:3rem 2rem 1.5rem}
-  /* Titre dégradé blanc → blanc semi-transparent, clip sur le texte */
-  .printers-hero h1{font-size:2.5rem;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#fff,rgba(255,255,255,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; /* Propriété standard pour la compatibilité cross-browser */}
-  .printers-hero p{color:rgba(255,255,255,.6);margin-top:.5rem}
-
-  /* ── Grille des cartes imprimantes ── */
-  /* auto-fit : le nombre de colonnes s'adapte à la largeur disponible */
-  .printers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:2rem;padding:1.5rem 2rem 3rem;max-width:1200px;margin:0 auto}
-
-  /* ── Carte imprimante ── */
-  .printer-card{background:rgba(255,255,255,.95);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;color:#2c3e50}
-
-  /* En-tête coloré avec titre + badge statut */
-  .printer-card-header{background:var(--btn-grad);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between}
-  .printer-card-header h2{font-size:1.3rem;font-weight:900;letter-spacing:2px}
-  /* Badge "Disponible / En impression / Hors ligne" */
-  .printer-card-header .badge-printer{background:rgba(255,255,255,.2);padding:.3rem .8rem;border-radius:20px;font-size:.8rem}
-
-  /* Zone du canvas Three.js (fond noir pour contraste) */
-  .printer-canvas-wrap{background:#111;display:flex;align-items:center;justify-content:center;height:300px}
-  /* Canvas occupe toute la largeur de la carte, hauteur fixe 300 px */
-  .printer-canvas{width:100%;height:300px}
-
-  /* Corps de la carte : specs, features, formulaire */
-  .printer-body{padding:2rem}
-
-  /* Grille 2 colonnes pour les spécifications techniques */
-  .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
-  .spec-item{background:#f8f9fa;border-radius:10px;padding:.8rem 1rem}
-  /* Label de spec en petites capitales grises */
-  .spec-label{font-size:.72rem;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
-  .spec-value{font-size:.95rem;font-weight:700;color:#2c3e50;margin-top:.2rem}
-
-  /* Liste des fonctionnalités avec icône ✅ via ::before */
-  .features-list{list-style:none;display:flex;flex-direction:column;gap:.4rem}
-  .features-list li{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#555}
-  .features-list li::before{content:'✅';font-size:.8rem}
-
-  /* Tags de matériaux compatibles (style pill) */
-  .materials-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
-  .mat-tag{background:#eef2f7;border:1px solid #d0dbe8;border-radius:8px;padding:.25rem .7rem;font-size:.8rem;font-weight:600;color:#3d5a80}
-
-  /* Formulaire de lancement d'impression (fond gris léger) */
-  .print-form{background:#f8f9fa;border-radius:var(--radius-sm);padding:1.5rem;margin-top:1.5rem}
-  .print-form h3{font-size:1rem;font-weight:700;margin-bottom:1rem;color:#2c3e50}
-  .print-form .form-group label{color:#555}
-  /* Inputs sur fond blanc avec bordure légère, focus en bleu accent */
-  .print-form input,.print-form select{background:#fff;border:1.5px solid #e0e0e0;color:#2c3e50;border-radius:10px;padding:.7rem 1rem;width:100%;font-family:var(--font);font-size:.9rem}
-  .print-form input:focus,.print-form select:focus{outline:none;border-color:var(--accent)}
-
-  /* ── Pied de page ── */
-  footer.site-footer{text-align:center;padding:2rem;color:rgba(255,255,255,.4);font-size:.8rem}
-  footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
-  footer.site-footer a:hover{color:#fff}
+body{padding-top:60px}
+.printers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:1.5rem}
+.printer-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.printer-card:hover{border-color:rgba(255,255,255,.2);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.printer-card.offline{opacity:.7}
+.pc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.4rem;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.07)}
+.pc-title{display:flex;align-items:center;gap:.8rem}
+.pc-title h2{font-size:1rem;font-weight:700;margin:0}
+.pc-ip{font-size:.72rem;color:rgba(255,255,255,.35);font-family:monospace;margin-top:2px}
+.pc-status{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;padding:.3rem .9rem;border-radius:20px;border:1px solid}
+.st-online  {color:#2ecc71;border-color:rgba(46,204,113,.35);background:rgba(46,204,113,.08)}
+.st-offline {color:#e74c3c;border-color:rgba(231,76,60,.35); background:rgba(231,76,60,.08)}
+.st-printing{color:#3498db;border-color:rgba(52,152,219,.35);background:rgba(52,152,219,.08)}
+.st-paused  {color:#f39c12;border-color:rgba(243,156,18,.35);background:rgba(243,156,18,.08)}
+.pc-body{padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:1rem}
+.temps-row{display:flex;gap:1rem}
+.temp-gauge{flex:1;background:rgba(0,0,0,.2);border-radius:10px;padding:.8rem 1rem;border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:.4rem}
+.temp-label{font-size:.7rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.temp-vals{display:flex;align-items:baseline;gap:.5rem}
+.temp-val{font-size:1.6rem;font-weight:700;font-family:monospace;line-height:1}
+.t-hot   {color:#e74c3c}
+.t-warm  {color:#f39c12}
+.t-ok    {color:#2ecc71}
+.t-cold  {color:rgba(255,255,255,.35)}
+.temp-tgt{font-size:.78rem;color:rgba(255,255,255,.35)}
+.tbar-wrap{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.tbar{height:100%;border-radius:2px;transition:width .6s ease}
+.temp-ctrl{display:flex;gap:.4rem;align-items:center;margin-top:.3rem}
+.temp-ctrl input{width:60px;padding:.25rem .5rem;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:monospace;text-align:center;outline:none}
+.temp-ctrl input:focus{border-color:#3498db}
+.tbtn{padding:.25rem .7rem;font-size:.75rem;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);cursor:pointer;transition:all .2s}
+.tbtn:hover{background:rgba(255,255,255,.18);color:#fff}
+.tbtn.off{border-color:rgba(231,76,60,.3);color:#e74c3c}
+.tbtn.off:hover{background:rgba(231,76,60,.15)}
+.pbar-section{display:flex;flex-direction:column;gap:.5rem}
+.pbar-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.pbar-file{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.pbar-pct{font-size:1.1rem;font-weight:700;font-family:monospace;color:#3498db;flex-shrink:0}
+.pbar-wrap{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.pbar{height:100%;background:linear-gradient(90deg,#3498db,#2ecc71);border-radius:4px;transition:width .8s ease}
+.pbar-times{display:flex;justify-content:space-between;font-size:.72rem;color:rgba(255,255,255,.38);font-family:monospace;flex-wrap:wrap;gap:.2rem}
+.no-job{text-align:center;padding:.9rem;color:rgba(255,255,255,.3);font-size:.85rem}
+.ctrl-row{display:flex;gap:.5rem;flex-wrap:wrap;padding-top:.9rem;border-top:1px solid rgba(255,255,255,.07);align-items:center}
+.cb{display:flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:8px;border:1px solid;cursor:pointer;font-size:.82rem;font-weight:500;font-family:inherit;transition:all .2s}
+.cb:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+.cb:not(:disabled):hover{filter:brightness(1.25);transform:translateY(-1px)}
+.cb-pause  {color:#f39c12;border-color:rgba(243,156,18,.35);background:rgba(243,156,18,.08)}
+.cb-resume {color:#2ecc71;border-color:rgba(46,204,113,.35); background:rgba(46,204,113,.08)}
+.cb-cancel {color:#e74c3c;border-color:rgba(231,76,60,.35);  background:rgba(231,76,60,.08)}
+.cb-connect{color:#2ecc71;border-color:rgba(46,204,113,.35); background:rgba(46,204,113,.08)}
+.cb-neutral{color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+.pc-error{text-align:center;padding:1.5rem;color:#e74c3c;font-size:.85rem}
+.sync-label{font-size:.72rem;color:rgba(255,255,255,.3);font-family:monospace}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+.move-section,.fan-section{padding:.75rem 1.4rem;border-top:1px solid rgba(255,255,255,.07)}
+.sect-title{font-size:.68rem;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:.55rem}
+.dist-row{display:flex;align-items:center;gap:.4rem;margin-bottom:.65rem}
+.dist-lbl{font-size:.72rem;color:rgba(255,255,255,.38)}
+.dbtn{padding:.2rem .55rem;font-size:.74rem;border-radius:5px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s}
+.dbtn.active{border-color:#3498db;color:#3498db;background:rgba(52,152,219,.12)}
+.move-body{display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap}
+.xy-grid{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,30px);gap:.3rem}
+.z-col{display:flex;flex-direction:column;gap:.3rem;align-items:center;margin-top:0}
+.mbtn{display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;width:38px;height:30px;padding:0}
+.mbtn:hover{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)}
+.mbtn.mhome{background:rgba(52,152,219,.1);border-color:rgba(52,152,219,.35);color:#3498db}
+.mbtn.mhome:hover{background:rgba(52,152,219,.22)}
+.mbtn.mz{width:34px}
+.axis-lbl{font-size:.62rem;color:rgba(255,255,255,.28);text-align:center;margin-top:.25rem;letter-spacing:.4px}
+.fan-ctrl{display:flex;align-items:center;gap:.6rem}
+.fan-ctrl input[type=range]{flex:1;accent-color:#3498db;min-width:80px}
+.fan-val{font-size:.82rem;font-family:monospace;color:#3498db;min-width:38px;text-align:right}
+.gcode-section{border-top:1px solid rgba(255,255,255,.07)}
+.gcode-toggle{width:100%;padding:.65rem 1.4rem;background:none;border:none;color:rgba(255,255,255,.42);font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;transition:color .15s}
+.gcode-toggle:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.03)}
+.gcode-body{padding:0 1.4rem .9rem;display:none}
+.gcode-body.open{display:block}
+.gcode-canvas{width:100%;height:260px;border-radius:8px;background:#0d1117;display:block;margin-bottom:.6rem;cursor:crosshair}
+.gcode-ctrl{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.gcode-ctrl input[type=range]{flex:1;min-width:60px;accent-color:#3498db}
+.gcode-lbl{font-size:.7rem;color:rgba(255,255,255,.35);font-family:monospace;white-space:nowrap}
+.gcode-status{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:.4rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.print-section{padding:.75rem 1.4rem;border-top:1px solid rgba(255,255,255,.07)}
+.print-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.fsel{flex:1;min-width:120px;padding:.3rem .6rem;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:inherit;outline:none;cursor:pointer}
+.fsel:focus{border-color:#3498db}
+.fsel option{background:#1a1a2e;color:#fff}
+.cb-start{color:#2ecc71;border-color:rgba(46,204,113,.35);background:rgba(46,204,113,.08)}
 </style>
 </head>
 <body>
 
-<!-- ── Barre de navigation fixe ── -->
-<!-- nav-auth est remplacé dynamiquement si l'utilisateur est connecté -->
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">SGI3D</a>
   <div class="nav-links">
@@ -79,376 +107,568 @@
     <a href="cameras.html">📷 <span>Caméras</span></a>
     <a href="alerts.html">🔔 <span>Alertes</span></a>
     <a href="dashboard.html">📊 <span>Dashboard</span></a>
-    <a href="login.html" class="btn-nav" id="nav-auth">🔐 <span>Connexion</span></a>
+    <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
 </nav>
 
-<!-- ── Section héros : titre + sous-titre ── -->
-<div class="printers-hero">
-  <h1>NOS IMPRIMANTES 3D</h1>
-  <p>Parc machines SGI3D · Technologie FDM haute précision</p>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="s-section">Navigation</div>
+    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="printers.html" class="active"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <div class="s-section">Administration</div>
+    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <a href="alerts.html"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <div class="s-section">Compte</div>
+    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
+  </aside>
+
+  <main class="admin-content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+      <div>
+        <h1>🖨️ Imprimantes 3D</h1>
+        <p>Monitoring et contrôle en temps réel via OctoPrint</p>
+      </div>
+      <div style="display:flex;gap:.8rem;align-items:center">
+        <span class="sync-label" id="sync-label">Chargement…</span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">🔄 Rafraîchir</button>
+      </div>
+    </div>
+    <div class="printers-grid" id="grid">
+      <div style="text-align:center;padding:3rem;color:rgba(255,255,255,.4);grid-column:1/-1">
+        <span class="spin" style="font-size:2rem">⚙️</span>
+        <p style="margin-top:1rem">Connexion à OctoPrint…</p>
+      </div>
+    </div>
+  </main>
 </div>
 
-<!-- ── Grille des deux imprimantes ── -->
-<div class="printers-grid">
-
-  <!-- ══════════════════════════════════════════════════════════
-       CARTE 1 : ULTIMAKER 2+
-       Imprimante FDM professionnelle à extrusion directe.
-       Canvas Three.js : id="canvas-ultimaker"
-       Formulaire : ids ult-file / ult-mat / ult-dur
-  ══════════════════════════════════════════════════════════ -->
-  <div class="printer-card">
-    <!-- En-tête : nom, sous-titre, badge disponibilité -->
-    <div class="printer-card-header">
-      <div>
-        <h2>ULTIMAKER 2+</h2>
-        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression FDM Professionnelle</div>
-      </div>
-      <span class="badge-printer">🟢 Disponible</span>
-    </div>
-
-    <!-- Zone de rendu 3D Three.js pour l'Ultimaker 2+ -->
-    <div class="printer-canvas-wrap">
-      <canvas id="canvas-ultimaker" class="printer-canvas"></canvas>
-    </div>
-
-    <div class="printer-body">
-      <!-- Spécifications techniques : grille 2×3 -->
-      <div class="specs-grid">
-        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">223×223×205 mm</div></div>
-        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm (0.25–0.8)</div></div>
-        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.02–0.6 mm</div></div>
-        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">24 mm³/s</div></div>
-        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">260 °C</div></div>
-        <div class="spec-item"><div class="spec-label">Précision XYZ</div><div class="spec-value">12.5/12.5/5 µm</div></div>
-      </div>
-
-      <!-- Points forts de l'Ultimaker 2+ -->
-      <ul class="features-list">
-        <li>Extrusion directe haute précision</li>
-        <li>Plateau chauffant jusqu'à 100°C</li>
-        <li>Écran tactile couleur intégré</li>
-        <li>Détection automatique matériau</li>
-        <li>Connectivité USB &amp; carte SD</li>
-        <li>Nivellement automatique du plateau</li>
-        <li>Refroidissement optimisé dual fan</li>
-      </ul>
-
-      <!-- Matériaux compatibles (PLA, ABS, CPE, Nylon, PVA) -->
-      <div style="margin-top:1rem"><strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
-        <div class="materials-row"><span class="mat-tag">PLA</span><span class="mat-tag">ABS</span><span class="mat-tag">CPE</span><span class="mat-tag">Nylon</span><span class="mat-tag">PVA</span></div>
-      </div>
-
-      <!-- Formulaire de lancement d'impression Ultimaker -->
-      <!-- launchPrint() vérifie la connexion, crée le job via l'API,
-           puis simule la fin de l'impression après 5 secondes -->
-      <div class="print-form">
-        <h3>🖨️ Lancer une impression</h3>
-        <div class="form-group">
-          <label>Nom du fichier</label>
-          <input type="text" id="ult-file" placeholder="piece_v2.stl">
-        </div>
-        <div class="form-group" style="display:flex;gap:1rem">
-          <div style="flex:1"><label>Matière</label>
-            <select id="ult-mat"><option>PLA</option><option>ABS</option><option>CPE</option><option>Nylon</option><option>PVA</option></select>
-          </div>
-          <div style="flex:1"><label>Durée (min)</label>
-            <input type="number" id="ult-dur" placeholder="90" min="1">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="launchPrint('Ultimaker 2+','ult-file','ult-mat','ult-dur')">▶️ Lancer l'impression</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════
-       CARTE 2 : CREALITY NEO ENDER V2
-       Imprimante FDM avec nivellement automatique CR Touch 16 pts.
-       Structure ouverte, double axe Z, plateau PEI magnétique.
-       Canvas Three.js : id="canvas-ender"
-       Formulaire : ids end-file / end-mat / end-dur
-  ══════════════════════════════════════════════════════════ -->
-  <div class="printer-card">
-    <!-- En-tête : nom Creality, sous-titre nivellement auto, badge disponibilité -->
-    <div class="printer-card-header">
-      <div>
-        <h2>CREALITY NEO ENDER V2</h2>
-        <div style="font-size:.85rem;opacity:.8;margin-top:.3rem">Impression FDM avec nivellement automatique</div>
-      </div>
-      <span class="badge-printer">🟢 Disponible</span>
-    </div>
-
-    <!-- Zone de rendu 3D Three.js pour la Creality Neo Ender V2 -->
-    <div class="printer-canvas-wrap">
-      <canvas id="canvas-ender" class="printer-canvas"></canvas>
-    </div>
-
-    <div class="printer-body">
-      <!-- Spécifications techniques : 220×220×250 mm, CR Touch 16 pts -->
-      <div class="specs-grid">
-        <div class="spec-item"><div class="spec-label">Volume de build</div><div class="spec-value">220×220×250 mm</div></div>
-        <div class="spec-item"><div class="spec-label">Diamètre buse</div><div class="spec-value">0.4 mm</div></div>
-        <div class="spec-item"><div class="spec-label">Épaisseur couche</div><div class="spec-value">0.1–0.35 mm</div></div>
-        <div class="spec-item"><div class="spec-label">Vitesse impression</div><div class="spec-value">50–150 mm/s</div></div>
-        <div class="spec-item"><div class="spec-label">Temp. max buse</div><div class="spec-value">260 °C</div></div>
-        <!-- Spécification distinctive : nivellement CR Touch 16 points -->
-        <div class="spec-item"><div class="spec-label">Nivellement</div><div class="spec-value">CR Touch 16 pts</div></div>
-      </div>
-
-      <!-- Points forts de la Creality Neo Ender V2 -->
-      <ul class="features-list">
-        <li>Nivellement automatique CR Touch 16 points</li>  <!-- Sonde capacitive montée sur la tête -->
-        <li>Plateau magnétique amovible PEI</li>             <!-- Adhérence améliorée, retrait facile -->
-        <li>Double axe Z synchronisé</li>                    <!-- 2 vis de Z pour meilleure stabilité -->
-        <li>Carte mère 32 bits silencieuse</li>              <!-- Drivers TMC2208 sans bruit de pas -->
-        <li>Reprise après coupure de courant</li>            <!-- Reprend l'impression au mm près -->
-        <li>Détection de fin de filament</li>                <!-- Pause automatique si bobine vide -->
-        <li>Écran couleur rotatif</li>                       <!-- Interface intuitive orientable -->
-      </ul>
-
-      <!-- Matériaux compatibles (PLA, ABS, TPU souple, PETG résistant) -->
-      <div style="margin-top:1rem"><strong style="font-size:.85rem;color:#555;text-transform:uppercase;letter-spacing:.5px">Matériaux compatibles</strong>
-        <div class="materials-row"><span class="mat-tag">PLA</span><span class="mat-tag">ABS</span><span class="mat-tag">TPU</span><span class="mat-tag">PETG</span></div>
-      </div>
-
-      <!-- Formulaire de lancement d'impression Creality Neo Ender V2 -->
-      <div class="print-form">
-        <h3>🖨️ Lancer une impression</h3>
-        <div class="form-group">
-          <label>Nom du fichier</label>
-          <input type="text" id="end-file" placeholder="piece_ender.stl">
-        </div>
-        <div class="form-group" style="display:flex;gap:1rem">
-          <div style="flex:1"><label>Matière</label>
-            <select id="end-mat"><option>PLA</option><option>ABS</option><option>TPU</option><option>PETG</option></select>
-          </div>
-          <div style="flex:1"><label>Durée (min)</label>
-            <input type="number" id="end-dur" placeholder="60" min="1">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="launchPrint('Creality Neo Ender V2','end-file','end-mat','end-dur')">▶️ Lancer l'impression</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Pied de page avec liens rapides ── -->
-<footer class="site-footer">
-  <a href="index.html">🏠 Accueil</a> · <a href="login.html">🔐 Connexion</a> · <a href="dashboard.html">📊 Dashboard</a> · <a href="sitemap.html">🗺️ Plan du site</a>
-  <p style="margin-top:.5rem">© 2025 SGI3D v3.0</p>
-</footer>
-
-<!-- Conteneur des notifications toast (inséré dynamiquement par showToast) -->
 <div id="toast-container"></div>
-
-<!-- Moteur de données SGI3D (fetch → api.php) -->
 <script src="db.js"></script>
-<!-- Bibliothèque Three.js r128 pour les scènes 3D interactives -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+// ── Config : doit correspondre à octoprint_sync.php ──────────
+const PRINTERS = [
+  { id:1, name:'Ultimaker 2+',          host:'192.168.0.19', port:5000 },
+  { id:2, name:'Creality Ender V2 Neo', host:'192.168.1.101', port:5000 },
+];
 
-// ── Personnalisation de la navbar selon la session ──────────────────────────
-// Si l'utilisateur est connecté (session dans sessionStorage),
-// remplace le bouton "Connexion" par le prénom de l'utilisateur
-// avec un lien vers le dashboard.
-(function(){
-  const s=SGI3D_DB.getSession();
-  if(s){
-    const a=document.getElementById('nav-auth');
-    // On n'affiche que le premier prénom pour économiser de l'espace
-    a.href='dashboard.html'; a.innerHTML='👤 <span>'+s.name.split(' ')[0]+'</span>';
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+
+// ── Appel API SGI3D ──────────────────────────────────────────
+async function api(action, params={}) {
+  const r = await fetch('api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...params})});
+  return r.json();
+}
+
+// ── Charger l'état d'une imprimante ─────────────────────────
+async function loadPrinter(p) {
+  try {
+    const j = await api('octoprintState',{printer_id:p.id});
+    j.ok ? renderCard(p,j.data) : renderOffline(p, j.error||'Erreur API');
+  } catch(e) { renderOffline(p,'Réseau inaccessible'); }
+}
+
+// ── Rafraîchir tout ──────────────────────────────────────────
+async function refreshAll() {
+  document.getElementById('sync-label').textContent = '⏳ Sync…';
+  await Promise.all(PRINTERS.map(loadPrinter));
+  document.getElementById('sync-label').textContent =
+    'Sync ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  SGI3D_DB.getAlerts(false).then(a=>{ document.getElementById('sb-alerts').textContent=a.length; });
+}
+
+// ── Obtenir ou créer la carte ────────────────────────────────
+function card(p) {
+  let el = document.getElementById('card-'+p.id);
+  if (!el) {
+    document.querySelector('#grid > div:not(.printer-card)')?.remove();
+    el = Object.assign(document.createElement('div'),{id:'card-'+p.id, className:'printer-card'});
+    document.getElementById('grid').appendChild(el);
   }
-})();
+  return el;
+}
 
-// ── Lancer une impression ──────────────────────────────────────────────────
-// Paramètres :
-//   printer  – nom de l'imprimante (ex. "Ultimaker 2+")
-//   fileId   – id de l'input nom de fichier
-//   matId    – id du select matériau
-//   durId    – id de l'input durée en minutes
-//
-// Comportement :
-//   1. Vérifie que l'utilisateur est connecté (sinon redirige vers login.html)
-//   2. Lit les valeurs du formulaire
-//   3. Crée le travail d'impression dans la base via SGI3D_DB.createPrintJob()
-//   4. Affiche un toast de confirmation
-//   5. Simule la fin de l'impression après 5 secondes (85 % de chance de succès)
-function launchPrint(printer, fileId, matId, durId){
-  // Vérification d'authentification : impossible de lancer sans compte
-  if(!SGI3D_DB.isLoggedIn()){
-    showToast('⚠️ Connectez-vous pour lancer une impression','warning');
-    setTimeout(()=>window.location.href='login.html',1500);
+// ── Rendu carte opérationnelle ───────────────────────────────
+function renderCard(p, s) {
+  const el = card(p);
+  if (!s.online) { el.className='printer-card offline'; el.innerHTML=offHtml(p,s.error||'OctoPrint inaccessible'); return; }
+
+  const cs = s.connection?.state || 'Unknown';
+  const isPrint = cs==='Printing', isPause=cs==='Paused', isOp=cs==='Operational';
+  const isClosed = ['Closed','Detecting serial connection'].includes(cs);
+
+  const stMap = {
+    'Printing':    ['st-printing','🔵 En impression'],
+    'Paused':      ['st-paused',  '🟡 En pause'],
+    'Operational': ['st-online',  '🟢 Opérationnelle'],
+    'Cancelling':  ['st-paused',  '🔴 Annulation…'],
+    'Finishing':   ['st-online',  '🟢 Finalisation…'],
+    'Closed':      ['st-offline', '⚫ Déconnectée'],
+  };
+  const [stCls,stLbl] = stMap[cs]||['st-offline','⚫ '+cs];
+  const t = s.temperatures||{};
+
+  if (!DIST[p.id]) DIST[p.id] = 1;
+  el.className='printer-card';
+  el.innerHTML=`
+    <div class="pc-header">
+      <div class="pc-title">
+        <span style="font-size:1.5rem">🖨️</span>
+        <div><h2>${p.name}</h2><div class="pc-ip">${p.host}:${p.port}</div></div>
+      </div>
+      <div class="pc-status ${stCls}">${stLbl}</div>
+    </div>
+    <div class="pc-body">
+      <div class="temps-row">
+        ${gauge('Buse (tool0)', t.tool0?.actual??null, t.tool0?.target??0, 300, p.id, 'tool0')}
+        ${gauge('Lit chauffant', t.bed?.actual??null, t.bed?.target??0, 120, p.id, 'bed')}
+      </div>
+      ${s.job?.file ? jobHtml(s.job) : '<div class="no-job">Aucune impression en cours</div>'}
+      <div class="ctrl-row">
+        ${isPrint ? `<button class="cb cb-pause"  onclick="cmd(${p.id},'pause')">⏸ Pause</button>` : ''}
+        ${isPause ? `<button class="cb cb-resume" onclick="cmd(${p.id},'resume')">▶ Reprendre</button>` : ''}
+        ${(isPrint||isPause) ? `<button class="cb cb-cancel" onclick="cancelConfirm(${p.id})">⏹ Annuler</button>` : ''}
+        ${isOp    ? `<button class="cb cb-neutral" onclick="setConn(${p.id},'disconnect')">🔌 Déconnecter</button>` : ''}
+        ${isClosed? `<button class="cb cb-connect" onclick="setConn(${p.id},'connect')">🔌 Connecter</button>` : ''}
+        <button class="cb cb-neutral" style="margin-left:auto" title="Rafraîchir" onclick="loadPrinter(PRINTERS.find(x=>x.id===${p.id}))">🔄</button>
+      </div>
+      ${printStartHtml(p.id)}
+      ${moveHtml(p.id)}
+      ${fanHtml(p.id)}
+      ${gcodeHtml(p.id)}
+    </div>`;
+}
+
+function renderOffline(p, msg) {
+  const el = card(p);
+  el.className='printer-card offline';
+  el.innerHTML=offHtml(p,msg);
+}
+
+function offHtml(p, msg) {
+  return `
+    <div class="pc-header">
+      <div class="pc-title">
+        <span style="font-size:1.5rem">🖨️</span>
+        <div><h2>${p.name}</h2><div class="pc-ip">${p.host}:${p.port}</div></div>
+      </div>
+      <div class="pc-status st-offline">⚫ Hors ligne</div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-error">⚠️ ${msg}</div>
+      <div class="ctrl-row">
+        <button class="cb cb-connect" onclick="setConn(${p.id},'connect')">🔌 Tenter connexion</button>
+        <button class="cb cb-neutral" style="margin-left:auto" onclick="loadPrinter(PRINTERS.find(x=>x.id===${p.id}))">🔄</button>
+      </div>
+    </div>`;
+}
+
+// ── Jauge de température ─────────────────────────────────────
+function gauge(lbl, actual, target, max, pid, heater) {
+  const pct = actual!==null ? Math.min(100,(actual/max)*100) : 0;
+  const cls = actual===null ? 't-cold' : actual>max*.9 ? 't-hot' : actual>max*.5 ? 't-warm' : actual>30 ? 't-ok' : 't-cold';
+  const barClr = {'t-hot':'#e74c3c','t-warm':'#f39c12','t-ok':'#2ecc71','t-cold':'rgba(255,255,255,.15)'}[cls] || '#2ecc71';
+  return `
+    <div class="temp-gauge">
+      <div class="temp-label">${lbl}</div>
+      <div class="temp-vals">
+        <span class="temp-val ${cls}">${actual!==null ? actual.toFixed(1)+'°C' : '—'}</span>
+        <span class="temp-tgt">${target>0 ? '→ '+target+'°C' : 'éteint'}</span>
+      </div>
+      <div class="tbar-wrap"><div class="tbar" style="width:${pct}%;background:${barClr}"></div></div>
+      <div class="temp-ctrl">
+        <input type="number" id="t-${pid}-${heater}" value="${target||''}" min="0" max="${max}" placeholder="°C">
+        <button class="tbtn" onclick="setTemp(${pid},'${heater}')">✓ Appliquer</button>
+        <button class="tbtn off" onclick="setTempOff(${pid},'${heater}')">Off</button>
+      </div>
+    </div>`;
+}
+
+// ── Barre de progression ─────────────────────────────────────
+function jobHtml(job) {
+  const pct = job.progress||0;
+  return `
+    <div class="pbar-section">
+      <div class="pbar-head">
+        <span class="pbar-file" title="${job.file}">📄 ${job.file}</span>
+        <span class="pbar-pct">${pct}%</span>
+      </div>
+      <div class="pbar-wrap"><div class="pbar" style="width:${pct}%"></div></div>
+      <div class="pbar-times">
+        <span>⏱ Écoulé : ${ftime(job.time)}</span>
+        <span>⏳ Restant : ${ftime(job.timeLeft)}</span>
+        <span>📊 Total : ${ftime(job.estimatedTotal)}</span>
+      </div>
+    </div>`;
+}
+
+function ftime(s) {
+  if (!s && s!==0) return '—';
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60);
+  return h>0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m ${String(sec).padStart(2,'0')}s`;
+}
+
+// ── Contrôles ────────────────────────────────────────────────
+async function cmd(pid, command) {
+  toast({pause:'⏸ Pause envoyée…',resume:'▶ Reprise…',cancel:'⏹ Annulation…'}[command]||command,'info');
+  const j = await api('octoprintJobControl',{printer_id:pid, command});
+  if (j.ok && j.data?.ok) {
+    toast('✅ Commande envoyée','success');
+    setTimeout(()=>loadPrinter(PRINTERS.find(p=>p.id===pid)), 1500);
+  } else {
+    toast('❌ '+(j.error||j.data?.error||'Erreur OctoPrint'),'error');
+  }
+}
+
+function cancelConfirm(pid){
+  if(!confirm('Annuler l\'impression en cours ?\nCette action est irréversible.')) return;
+  cmd(pid,'cancel');
+}
+
+async function setTemp(pid, heater) {
+  const inp = document.getElementById(`t-${pid}-${heater}`);
+  const temp = parseFloat(inp?.value);
+  if (isNaN(temp)||temp<0) { toast('Température invalide','warning'); return; }
+  const j = await api('octoprintSetTemp',{printer_id:pid, heater, temp});
+  toast(j.ok ? `🌡️ Cible ${temp}°C envoyée` : '❌ '+(j.error||'Erreur'), j.ok?'success':'error');
+}
+
+async function setTempOff(pid, heater) {
+  const inp = document.getElementById(`t-${pid}-${heater}`);
+  if(inp) inp.value='';
+  const j = await api('octoprintSetTemp',{printer_id:pid, heater, temp:0});
+  toast(j.ok?'🌡️ Chauffage éteint':'❌ Erreur', j.ok?'info':'error');
+}
+
+async function setConn(pid, action) {
+  toast(action==='connect'?'🔌 Connexion…':'🔌 Déconnexion…','info');
+  const j = await api('octoprintConnection',{printer_id:pid, action});
+  if(j.ok) setTimeout(()=>loadPrinter(PRINTERS.find(p=>p.id===pid)), 2500);
+  else toast('❌ '+(j.error||'Erreur'),'error');
+}
+
+function toast(msg, type='info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+type; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ── Déplacements & ventilateur ───────────────────────────────
+const DIST = {};
+
+function moveHtml(pid) {
+  const d = DIST[pid]||1;
+  return `
+    <div class="move-section">
+      <div class="sect-title">🕹️ Déplacements</div>
+      <div class="dist-row">
+        <span class="dist-lbl">Pas :</span>
+        <button class="dbtn${d===0.1?' active':''}" onclick="setDist(${pid},0.1,this)">0.1</button>
+        <button class="dbtn${d===1?' active':''}"   onclick="setDist(${pid},1,this)">1</button>
+        <button class="dbtn${d===10?' active':''}"  onclick="setDist(${pid},10,this)">10</button>
+        <span class="dist-lbl">mm</span>
+      </div>
+      <div class="move-body">
+        <div>
+          <div class="xy-grid">
+            <div></div>
+            <button class="mbtn" onclick="jog(${pid},{y:DIST[${pid}]})">▲</button>
+            <div></div>
+            <button class="mbtn" onclick="jog(${pid},{x:-DIST[${pid}]})">◄</button>
+            <button class="mbtn mhome" onclick="home(${pid},['x','y'])">⌂</button>
+            <button class="mbtn" onclick="jog(${pid},{x:DIST[${pid}]})">►</button>
+            <div></div>
+            <button class="mbtn" onclick="jog(${pid},{y:-DIST[${pid}]})">▼</button>
+            <div></div>
+          </div>
+          <div class="axis-lbl">X / Y</div>
+        </div>
+        <div class="z-col">
+          <button class="mbtn mz" onclick="jog(${pid},{z:DIST[${pid}]})">▲</button>
+          <button class="mbtn mz mhome" onclick="home(${pid},['z'])">⌂</button>
+          <button class="mbtn mz" onclick="jog(${pid},{z:-DIST[${pid}]})">▼</button>
+          <div class="axis-lbl">Z</div>
+        </div>
+        <button class="cb cb-neutral" style="align-self:flex-end;font-size:.75rem;padding:.35rem .8rem" onclick="home(${pid},['x','y','z'])">⌂ Home All</button>
+      </div>
+    </div>`;
+}
+
+function fanHtml(pid) {
+  return `
+    <div class="fan-section">
+      <div class="sect-title">🌀 Ventilateur</div>
+      <div class="fan-ctrl">
+        <input type="range" id="fan-${pid}" min="0" max="100" value="0"
+          oninput="document.getElementById('fan-val-${pid}').textContent=this.value+'%'">
+        <span class="fan-val" id="fan-val-${pid}">0%</span>
+        <button class="tbtn" onclick="setFan(${pid})">✓ Appliquer</button>
+        <button class="tbtn off" onclick="setFanOff(${pid})">Off</button>
+      </div>
+    </div>`;
+}
+
+function setDist(pid, d, btn) {
+  DIST[pid] = d;
+  btn.closest('.dist-row').querySelectorAll('.dbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function jog(pid, axes) {
+  const j = await api('octoprintJog', {printer_id:pid, ...axes});
+  if (!j.ok || !j.data?.ok) toast('❌ Erreur déplacement', 'error');
+}
+
+async function home(pid, axes) {
+  toast('⌂ Homing…', 'info');
+  const j = await api('octoprintHome', {printer_id:pid, axes});
+  if (!j.ok || !j.data?.ok) toast('❌ Erreur home', 'error');
+}
+
+async function setFan(pid) {
+  const speed = parseInt(document.getElementById('fan-'+pid).value);
+  const j = await api('octoprintFan', {printer_id:pid, speed});
+  toast(j.ok ? '🌀 Ventilateur '+speed+'%' : '❌ Erreur', j.ok?'success':'error');
+}
+
+async function setFanOff(pid) {
+  const inp = document.getElementById('fan-'+pid);
+  if(inp){ inp.value=0; document.getElementById('fan-val-'+pid).textContent='0%'; }
+  const j = await api('octoprintFan', {printer_id:pid, speed:0});
+  toast(j.ok?'🌀 Ventilateur éteint':'❌ Erreur', j.ok?'info':'error');
+}
+
+// ── Lancer / Pause / Arrêt ───────────────────────────────────
+function printStartHtml(pid) {
+  return `
+    <div class="print-section">
+      <div class="sect-title">▶ Lancer une impression</div>
+      <div class="print-row">
+        <select id="fsel-${pid}" class="fsel">
+          <option value="">— Cliquez sur 📂 pour charger —</option>
+        </select>
+        <button class="tbtn" onclick="loadFiles(${pid})" title="Charger la liste des fichiers">📂</button>
+        <button class="cb cb-start" onclick="startPrint(${pid})">▶ Imprimer</button>
+      </div>
+    </div>`;
+}
+
+async function loadFiles(pid) {
+  const sel = document.getElementById('fsel-'+pid);
+  sel.innerHTML = '<option>⏳ Chargement…</option>';
+  const j = await api('octoprintFiles', {printer_id: pid});
+  if (!j.ok || !j.data?.ok) {
+    sel.innerHTML = '<option>❌ ' + (j.data?.error||'Erreur') + '</option>';
     return;
   }
-  // Lecture et validation des champs du formulaire
-  const file=document.getElementById(fileId).value.trim();
-  const mat=document.getElementById(matId).value;
-  const dur=document.getElementById(durId).value;
-  if(!file){showToast('Entrez un nom de fichier','warning');return;}
-  // Création du job en base (statut initial : "en_cours")
-  const job=SGI3D_DB.createPrintJob({fileName:file,printer,material:mat,duration:dur?dur+'min':'N/A'});
-  showToast('🖨️ Impression lancée : '+file+' sur '+printer,'success');
-  // Simulation : fin de l'impression après 5 secondes
-  // Math.random() > 0.15 → 85 % de réussite, 15 % d'erreur
-  setTimeout(()=>{
-    SGI3D_DB.finishPrintJob(job.id, Math.random()>.15);
-  },5000);
+  const files = (j.data.files||[]).filter(f => f.type==='machinecode');
+  if (!files.length) { sel.innerHTML = '<option>Aucun fichier G-code</option>'; return; }
+  sel.innerHTML = '<option value="">— Sélectionner un fichier —</option>'
+    + files.map(f => `<option value="${f.name}|${f.origin||'local'}">${f.name}</option>`).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  SCÈNE THREE.JS — ULTIMAKER 2+
-//  IIFE (Immediately Invoked Function Expression) pour isoler le scope.
-//  Modèle : structure cubique fermée à 4 colonnes, tête mobile sur axe Y,
-//           plateau chauffant animé, bobine rouge, LED verte clignotante.
-// ══════════════════════════════════════════════════════════════════════════
-(function(){
-  // Initialisation du renderer WebGL avec antialiasing et fond transparent
-  const canvas=document.getElementById('canvas-ultimaker');
-  const W=canvas.parentElement.offsetWidth||480, H=300;
-  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  r.setSize(W,H); r.shadowMap.enabled=true; // Ombres portées activées
-
-  const scene=new THREE.Scene();
-
-  // Caméra perspective : FOV 40°, position haute légèrement décalée
-  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
-  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
-
-  // Éclairage : lumière ambiante douce + directionnelle avec ombres + point bleu
-  scene.add(new THREE.AmbientLight(0xffffff,0.5));
-  const dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
-  scene.add(new THREE.PointLight(0x3498db,1.2,12)); // Accent bleu Ultimaker
-
-  // Helper : crée et positionne un parallélépipède (BoxGeometry) Phong
-  function box(w,h,d,c,x,y,z){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80})); m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m; }
-
-  // ── Structure de la machine ──
-  const base=box(2.2,.25,2.2,0x2c3e50,0,.12,0);                  // Socle bleu nuit
-  const c1=box(.12,3,.12,0x4a5568,-.95,1.6,-.95);                 // Colonne avant-gauche
-  const c2=box(.12,3,.12,0x4a5568,.95,1.6,-.95);                  // Colonne avant-droite
-  const c3=box(.12,3,.12,0x4a5568,-.95,1.6,.95);                  // Colonne arrière-gauche
-  const c4=box(.12,3,.12,0x4a5568,.95,1.6,.95);                   // Colonne arrière-droite
-  const top=box(2.2,.1,2.2,0x3d5a80,0,3.1,0);                    // Toit de l'enceinte
-
-  // ── Éléments mobiles (animés dans la boucle) ──
-  const plate=box(1.8,.06,1.8,0x546e7a,0,.5,0);                  // Plateau chauffant (axe Z)
-  const yBar=box(2.2,.09,.14,0x607d8b,0,2.5,0);                  // Barre guide axe Y
-  const head=box(.22,.32,.22,0x263238,0,2.3,0);                   // Tête d'impression (axe X)
-  const noz=box(.06,.14,.06,0xffd700,0,2.1,0);                    // Buse en or (identifiant visuel)
-
-  // ── Éléments décoratifs ──
-  const screen=box(.4,.28,.05,0x1565c0,.72,.9,-.97);              // Écran tactile bleu
-  // Bobine de filament rouge (TorusGeometry = anneau)
-  const spool=new THREE.Mesh(new THREE.TorusGeometry(.28,.09,8,24),new THREE.MeshPhongMaterial({color:0xe74c3c}));
-  spool.position.set(0,2.6,0); spool.rotation.x=Math.PI/2; scene.add(spool);
-  // LED témoin (SphereGeometry + émission lumineuse pour le clignotement)
-  const ledGeo=new THREE.SphereGeometry(.05,8,8);
-  const ledMat=new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:.6});
-  const led=new THREE.Mesh(ledGeo,ledMat); led.position.set(-.68,.9,-.97); scene.add(led);
-
-  // ── Boucle d'animation ──
-  let t=0;
-  (function animate(){
-    requestAnimationFrame(animate); t+=.016;
-    scene.rotation.y=Math.sin(t*.25)*.4+.3;         // Rotation oscillante de la scène entière
-    head.position.x=Math.sin(t*1.4)*.75;            // Mouvement de la tête sur l'axe X
-    yBar.position.x=head.position.x;                // La barre Y suit la tête
-    plate.position.y=.44+Math.sin(t*.35)*.1;        // Le plateau descend progressivement (axe Z)
-    spool.rotation.z+=.025;                          // Rotation de la bobine de filament
-    ledMat.emissiveIntensity=.3+Math.abs(Math.sin(t*2.8))*.7; // Pulsation de la LED
-    r.render(scene,cam);
-  })();
-})();
-
-// ══════════════════════════════════════════════════════════════════════════
-//  SCÈNE THREE.JS — CREALITY NEO ENDER V2
-//  IIFE pour isoler le scope.
-//  Structure ouverte caractéristique des Ender :
-//    - 2 colonnes arrière rouges (double axe Z)
-//    - Bras horizontal (axe X) + tête d'impression
-//    - Plateau magnétique PEI noir animé
-//    - Sonde CR Touch bleue (suit la tête)
-//    - Bobine rouge Creality, LED verte clignotante
-// ══════════════════════════════════════════════════════════════════════════
-(function(){
-  // Initialisation du renderer WebGL
-  const canvas=document.getElementById('canvas-ender');
-  const W=canvas.parentElement.offsetWidth||480, H=300;
-  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  r.setSize(W,H); r.shadowMap.enabled=true;
-
-  const scene=new THREE.Scene();
-
-  // Caméra perspective identique à l'Ultimaker pour cohérence visuelle
-  const cam=new THREE.PerspectiveCamera(40,W/H,0.1,100);
-  cam.position.set(3,4,6); cam.lookAt(0,1.5,0);
-
-  // Éclairage : ambiant + directionnel + point rouge Creality
-  scene.add(new THREE.AmbientLight(0xffffff,0.5));
-  const dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(5,8,5); dl.castShadow=true; scene.add(dl);
-  scene.add(new THREE.PointLight(0xe74c3c,.8,12)); // Accent rouge Creality
-
-  // Helper boxe identique à la scène Ultimaker
-  function box(w,h,d,c,x,y,z){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshPhongMaterial({color:c,shininess:80})); m.position.set(x,y,z);m.castShadow=true;scene.add(m);return m; }
-
-  // ── Châssis de base ──
-  box(2.2,.2,1.6,0x1a1a1a,0,.1,0);        // Socle noir principal
-  box(2.2,.12,.12,0x222222,0,.25,-.65);    // Profilé aluminium bas avant
-
-  // ── Double axe Z : 2 colonnes rouges Creality (caractéristique Ender) ──
-  const zCol1=box(.12,3.2,.12,0xe74c3c,-.9,1.7,-.7); // Colonne Z gauche
-  const zCol2=box(.12,3.2,.12,0xe74c3c, .9,1.7,-.7); // Colonne Z droite
-  box(1.9,.1,.12,0x333333,0,3.25,-.7);               // Traverse supérieure unissant les 2 colonnes
-
-  // ── Plateau magnétique PEI (surface noire, animé en Z) ──
-  const plate=box(1.9,.06,1.5,0x1c1c1c,0,.55,0);
-
-  // ── Axe X : bras porteur + tête d'impression (animés ensemble sur X) ──
-  const xBar=box(2.0,.1,.12,0x444444,0,2.4,-.7);   // Bras guide horizontal
-  const head=box(.2,.3,.2,0x222222,0,2.2,-.7);     // Tête d'impression
-  box(.06,.12,.06,0xe74c3c,0,2.06,-.7);            // Buse rouge (couleur Creality)
-
-  // ── Sonde CR Touch (nivellement automatique 16 points) ──
-  // Montée sur le côté de la tête ; suit son déplacement sur X
-  const probe=box(.05,.18,.05,0x3498db,.15,2.1,-.7);
-
-  // ── Éléments décoratifs ──
-  box(.35,.28,.05,0xc0392b,-.8,.85,-.1); // Écran rotatif rouge foncé (gauche du socle)
-
-  // Bobine de filament rouge Creality (sur la traverse supérieure)
-  const spool=new THREE.Mesh(new THREE.TorusGeometry(.26,.08,8,22),new THREE.MeshPhongMaterial({color:0xe74c3c}));
-  spool.position.set(0,3.1,-.7); spool.rotation.x=Math.PI/2; spool.castShadow=true; scene.add(spool);
-
-  // LED verte clignotante (témoin d'état d'impression)
-  const ledGeo=new THREE.SphereGeometry(.045,8,8);
-  const ledMat=new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:.6});
-  const led=new THREE.Mesh(ledGeo,ledMat); led.position.set(-.78,.85,.05); scene.add(led);
-
-  // ── Boucle d'animation ──
-  let t=0;
-  (function animate(){
-    requestAnimationFrame(animate); t+=.016;
-    scene.rotation.y=Math.sin(t*.22)*.4+.3;              // Rotation oscillante de la scène
-    head.position.x=Math.sin(t*1.3)*.75;                 // Déplacement de la tête sur l'axe X
-    xBar.position.x=head.position.x;                     // Le bras X suit la tête
-    probe.position.x=head.position.x+.15;                // La sonde CR Touch suit aussi la tête
-    plate.position.y=.5+Math.sin(t*.28)*.12;             // Le plateau descend progressivement
-    spool.rotation.z+=.022;                               // Rotation de la bobine de filament
-    ledMat.emissiveIntensity=.3+Math.abs(Math.sin(t*2.5))*.7; // Pulsation de la LED
-    r.render(scene,cam);
-  })();
-})();
-
-// ── Affichage d'une notification toast ──────────────────────────────────────
-// msg  : texte du message
-// type : 'info' | 'success' | 'warning' | 'error' (classe CSS appliquée)
-// Le toast est retiré automatiquement après 4 secondes.
-function showToast(msg,type='info'){
-  const c=document.getElementById('toast-container');
-  const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg; c.appendChild(t);
-  setTimeout(()=>t.remove(),4000);
+async function startPrint(pid) {
+  const sel = document.getElementById('fsel-'+pid);
+  if (!sel?.value) { toast('Sélectionnez un fichier d\'abord', 'warning'); return; }
+  const [filename, location] = sel.value.split('|');
+  if (!confirm('Démarrer l\'impression de "' + filename + '" ?')) return;
+  toast('▶ Lancement…', 'info');
+  const j = await api('octoprintStartPrint', {printer_id:pid, filename, location});
+  if (j.ok && j.data?.ok) {
+    toast('✅ Impression lancée', 'success');
+    setTimeout(() => loadPrinter(PRINTERS.find(p => p.id===pid)), 2000);
+  } else {
+    toast('❌ ' + (j.data?.error||j.error||'Erreur OctoPrint'), 'error');
+  }
 }
+
+// ── G-code Viewer ────────────────────────────────────────────
+const GCODE_DATA = {};
+
+function gcodeHtml(pid) {
+  return `
+    <div class="gcode-section">
+      <button class="gcode-toggle" onclick="toggleGcode(${pid})">
+        <span>📄 G-code Viewer</span>
+        <span id="gcode-chev-${pid}">▼</span>
+      </button>
+      <div class="gcode-body" id="gcode-body-${pid}">
+        <canvas class="gcode-canvas" id="gcode-cv-${pid}"></canvas>
+        <div class="gcode-ctrl">
+          <button class="tbtn" onclick="loadGcode(${pid})">⬇ Charger G-code</button>
+          <input type="range" id="gcode-sl-${pid}" min="0" max="0" value="0"
+            oninput="renderLayer(${pid},+this.value)">
+          <span class="gcode-lbl" id="gcode-lbl-${pid}">—</span>
+        </div>
+        <div class="gcode-status" id="gcode-st-${pid}"></div>
+      </div>
+    </div>`;
+}
+
+function toggleGcode(pid) {
+  const body = document.getElementById('gcode-body-'+pid);
+  const chev = document.getElementById('gcode-chev-'+pid);
+  const open = body.classList.toggle('open');
+  chev.textContent = open ? '▲' : '▼';
+  if (open) initCanvas(pid);
+}
+
+function initCanvas(pid) {
+  const cv = document.getElementById('gcode-cv-'+pid);
+  if (!cv) return;
+  cv.width  = cv.offsetWidth * (window.devicePixelRatio||1);
+  cv.height = 260       * (window.devicePixelRatio||1);
+  cv.style.width  = cv.offsetWidth+'px';
+  cv.style.height = '260px';
+  GCODE_DATA[pid] ? renderLayer(pid, +document.getElementById('gcode-sl-'+pid).value) : drawEmpty(pid);
+}
+
+function drawEmpty(pid) {
+  const cv = document.getElementById('gcode-cv-'+pid);
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle = 'rgba(255,255,255,.2)';
+  ctx.font = '13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Cliquez sur "Charger G-code"', cv.width/2, cv.height/2);
+}
+
+async function loadGcode(pid) {
+  const st = document.getElementById('gcode-st-'+pid);
+  st.textContent = '⏳ Téléchargement…';
+  const j = await api('octoprintGcode', {printer_id: pid});
+  if (!j.ok || !j.data?.ok) {
+    st.textContent = '❌ ' + (j.data?.error || j.error || 'Erreur');
+    return;
+  }
+  st.textContent = '⚙️ Analyse du G-code…';
+  setTimeout(() => {
+    const parsed = parseGcode(j.data.content);
+    GCODE_DATA[pid] = parsed;
+    const sl = document.getElementById('gcode-sl-'+pid);
+    sl.max   = Math.max(0, parsed.layers.length - 1);
+    sl.value = sl.max;
+    renderLayer(pid, +sl.value);
+    st.textContent = j.data.filename
+      + ' — ' + parsed.layers.length + ' couche(s)'
+      + (j.data.truncated ? ' (aperçu 500 Ko)' : '');
+  }, 10);
+}
+
+function parseGcode(text) {
+  const layers = [[]];
+  const zH     = [0];
+  let x=0, y=0, z=0, e=0;
+  let abs=true, eAbs=true;
+  let path=[];
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+
+  for (const raw of text.split('\n')) {
+    const line = raw.split(';')[0].trim();
+    if (!line) continue;
+    const tok = line.toUpperCase().split(/\s+/);
+    const cmd = tok[0];
+
+    if (cmd==='G90'){abs=true;continue;}
+    if (cmd==='G91'){abs=false;continue;}
+    if (cmd==='M82'){eAbs=true;continue;}
+    if (cmd==='M83'){eAbs=false;continue;}
+
+    if (cmd==='G0'||cmd==='G1') {
+      const p={};
+      for (let i=1;i<tok.length;i++){
+        const v=parseFloat(tok[i].slice(1));
+        if(!isNaN(v)) p[tok[i][0]]=v;
+      }
+      const nx = p.X!==undefined?(abs?p.X:x+p.X):x;
+      const ny = p.Y!==undefined?(abs?p.Y:y+p.Y):y;
+      const nz = p.Z!==undefined?(abs?p.Z:z+p.Z):z;
+      const de = p.E!==undefined?(eAbs?p.E-e:p.E):0;
+      if(p.E!==undefined) e=eAbs?p.E:e+p.E;
+
+      if (nz!==z) {
+        if(path.length>1) layers[layers.length-1].push([...path]);
+        path=[];
+        layers.push([]);
+        zH.push(nz);
+        z=nz;
+      }
+      if (de>0) {
+        if(!path.length) path.push({x,y});
+        path.push({x:nx,y:ny});
+        minX=Math.min(minX,nx);maxX=Math.max(maxX,nx);
+        minY=Math.min(minY,ny);maxY=Math.max(maxY,ny);
+      } else {
+        if(path.length>1) layers[layers.length-1].push([...path]);
+        path=[];
+      }
+      x=nx;y=ny;
+    }
+  }
+  if(path.length>1) layers[layers.length-1].push([...path]);
+  return {layers, zH, bounds:{minX,maxX,minY,maxY}};
+}
+
+function renderLayer(pid, idx) {
+  const d  = GCODE_DATA[pid];
+  const cv = document.getElementById('gcode-cv-'+pid);
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+
+  ctx.fillStyle='#0d1117';
+  ctx.fillRect(0,0,W,H);
+  if (!d) return;
+
+  const {layers,zH,bounds:{minX,maxX,minY,maxY}} = d;
+  const pad=20*window.devicePixelRatio;
+  const sx=(W-pad*2)/((maxX-minX)||1);
+  const sy=(H-pad*2)/((maxY-minY)||1);
+  const sc=Math.min(sx,sy);
+  const ox=pad+(W-pad*2-(maxX-minX)*sc)/2;
+  const oy=pad+(H-pad*2-(maxY-minY)*sc)/2;
+  const tx=x=>ox+(x-minX)*sc;
+  const ty=y=>H-oy-(y-minY)*sc;
+
+  // Couches précédentes (estompées)
+  ctx.lineWidth=.8;
+  for (let li=0;li<idx&&li<layers.length;li++) {
+    ctx.strokeStyle='rgba(52,152,219,.12)';
+    for (const path of layers[li]) {
+      if(path.length<2) continue;
+      ctx.beginPath();
+      ctx.moveTo(tx(path[0].x),ty(path[0].y));
+      for(let i=1;i<path.length;i++) ctx.lineTo(tx(path[i].x),ty(path[i].y));
+      ctx.stroke();
+    }
+  }
+
+  // Couche active (lumineuse)
+  ctx.strokeStyle='#3498db';
+  ctx.lineWidth=1.5;
+  for (const path of (layers[idx]||[])) {
+    if(path.length<2) continue;
+    ctx.beginPath();
+    ctx.moveTo(tx(path[0].x),ty(path[0].y));
+    for(let i=1;i<path.length;i++) ctx.lineTo(tx(path[i].x),ty(path[i].y));
+    ctx.stroke();
+  }
+
+  const lbl = document.getElementById('gcode-lbl-'+pid);
+  if (lbl) lbl.textContent =
+    'Couche '+(idx+1)+'/'+layers.length
+    +(zH[idx]!==undefined?' — Z='+zH[idx].toFixed(2)+'mm':'');
+}
+
+// ── Démarrage ────────────────────────────────────────────────
+refreshAll();
+setInterval(refreshAll, 15000);
 </script>
 </body>
 </html>

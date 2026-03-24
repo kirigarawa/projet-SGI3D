@@ -17,7 +17,7 @@ define('OCTOPRINT_PRINTERS', json_encode([
     [
         'id'      => 1,
         'name'    => 'Ultimaker 2+',
-        'host'    => '192.168.0.111',
+        'host'    => '192.168.0.19',
         'port'    => 5000,
         'api_key' => 'GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8',  // À remplacer
     ],
@@ -26,7 +26,7 @@ define('OCTOPRINT_PRINTERS', json_encode([
         'name'    => 'Creality Ender V2 Neo',
         'host'    => '192.168.1.101',
         'port'    => 5000,
-        'api_key' => 'GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8',  // À remplacer
+        'api_key' => '',  // À remplacer
     ],
 ]));
 
@@ -47,6 +47,256 @@ class OctoPrintSync {
         $this->printers = json_decode(OCTOPRINT_PRINTERS, true);
     }
 
+
+    // Retourne la liste des imprimantes configurées
+    public function getPrinters(): array { return $this->printers; }
+
+    // Trouve une imprimante par son id
+    public function getPrinterById(int $id): ?array {
+        foreach ($this->printers as $p) {
+            if ((int)$p['id'] === $id) return $p;
+        }
+        return null;
+    }
+
+    // ── État complet d'une imprimante ────────────────────────
+    public function getFullState(int $printerId): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['error' => 'Imprimante introuvable', 'online' => false];
+
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+
+        $state = [
+            'printer_id'   => $printer['id'],
+            'printer_name' => $printer['name'],
+            'host'         => $printer['host'],
+            'port'         => $printer['port'],
+            'online'       => false,
+            'connection'   => null,
+            'temperatures' => null,
+            'job'          => null,
+        ];
+
+        $conn = $this->apiGet("$baseUrl/api/connection", $headers);
+        if ($conn === null) {
+            $state['error'] = 'OctoPrint inaccessible — vérifiez ' . $printer['host'];
+            return $state;
+        }
+
+        $state['online']     = true;
+        $state['connection'] = $conn['current'] ?? [];
+
+        $printerData = $this->apiGet("$baseUrl/api/printer", $headers);
+        if ($printerData) {
+            $state['temperatures']  = $printerData['temperature'] ?? [];
+            $state['printer_state'] = $printerData['state']       ?? [];
+        }
+
+        $jobData = $this->apiGet("$baseUrl/api/job", $headers);
+        if ($jobData) {
+            $progress = $jobData['progress'] ?? [];
+            $job      = $jobData['job']      ?? [];
+            $state['job'] = [
+                'state'          => $jobData['state']                   ?? 'Unknown',
+                'file'           => $job['file']['name']                ?? null,
+                'size'           => $job['file']['size']                ?? null,
+                'progress'       => round($progress['completion']       ?? 0, 1),
+                'time'           => $progress['printTime']              ?? null,
+                'timeLeft'       => $progress['printTimeLeft']          ?? null,
+                'estimatedTotal' => $job['estimatedPrintTime']          ?? null,
+            ];
+        }
+
+        return $state;
+    }
+
+    // ── Contrôle du travail : pause / resume / cancel / start ─
+    public function controlJob(int $printerId, string $command): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+
+        $body = match($command) {
+            'pause'  => ['command' => 'pause', 'action' => 'pause'],
+            'resume' => ['command' => 'pause', 'action' => 'resume'],
+            'cancel' => ['command' => 'cancel'],
+            'start'  => ['command' => 'start'],
+            default  => null,
+        };
+
+        if ($body === null) return ['ok' => false, 'error' => "Commande invalide : $command"];
+
+        $this->apiPost("$baseUrl/api/job", $headers, $body);
+        $labels = ['pause' => 'Pause', 'resume' => 'Reprise', 'cancel' => 'Annulation', 'start' => 'Démarrage'];
+        $this->createAlertIfNew('info', "{$labels[$command]} impression – {$printer['name']}", "Commande '$command' envoyée depuis SGI3D.", $printer['name'], 5);
+
+        return ['ok' => true, 'command' => $command];
+    }
+
+    // ── Température cible buse ou lit ────────────────────────
+    public function setTemperature(int $printerId, string $heater, float $temp): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+
+        if ($heater === 'tool0') {
+            $this->apiPost("$baseUrl/api/printer/tool", $headers, ['command' => 'target', 'targets' => ['tool0' => (int)$temp]]);
+        } elseif ($heater === 'bed') {
+            $this->apiPost("$baseUrl/api/printer/bed", $headers, ['command' => 'target', 'target' => (int)$temp]);
+        } else {
+            return ['ok' => false, 'error' => "Heater inconnu : $heater"];
+        }
+
+        return ['ok' => true, 'heater' => $heater, 'target' => $temp];
+    }
+
+    // ── Déplacement de la buse (jog) ─────────────────────────
+    public function jogPrinthead(int $printerId, array $axes): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $body = array_merge(['command' => 'jog', 'absolute' => false], $axes);
+        $this->apiPost("$baseUrl/api/printer/printhead", $headers, $body);
+        return ['ok' => true];
+    }
+
+    // ── Mise à zéro des axes (home) ───────────────────────────
+    public function homePrinthead(int $printerId, array $axes): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $this->apiPost("$baseUrl/api/printer/printhead", $headers, ['command' => 'home', 'axes' => $axes]);
+        return ['ok' => true];
+    }
+
+    // ── Vitesse du ventilateur (0-100 %) ─────────────────────
+    public function setFanSpeed(int $printerId, int $speed): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $gcode = $speed > 0 ? 'M106 S' . (int)round($speed * 2.55) : 'M107';
+        $this->apiPost("$baseUrl/api/printer/command", $headers, ['command' => $gcode]);
+        return ['ok' => true, 'speed' => $speed];
+    }
+
+    // ── Liste les fichiers G-code d'OctoPrint ────────────────
+    public function getFiles(int $printerId): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $data = $this->apiGet("$baseUrl/api/files?recursive=true", $headers);
+        if ($data === null) return ['ok' => false, 'error' => 'OctoPrint inaccessible'];
+        return ['ok' => true, 'files' => $data['files'] ?? []];
+    }
+
+    // ── Lance l'impression d'un fichier ──────────────────────
+    public function startPrint(int $printerId, string $filename, string $location = 'local'): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        if (!$filename) return ['ok' => false, 'error' => 'Nom de fichier manquant'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $url = "$baseUrl/api/files/{$location}/" . rawurlencode($filename);
+        $this->apiPost($url, $headers, ['command' => 'select', 'print' => true]);
+        return ['ok' => true];
+    }
+
+    // ── Télécharge le G-code du fichier en cours (500 Ko max) ─
+    public function getGcodeFile(int $printerId, string $filename = '', string $location = 'local'): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        if (!function_exists('curl_init')) return ['ok' => false, 'error' => 'cURL requis'];
+
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+
+        if (!$filename) {
+            $job      = $this->apiGet("$baseUrl/api/job", $headers);
+            $filename = $job['job']['file']['name']   ?? '';
+            $location = $job['job']['file']['origin'] ?? 'local';
+            if (!$filename) return ['ok' => false, 'error' => 'Aucun fichier en cours'];
+        }
+
+        $url      = "$baseUrl/downloads/files/{$location}/" . rawurlencode($filename);
+        $maxBytes = 512000; // 500 Ko
+        $received = '';
+        $truncated = false;
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_TIMEOUT    => 20,
+            CURLOPT_HTTPHEADER => $headers,
+        ]);
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($_, $chunk) use (&$received, &$truncated, $maxBytes) {
+            $free = $maxBytes - strlen($received);
+            if ($free <= 0) { $truncated = true; return strlen($chunk); }
+            $received .= substr($chunk, 0, $free);
+            if (strlen($chunk) > $free) $truncated = true;
+            return strlen($chunk);
+        });
+        curl_exec($ch);
+
+        if (!$received) return ['ok' => false, 'error' => 'Téléchargement échoué : ' . curl_error($ch)];
+
+        return ['ok' => true, 'filename' => $filename, 'content' => $received, 'truncated' => $truncated];
+    }
+
+    // ── Connexion / déconnexion imprimante ───────────────────
+    public function setConnection(int $printerId, string $action): array {
+        $printer = $this->getPrinterById($printerId);
+        if (!$printer) return ['ok' => false, 'error' => 'Imprimante introuvable'];
+        $baseUrl = "http://{$printer['host']}:{$printer['port']}";
+        $headers = $this->buildHeaders($printer['api_key']);
+        $this->apiPost("$baseUrl/api/connection", $headers, ['command' => $action]);
+        return ['ok' => true, 'action' => $action];
+    }
+
+    // ── Construit le header X-Api-Key (CORRECTION BUG) ───────
+    private function buildHeaders(string $apiKey): array {
+        return [
+            "X-Api-Key: $apiKey",
+            "Content-Type: application/json",
+        ];
+    }
+
+    // ── HTTP POST ─────────────────────────────────────────────
+    private function apiPost(string $url, array $headers, array $body, int $timeout = 8): ?array {
+        $json = json_encode($body);
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => $timeout,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $json,
+                CURLOPT_HTTPHEADER     => $headers,
+            ]);
+            $raw = curl_exec($ch);
+            if ($raw === false || curl_error($ch)) return ['sent' => true];
+        } else {
+            $ctx = stream_context_create(['http' => [
+                'method'        => 'POST',
+                'header'        => implode("\r\n", $headers),
+                'content'       => $json,
+                'timeout'       => $timeout,
+                'ignore_errors' => true,
+            ]]);
+            $raw = @file_get_contents($url, false, $ctx);
+            if ($raw === false || trim($raw) === '') return ['sent' => true];
+        }
+        $decoded = json_decode($raw, true);
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : ['sent' => true];
+    }
+
     // ── Point d'entrée : synchronise toutes les imprimantes ──
     public function syncAll(): array {
         $results = [];
@@ -60,7 +310,7 @@ class OctoPrintSync {
     private function syncPrinter(array $printer): array {
         $log     = [];
         $baseUrl = "http://{$printer['host']}:{$printer['port']}";
-        $headers = ["GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8: {$printer['GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8']}"];
+        $headers = $this->buildHeaders($printer['api_key']);
 
         // 1. Vérifier la connexion à OctoPrint
         $connection = $this->apiGet("$baseUrl/api/connection", $headers);
@@ -236,15 +486,16 @@ class OctoPrintSync {
     // $dedupMinutes : durée en minutes pendant laquelle on ne recrée pas la même alerte
     private function createAlertIfNew(string $type, string $titre, string $message, string $source, int $dedupMinutes = 30): bool {
         // Vérifier si une alerte similaire (même titre, non résolue) existe déjà récemment
-        $st = $this->db->prepare('
+        $mins = (int)$dedupMinutes;
+        $st = $this->db->prepare("
             SELECT id FROM alertes
             WHERE titre = ?
               AND source = ?
               AND resolue = 0
-              AND cree_le > NOW() - INTERVAL ? MINUTE
+              AND cree_le > NOW() - INTERVAL {$mins} MINUTE
             LIMIT 1
-        ');
-        $st->execute([$titre, $source, $dedupMinutes]);
+        ");
+        $st->execute([$titre, $source]);
 
         if ($st->fetch()) {
             return false; // Alerte déjà présente, on ne duplique pas
@@ -258,19 +509,28 @@ class OctoPrintSync {
 
     // ── Appel HTTP vers l'API OctoPrint ──────────────────────
     private function apiGet(string $url, array $headers, int $timeout = 5): ?array {
-        $ctx = stream_context_create([
-            'http' => [
-                'method'  => 'GET',
-                'header'  => implode("\r\n", $headers),
-                'timeout' => $timeout,
-                'ignore_errors' => true,
-            ]
-        ]);
-
-        $response = @file_get_contents($url, false, $ctx);
-
-        if ($response === false) {
-            return null;
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => $timeout,
+                CURLOPT_HTTPHEADER     => $headers,
+                CURLOPT_FOLLOWLOCATION => true,
+            ]);
+            $response = curl_exec($ch);
+            $err      = curl_error($ch);
+            if ($response === false || $err) return null;
+        } else {
+            $ctx = stream_context_create([
+                'http' => [
+                    'method'        => 'GET',
+                    'header'        => implode("\r\n", $headers),
+                    'timeout'       => $timeout,
+                    'ignore_errors' => true,
+                ]
+            ]);
+            $response = @file_get_contents($url, false, $ctx);
+            if ($response === false) return null;
         }
 
         $data = json_decode($response, true);

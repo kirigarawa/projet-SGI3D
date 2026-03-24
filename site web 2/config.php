@@ -7,7 +7,7 @@
 define('DB_HOST',     'localhost');
 define('DB_NAME',     'sgi3d');
 define('DB_USER',     'root');       // Votre utilisateur MySQL
-define('DB_PASSWORD', '');           // Votre mot de passe MySQL
+define('DB_PASSWORD', 'root');           // Votre mot de passe MySQL
 define('DB_CHARSET',  'utf8mb4');
 
 function getDB(): PDO {
