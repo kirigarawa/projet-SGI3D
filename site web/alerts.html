@@ -4,41 +4,104 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Alertes</title>
+<!-- Feuille de style globale du projet -->
 <link rel="stylesheet" href="style.css">
 <style>
+  /* Décalage du contenu sous la barre de navigation fixe */
   body{padding-top:60px}
+
+  /* ── Barre de filtres ── */
   .filters{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem}
+
+  /* Bouton de filtre générique (style pill) */
   .filter-btn{
     padding:.5rem 1.2rem;border-radius:20px;border:1px solid rgba(255,255,255,.2);
     background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;
     font-size:.85rem;font-family:var(--font);transition:all .2s;
   }
+  /* État actif commun */
   .filter-btn.active{font-weight:700}
+  /* Couleurs spécifiques à chaque filtre actif */
   .filter-btn.all.active    {background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4);color:#fff}
   .filter-btn.error.active  {background:rgba(231,76,60,.2);  border-color:#e74c3c;color:#e74c3c}
   .filter-btn.warning.active{background:rgba(243,156,18,.2); border-color:#f39c12;color:#f39c12}
   .filter-btn.info.active   {background:rgba(52,152,219,.2); border-color:#3498db;color:#3498db}
   .filter-btn.resolved.active{background:rgba(46,204,113,.2);border-color:#2ecc71;color:#2ecc71}
+
+  /* ── Liste d'alertes ── */
   .alerts-list{display:flex;flex-direction:column;gap:1rem}
+
+  /* Carte individuelle d'alerte avec bordure gauche colorée selon la sévérité */
   .alert-item{
     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
     border-radius:var(--radius-sm);padding:1.2rem 1.5rem;
     display:flex;gap:1rem;align-items:flex-start;
     border-left-width:4px;transition:all .2s;
   }
+  /* Couleurs de la bordure gauche par sévérité */
   .alert-item.error  {border-left-color:#e74c3c}
   .alert-item.warning{border-left-color:#f39c12}
   .alert-item.info   {border-left-color:#3498db}
+  /* Alertes résolues légèrement transparentes */
   .alert-item.resolved{opacity:.6}
+
+  /* Icône de l'alerte (emoji) */
   .alert-item-icon{font-size:1.5rem;flex-shrink:0;margin-top:.1rem}
+  /* Corps textuel de l'alerte */
   .alert-item-body{flex:1}
   .alert-item-body h3{font-size:.95rem;font-weight:700;margin-bottom:.3rem}
   .alert-item-body p{font-size:.88rem;color:rgba(255,255,255,.7);margin-bottom:.5rem}
+  /* Métadonnées (date, source, résolution) */
   .alert-item-meta{font-size:.78rem;color:rgba(255,255,255,.4)}
+
+  /* Zone des boutons d'action (résoudre / supprimer) */
   .alert-actions{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;flex-shrink:0}
+  /* Bouton de toggle son (sans bordure) */
   .sound-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;padding:.2rem}
+
+  /* Message affiché quand la liste est vide */
   .no-alerts{text-align:center;padding:3rem;color:rgba(255,255,255,.4)}
   .no-alerts .na-icon{font-size:3rem;margin-bottom:1rem}
+
+  /* ── Barre de statut OctoPrint ── */
+  .octo-bar{
+    display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-sm);padding:.8rem 1.2rem;margin-bottom:1.5rem;
+    font-size:.85rem;
+  }
+  /* Titre "OctoPrint" dans la barre */
+  .octo-title{font-weight:600;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:.5rem}
+  /* Conteneur des pastilles d'imprimantes */
+  .octo-printers{display:flex;gap:.8rem;flex-wrap:wrap;flex:1}
+
+  /* Pastille d'une imprimante individuelle */
+  .octo-printer{
+    display:flex;align-items:center;gap:.5rem;
+    background:rgba(255,255,255,.06);border-radius:8px;padding:.3rem .8rem;
+    border:1px solid rgba(255,255,255,.1);font-size:.8rem;
+  }
+  /* Couleurs de statut imprimante */
+  .octo-printer.ok     {border-color:rgba(46,204,113,.4);color:#2ecc71}
+  .octo-printer.warn   {border-color:rgba(243,156,18,.4);color:#f39c12}
+  .octo-printer.error  {border-color:rgba(231,76,60,.4); color:#e74c3c}
+  .octo-printer.offline{border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.4)}
+
+  /* Point de couleur (indicateur de statut) */
+  .octo-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+  /* Température affichée en police mono */
+  .octo-temp{font-family:var(--font-mono,monospace);font-size:.75rem;opacity:.8}
+
+  /* Bouton de synchronisation manuelle */
+  .octo-sync-btn{
+    background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);
+    border-radius:6px;padding:.3rem .8rem;cursor:pointer;font-size:.78rem;
+    font-family:var(--font);transition:all .2s;flex-shrink:0;
+  }
+  .octo-sync-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .octo-sync-btn:disabled{opacity:.4;cursor:default}
+  /* Horodatage de la dernière synchronisation */
+  .octo-last{font-size:.75rem;color:rgba(255,255,255,.3);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -83,6 +146,16 @@
         <button class="btn btn-ghost btn-sm" onclick="clearResolved()">🗑️ Supprimer résolues</button>
         <button class="sound-btn" onclick="toggleSound()" id="sound-toggle" title="Son des alertes">🔔</button>
       </div>
+    </div>
+
+    <!-- ── Barre de statut OctoPrint ── -->
+    <div class="octo-bar" id="octo-bar">
+      <div class="octo-title">🐙 OctoPrint</div>
+      <div class="octo-printers" id="octo-printers">
+        <span style="color:rgba(255,255,255,.4);font-size:.8rem">Synchronisation…</span>
+      </div>
+      <button class="octo-sync-btn" id="octo-sync-btn" onclick="syncOctoPrint()">🔄 Sync</button>
+      <span class="octo-last" id="octo-last"></span>
     </div>
 
     <!-- Stats alertes -->
@@ -132,13 +205,23 @@
 
 <script src="db.js"></script>
 <script>
-let currentFilter = 'all';
-let soundEnabled = true;
+/* ============================================================
+   État global
+   ============================================================ */
+let currentFilter = 'all'; // Filtre actif : 'all' | 'error' | 'warning' | 'info' | 'resolved'
+let soundEnabled = true;   // Active/désactive le son pour les alertes critiques
 
-function doLogout(){ SGI3D_DB.logout(); window.location.href='login.html'; }
+/* ── Authentification ── */
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+
+/* ── Modale : nouvelle alerte ── */
 function showAddAlert(){ document.getElementById('addAlertModal').classList.add('open'); }
+
+/* ── Son : bascule icône et affiche un toast ── */
 function toggleSound(){ soundEnabled=!soundEnabled; document.getElementById('sound-toggle').textContent=soundEnabled?'🔔':'🔕'; showToast(soundEnabled?'Son activé':'Son désactivé','info'); }
 
+/* ── Filtre ──
+   Change le filtre courant, met à jour les boutons et rafraîchit la liste. */
 function setFilter(f, btn){
   currentFilter=f;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
@@ -146,87 +229,111 @@ function setFilter(f, btn){
   renderAlerts();
 }
 
-function renderStats(){
-  const all=SGI3D_DB.getAlerts();
-  const active=SGI3D_DB.getAlerts(false);
+/* ── Statistiques ──
+   Récupère toutes les alertes et met à jour les cartes de stats + badge sidebar. */
+async function renderStats(){
+  const all    = await SGI3D_DB.getAlerts();
+  const active = await SGI3D_DB.getAlerts(false);   // alertes non résolues
+  const resolved = await SGI3D_DB.getAlerts(true);  // alertes résolues
   document.getElementById('alert-stats').innerHTML=`
-    <div class="stat-card red"><div class="s-val">${active.filter(a=>a.type==='error').length}</div><div class="s-label">Erreurs actives</div></div>
-    <div class="stat-card orange"><div class="s-val">${active.filter(a=>a.type==='warning').length}</div><div class="s-label">Avertissements</div></div>
+    <div class="stat-card red"><div class="s-val">${active.filter(a=>a.type==='erreur').length}</div><div class="s-label">Erreurs actives</div></div>
+    <div class="stat-card orange"><div class="s-val">${active.filter(a=>a.type==='avertissement').length}</div><div class="s-label">Avertissements</div></div>
     <div class="stat-card blue"><div class="s-val">${active.filter(a=>a.type==='info').length}</div><div class="s-label">Informations</div></div>
-    <div class="stat-card green"><div class="s-val">${SGI3D_DB.getAlerts(true).length}</div><div class="s-label">Résolues</div></div>
+    <div class="stat-card green"><div class="s-val">${resolved.length}</div><div class="s-label">Résolues</div></div>
   `;
+  // Mise à jour du badge dans la sidebar
   document.getElementById('sb-alerts').textContent=active.length;
   document.getElementById('alert-summary').textContent=
-    `${all.length} alertes au total · ${active.length} non résolues · ${SGI3D_DB.getAlerts(true).length} résolues`;
+    `${all.length} alertes au total · ${active.length} non résolues · ${resolved.length} résolues`;
 }
 
-function renderAlerts(){
-  let alerts = SGI3D_DB.getAlerts();
-  if(currentFilter==='resolved') alerts=alerts.filter(a=>a.resolved);
-  else if(currentFilter!=='all') alerts=alerts.filter(a=>a.type===currentFilter&&!a.resolved);
+/* ── Liste des alertes ──
+   Charge les alertes selon le filtre actif et génère le HTML de la liste. */
+async function renderAlerts(){
+  let alerts;
+  if(currentFilter==='resolved')    alerts = await SGI3D_DB.getAlerts(true);
+  else if(currentFilter==='all')    alerts = await SGI3D_DB.getAlerts();
+  else {
+    // Filtre par type parmi les alertes actives uniquement
+    const all = await SGI3D_DB.getAlerts(false);
+    alerts = all.filter(a=>a.type===currentFilter);
+  }
 
   const list = document.getElementById('alerts-list');
+
+  // Aucune alerte : affichage du message vide
   if(!alerts.length){
     list.innerHTML=`<div class="no-alerts"><div class="na-icon">${currentFilter==='resolved'?'✅':'🔕'}</div><p>${currentFilter==='resolved'?'Aucune alerte résolue':'Aucune alerte dans cette catégorie'}</p></div>`;
     return;
   }
 
-  const icon={error:'🔴',warning:'🟡',info:'🔵'};
+  // Mapping type → emoji
+  const icon={erreur:'🔴',avertissement:'🟡',info:'🔵'};
   list.innerHTML=alerts.map(a=>`
-    <div class="alert-item ${a.type} ${a.resolved?'resolved':''}" id="alert-${a.id}">
+    <div class="alert-item ${a.type==='erreur'?'error':a.type==='avertissement'?'warning':'info'} ${a.resolue?'resolved':''}" id="alert-${a.id}">
       <div class="alert-item-icon">${icon[a.type]||'❓'}</div>
       <div class="alert-item-body">
-        <h3>${a.title} ${a.resolved?'<span class="badge badge-success" style="font-size:.7rem">Résolu</span>':''}</h3>
+        <h3>${a.titre} ${a.resolue?'<span class="badge badge-success" style="font-size:.7rem">Résolu</span>':''}</h3>
         <p>${a.message}</p>
         <div class="alert-item-meta">
-          📅 ${SGI3D_DB.formatDate(a.createdAt)}
+          📅 ${SGI3D_DB.formatDate(a.cree_le)}
           ${a.source?' · 📍 '+a.source:''}
-          ${a.resolved&&a.resolvedAt?' · ✅ Résolu : '+SGI3D_DB.formatDate(a.resolvedAt):''}
+          ${a.resolue&&a.resolue_le?' · ✅ Résolu : '+SGI3D_DB.formatDate(a.resolue_le):''}
         </div>
       </div>
       <div class="alert-actions">
-        ${!a.resolved?`<button class="btn btn-success btn-xs" onclick="resolveAlert(${a.id})">✅ Résoudre</button>`:''}
+        ${!a.resolue?`<button class="btn btn-success btn-xs" onclick="resolveAlert(${a.id})">✅ Résoudre</button>`:''}
         <button class="btn btn-danger btn-xs" onclick="deleteAlert(${a.id})">🗑️ Supprimer</button>
-        ${a.type==='error'&&!a.resolved?`<span class="badge badge-danger">⚡ URGENT</span>`:''}
+        ${a.type==='erreur'&&!a.resolue?`<span class="badge badge-danger">⚡ URGENT</span>`:''}
       </div>
     </div>`).join('');
 }
 
-function resolveAlert(id){
-  SGI3D_DB.resolveAlert(id);
+/* ── Actions sur une alerte ── */
+
+// Marque une alerte comme résolue
+async function resolveAlert(id){
+  await SGI3D_DB.resolveAlert(id);
   renderAll(); showToast('✅ Alerte résolue','success');
 }
 
-function deleteAlert(id){
-  SGI3D_DB.deleteAlert(id);
+// Supprime définitivement une alerte
+async function deleteAlert(id){
+  await SGI3D_DB.deleteAlert(id);
   renderAll(); showToast('🗑️ Alerte supprimée','warning');
 }
 
-function resolveAll(){
+// Résout toutes les alertes actives en une seule action
+async function resolveAll(){
   if(!confirm('Résoudre toutes les alertes actives ?'))return;
-  SGI3D_DB.getAlerts(false).forEach(a=>SGI3D_DB.resolveAlert(a.id));
+  await SGI3D_DB.resolveAllAlerts();
   renderAll(); showToast('✅ Toutes les alertes résolues','success');
 }
 
-function clearResolved(){
+// Purge toutes les alertes dont le statut est "résolue"
+async function clearResolved(){
   if(!confirm('Supprimer toutes les alertes résolues ?'))return;
-  const active=SGI3D_DB.getAlerts(false);
-  SGI3D_DB.set('alerts',active);
+  await SGI3D_DB.deleteResolvedAlerts();
   renderAll(); showToast('🗑️ Alertes résolues supprimées','warning');
 }
 
-function doAddAlert(){
+/* ── Création d'une alerte via le formulaire modal ── */
+async function doAddAlert(){
   const type=document.getElementById('aa-type').value;
   const title=document.getElementById('aa-title').value.trim();
   const msg=document.getElementById('aa-msg').value.trim();
   const src=document.getElementById('aa-src').value.trim();
+  // Validation : titre et message obligatoires
   if(!title||!msg){showToast('Titre et message requis','warning');return;}
-  SGI3D_DB.addAlert({type,title,message:msg,source:src||(SGI3D_DB.getSession()?.name||'Admin')});
+  await SGI3D_DB.addAlert({type,titre:title,message:msg,source:src||(SGI3D_DB.getSession()?.name||'Admin')});
   document.getElementById('addAlertModal').classList.remove('open');
   renderAll(); showToast('🔔 Alerte créée','success');
-  if(soundEnabled && type==='error') playAlertSound();
+  // Son uniquement pour les erreurs critiques
+  if(soundEnabled && type==='erreur') playAlertSound();
 }
 
+/* ── Son d'alerte ──
+   Génère un bip descendant via Web Audio API (880 Hz → 440 Hz en 300 ms). */
 function playAlertSound(){
   try {
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -238,13 +345,16 @@ function playAlertSound(){
     gain.gain.setValueAtTime(0.3,ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.5);
-  } catch(e){}
+  } catch(e){/* Navigateur sans Web Audio API : on ignore silencieusement */}
 }
 
+/* ── Rafraîchissement complet (stats + liste) ── */
 function renderAll(){
   renderStats(); renderAlerts();
 }
 
+/* ── Notification toast ──
+   Affiche un message temporaire en bas de l'écran (disparaît après 3,5 s). */
 function showToast(msg,type='info'){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
@@ -252,26 +362,88 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),3500);
 }
 
-// Auto-simulation d'alertes système
-function autoAlert(){
+/* ── Simulation d'alertes automatiques ──
+   Génère une alerte aléatoire parmi un ensemble prédéfini (à des fins de démonstration). */
+async function autoAlert(){
   const types=['warning','info','error'];
-  const sources=['Ultimaker 2+','Geeetech A20T','Capteur T°','Système','Caméra 1'];
+  const sources=['Ultimaker 2+','Creality Ender V2 Neo','Capteur T°','Système','Caméra 1'];
   const msgs=[
-    {type:'warning',title:'Température buse élevée',msg:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
-    {type:'info',   title:'Maintenance programmée',msg:'Calibration automatique dans 24h'},
-    {type:'error',  title:'Panne extrudeur',msg:'L\'extrudeur du Geeetech A20T ne répond plus'},
-    {type:'warning',title:'Filament presque épuisé',msg:'Niveau filament ABS < 5%'},
-    {type:'info',   title:'Impression terminée',msg:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
+    {type:'avertissement',titre:'Température buse élevée',message:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
+    {type:'info',   titre:'Maintenance programmée',message:'Calibration automatique dans 24h'},
+    {type:'erreur',  titre:'Panne extrudeur',message:'L\'extrudeur de la Creality Ender V2 Neo ne répond plus'},
+    {type:'avertissement',titre:'Filament presque épuisé',message:'Niveau filament ABS < 5%'},
+    {type:'info',   titre:'Impression terminée',message:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
   ];
   const pick=msgs[Math.floor(Math.random()*msgs.length)];
-  SGI3D_DB.addAlert({...pick,message:pick.msg,source:sources[Math.floor(Math.random()*sources.length)]});
+  await SGI3D_DB.addAlert({...pick,source:sources[Math.floor(Math.random()*sources.length)]});
   renderAll();
-  if(soundEnabled && pick.type==='error') playAlertSound();
+  if(soundEnabled && pick.type==='erreur') playAlertSound();
 }
 
+/* ============================================================
+   syncOctoPrint()
+   Appelle api.php action=syncOctoPrint qui interroge l'API
+   de chaque imprimante OctoPrint et crée les alertes nécessaires.
+   ============================================================ */
+async function syncOctoPrint() {
+  const btn  = document.getElementById('octo-sync-btn');
+  const last = document.getElementById('octo-last');
+  // Désactivation du bouton pendant la synchronisation
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Sync…'; }
+
+  try {
+    // Appel API côté serveur pour interroger chaque OctoPrint
+    const res  = await fetch('api.php', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'syncOctoPrint' })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      updateOctoPrinterBar(json.data.results); // Mise à jour des pastilles imprimantes
+      if(last) last.textContent = 'Sync ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      await renderAll(); // Rafraîchissement des stats et de la liste
+    } else {
+      showToast('❌ Erreur OctoPrint : ' + (json.error||''), 'error');
+    }
+  } catch(e) {
+    // Erreur réseau : OctoPrint inaccessible
+    const printers = document.getElementById('octo-printers');
+    if(printers) printers.innerHTML = '<span style="color:rgba(231,76,60,.7);font-size:.8rem">🔴 OctoPrint inaccessible — vérifiez config.php</span>';
+  } finally {
+    // Réactivation du bouton dans tous les cas
+    if(btn) { btn.disabled = false; btn.textContent = '🔄 Sync'; }
+  }
+}
+
+/* ── Barre d'état OctoPrint ──
+   Construit les pastilles de statut pour chaque imprimante à partir des logs retournés par l'API. */
+function updateOctoPrinterBar(results) {
+  if (!results) return;
+  const container = document.getElementById('octo-printers');
+  if (!container) return;
+  const items = Object.entries(results).map(([name, logs]) => {
+    // Détermination du statut à partir des messages de log
+    const isOffline = logs.some(l => l.includes('inaccessible') || l.includes('déconnectée'));
+    const hasError  = logs.some(l => l.startsWith('ERREUR'));
+    const hasWarn   = logs.some(l => l.startsWith('AVERTISSEMENT'));
+    const tempLog   = logs.find(l => l.startsWith('Buse:')) || '';
+    const printLog  = logs.find(l => l.startsWith('Impression:')) || '';
+    // Classe CSS de la pastille selon la priorité : offline > error > warn > ok
+    const cls = isOffline ? 'offline' : hasError ? 'error' : hasWarn ? 'warn' : 'ok';
+    const temp  = tempLog  ? `<span class="octo-temp">${tempLog.replace('Buse:','').trim()}</span>` : '';
+    const print = printLog ? `<span class="octo-temp">${printLog.replace('Impression:','').trim().slice(0,35)}</span>` : '';
+    return `<div class="octo-printer ${cls}"><span class="octo-dot"></span><span>${name}</span>${temp}${print}</div>`;
+  });
+  container.innerHTML = items.join('') || '<span style="color:rgba(255,255,255,.4);font-size:.8rem">Aucune imprimante configurée dans octoprint_sync.php</span>';
+}
+
+/* ── Initialisation ──
+   Chargement initial puis synchronisation toutes les 30 secondes. */
 renderAll();
-// Simuler une nouvelle alerte toutes les 45 secondes
-setInterval(autoAlert, 45000);
+syncOctoPrint();
+setInterval(syncOctoPrint, 30 * 1000); // Resynchronisation OctoPrint toutes les 30 s
+setInterval(renderAll, 30 * 1000);     // Rafraîchissement de la liste toutes les 30 s
 </script>
 </body>
 </html>

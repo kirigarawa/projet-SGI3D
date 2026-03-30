@@ -4,52 +4,85 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Caméras</title>
+<!-- Feuille de style globale partagée par toutes les pages -->
 <link rel="stylesheet" href="style.css">
 <style>
+  /* Décalage vers le bas pour ne pas passer sous la barre de navigation fixe */
   body{padding-top:60px}
+
+  /* Grille responsive : les cartes caméras se répartissent automatiquement
+     en colonnes de 320 px minimum, avec un espacement de 1.5 rem */
   .cameras-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem}
+
+  /* Carte individuelle d'une caméra : fond semi-transparent, bordure subtile */
   .cam-card{
     background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
     border-radius:var(--radius);overflow:hidden;
   }
+  /* Caméra hors ligne : atténuée à 60% d'opacité */
   .cam-card.offline{opacity:.6}
+
+  /* En-tête de la carte : nom + emplacement à gauche, statut à droite */
   .cam-header{
     display:flex;align-items:center;justify-content:space-between;
     padding:.9rem 1.2rem;background:rgba(0,0,0,.3);
   }
   .cam-header h3{font-size:.95rem;font-weight:700;margin:0}
+  /* Emplacement physique de la caméra (ex: "Zone impression") */
   .cam-header .cam-loc{font-size:.75rem;color:rgba(255,255,255,.5)}
+
+  /* Indicateur de statut coloré : vert si en ligne, rouge si hors ligne */
   .cam-status{display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600}
   .cam-status.online{color:#2ecc71}.cam-status.offline{color:#e74c3c}
+
+  /* Corps de la carte : fond noir, ratio 16/9 pour le flux vidéo simulé */
   .cam-body{position:relative;background:#0a0a0a;aspect-ratio:16/9;overflow:hidden}
+
+  /* Canvas de simulation du flux vidéo : couvre tout le corps de la carte */
   .cam-canvas{width:100%;height:100%;display:block}
+
+  /* Overlay affiché à la place du flux quand la caméra est hors ligne */
   .cam-overlay{
     position:absolute;top:0;left:0;right:0;bottom:0;
     display:flex;align-items:center;justify-content:center;
     background:rgba(0,0,0,.7);color:rgba(255,255,255,.5);font-size:1.5rem;
   }
+
+  /* Barre d'infos en bas du flux : numéro de caméra + badge de mouvement
+     Dégradé transparent → noir pour lisibilité sur le flux vidéo */
   .cam-info-bar{
     position:absolute;bottom:0;left:0;right:0;
     background:linear-gradient(transparent,rgba(0,0,0,.8));
     padding:.5rem .8rem;display:flex;justify-content:space-between;align-items:center;
     font-size:.72rem;color:rgba(255,255,255,.7);
   }
+
+  /* Badge "⚠️ MOUVEMENT" : fond rouge semi-transparent, clignotant.
+     Masqué par défaut (display:none), affiché uniquement lors d'une détection. */
   .motion-badge{
     background:rgba(231,76,60,.8);color:#fff;
     font-size:.7rem;font-weight:700;padding:.2rem .5rem;border-radius:4px;
     animation:blink .8s infinite;display:none;
   }
+  /* Animation de clignotement du badge mouvement */
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Pied de la carte : boutons d'action (activer, plein écran, supprimer) */
   .cam-footer{padding:.9rem 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08)}
-  /* Bouton plein écran */
+
+  /* Bouton plein écran discret avec bordure légère */
   .btn-fullscreen{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem}
   .btn-fullscreen:hover{background:rgba(255,255,255,.1)}
-  /* Modal ajout caméra */
+
+  /* Message affiché quand aucune caméra n'est configurée */
   .no-cam{text-align:center;padding:3rem;color:rgba(255,255,255,.4);font-size:1rem}
 </style>
 </head>
 <body>
 
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION PRINCIPALE (barre fixe en haut)
+     ════════════════════════════════════════════════════════ -->
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">SGI3D</a>
   <div class="nav-links">
@@ -62,7 +95,15 @@
   </div>
 </nav>
 
+<!-- ════════════════════════════════════════════════════════
+     MISE EN PAGE ADMIN (sidebar gauche + contenu principal)
+     ════════════════════════════════════════════════════════ -->
 <div class="admin-layout">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────
+       Navigation latérale. Le badge #sb-alerts est mis à jour
+       toutes les 10 secondes avec le nombre d'alertes actives.
+       ──────────────────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
     <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
@@ -71,6 +112,7 @@
     <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
     <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.html" class="active"><span class="s-icon">📷</span> Caméras</a>
+    <!-- Badge rouge : nombre d'alertes non résolues (mis à jour en JS) -->
     <a href="alerts.html"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
     <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
@@ -78,32 +120,49 @@
     <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
   </aside>
 
+  <!-- ── CONTENU PRINCIPAL ────────────────────────────────
+       En-tête avec compteurs en temps réel + boutons d'action,
+       puis la grille de cartes caméras générée dynamiquement.
+       ──────────────────────────────────────────────────── -->
   <main class="admin-content">
+
+    <!-- En-tête : titre + compteurs + boutons d'action globaux -->
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
       <div>
         <h1>📷 Surveillance Caméras</h1>
+        <!-- Compteurs mis à jour dynamiquement par renderCameras() -->
         <p>Monitoring en temps réel · <span id="cam-count">0</span> caméras · <span id="cam-online">0</span> en ligne</p>
       </div>
       <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+        <!-- Ouvre le modal pour ajouter une nouvelle caméra -->
         <button class="btn btn-success btn-sm" onclick="showAddCam()">➕ Ajouter caméra</button>
+        <!-- Active/désactive la détection de mouvement sur toutes les caméras -->
         <button class="btn btn-accent btn-sm" onclick="toggleAllMotion()">🎯 Détection mvt</button>
+        <!-- Recharge toutes les cartes caméras et leurs simulations -->
         <button class="btn btn-ghost btn-sm" onclick="refreshAll()">🔄 Rafraîchir</button>
       </div>
     </div>
 
-    <!-- Grille caméras -->
+    <!-- Grille de cartes caméras : remplie dynamiquement par renderCameras() -->
     <div class="cameras-grid" id="cameras-grid"></div>
   </main>
 </div>
 
-<!-- Modal ajout caméra -->
+<!-- ════════════════════════════════════════════════════════
+     MODAL – AJOUT D'UNE CAMÉRA
+     Formulaire avec nom, emplacement, URL de flux (optionnel)
+     et case à cocher pour la détection de mouvement.
+     ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="addCamModal">
   <div class="modal">
+    <!-- Ferme le modal en retirant la classe "open" -->
     <button class="modal-close" onclick="document.getElementById('addCamModal').classList.remove('open')">✕</button>
     <h2>📷 Ajouter une caméra</h2>
     <div class="form-group"><label>Nom de la caméra</label><input id="ac-name" class="form-control" placeholder="Caméra Atelier 3"></div>
     <div class="form-group"><label>Emplacement</label><input id="ac-loc" class="form-control" placeholder="Zone impression"></div>
+    <!-- URL du flux RTSP/HTTP : laissée vide si la simulation suffit -->
     <div class="form-group"><label>URL du flux (optionnel)</label><input id="ac-url" class="form-control" placeholder="http://192.168.1.x/stream"></div>
+    <!-- Case cochée par défaut : active la détection de mouvement dès l'ajout -->
     <div class="form-group" style="display:flex;align-items:center;gap:.8rem">
       <input type="checkbox" id="ac-motion" checked>
       <label for="ac-motion" style="color:rgba(255,255,255,.85);cursor:pointer">Activer la détection de mouvement</label>
@@ -115,22 +174,41 @@
   </div>
 </div>
 
+<!-- Conteneur des notifications toast (injectées dynamiquement par showToast()) -->
 <div id="toast-container"></div>
 
+<!-- db.js : objet global SGI3D_DB pour toutes les opérations de données -->
 <script src="db.js"></script>
 <script>
-// Pas besoin d'auth stricte pour les caméras (public)
+// ── SESSION ──────────────────────────────────────────────
+// La page caméras est accessible sans authentification stricte.
+// La session est quand même récupérée pour d'éventuels usages futurs.
 const session = SGI3D_DB.getSession();
 
-function doLogout(){ SGI3D_DB.logout(); window.location.href='login.html'; }
+// Déconnexion : journalise l'événement puis redirige vers login.html
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+
+// Ouvre le modal d'ajout de caméra en ajoutant la classe "open"
 function showAddCam(){ document.getElementById('addCamModal').classList.add('open'); }
 
-// ─────────────────────────────────────────────────────
-// Simulateurs de flux caméra (canvas 2D animé)
-// ─────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+//  SIMULATION DU FLUX VIDÉO (canvas 2D animé)
+//  En l'absence d'un vrai flux RTSP, chaque caméra affiche
+//  une animation canvas qui imite l'aspect d'une caméra de
+//  surveillance : fond sombre, grain, grille en perspective,
+//  objets mobiles, horodatage et témoin REC clignotant.
+// ════════════════════════════════════════════════════════
+
+// Palette de couleurs de fond différente pour chaque caméra
 const CAM_COLORS = ['#1a3a2a','#1a2a3a','#2a1a3a','#3a2a1a'];
+
+// Stocke les IDs de requestAnimationFrame pour pouvoir les annuler
+// lors d'un re-rendu (évite les fuites d'animations fantômes)
 const camAnimators = {};
 
+// Lance la simulation canvas pour une caméra donnée.
+// canvasId  : id de l'élément <canvas> à dessiner
+// camIndex  : index de la caméra dans la liste (pour la couleur de fond)
 function startCamSimulation(canvasId, camIndex) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -140,175 +218,236 @@ function startCamSimulation(canvasId, camIndex) {
   let t = 0;
   const baseColor = CAM_COLORS[camIndex % CAM_COLORS.length];
 
-  // Objets mobiles simulés
+  // 3 objets mobiles (silhouettes) qui rebondissent dans le cadre
   const objects = Array.from({length:3}, ()=>({
     x: Math.random()*W, y: Math.random()*H,
     vx: (Math.random()-.5)*1.2, vy: (Math.random()-.5)*.8,
-    size: 8+Math.random()*15, color: `rgba(${Math.floor(Math.random()*200+50)},${Math.floor(Math.random()*200+50)},${Math.floor(Math.random()*200+50)},.8)`
+    size: 8+Math.random()*15,
+    color: `rgba(${Math.floor(Math.random()*200+50)},${Math.floor(Math.random()*200+50)},${Math.floor(Math.random()*200+50)},.8)`
   }));
 
   function draw() {
-    // Fond sombre + bruit
+    // ── Fond coloré de base ──
     ctx.fillStyle = baseColor;
     ctx.fillRect(0,0,W,H);
 
-    // Effet grain/scanline
+    // ── Effet grain/scanlines ──
+    // Lignes horizontales semi-transparentes espacées de 3 px
+    // avec opacité légèrement aléatoire pour simuler le bruit capteur
     for(let i=0;i<H;i+=3){
       ctx.fillStyle=`rgba(0,0,0,${0.05+Math.random()*.05})`;
       ctx.fillRect(0,i,W,1);
     }
 
-    // Grille perspective (sol)
+    // ── Grille en perspective (simule le sol de l'atelier) ──
     ctx.strokeStyle = 'rgba(255,255,255,0.06)';
     ctx.lineWidth = 1;
+    // Lignes fuyantes vers le point de fuite central
     for(let x=0;x<W;x+=W/8){ ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(W/2,H*.4);ctx.stroke(); }
+    // Lignes horizontales (parallèles au sol)
     for(let i=0;i<8;i++){ const y=H*.4+i*(H*.6/8); ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
 
-    // Objets mobiles
+    // ── Objets mobiles ──
+    // Chaque objet rebondit sur les bords et projette une ombre elliptique au sol
     objects.forEach(obj=>{
       obj.x+=obj.vx; obj.y+=obj.vy;
       if(obj.x<0||obj.x>W) obj.vx*=-1;
       if(obj.y<0||obj.y>H) obj.vy*=-1;
+      // Corps de l'objet (cercle coloré)
       ctx.beginPath();
       ctx.arc(obj.x,obj.y,obj.size,0,Math.PI*2);
       ctx.fillStyle=obj.color; ctx.fill();
-      // Ombre
+      // Ombre portée (ellipse aplatie sous l'objet)
       ctx.beginPath();
       ctx.ellipse(obj.x, H*.9, obj.size*.8, obj.size*.2, 0, 0, Math.PI*2);
       ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fill();
     });
 
-    // Timestamp
+    // ── Horodatage en bas à gauche ──
     ctx.fillStyle='rgba(255,255,255,.7)';
     ctx.font='bold 11px monospace';
     const now=new Date();
     ctx.fillText(now.toLocaleTimeString('fr-FR'),8,H-8);
-    ctx.fillText('REC ●',W-55,H-8);
 
-    // Point rouge REC clignotant
+    // ── Témoin REC en bas à droite ──
+    ctx.fillText('REC ●',W-55,H-8);
+    // Point rouge clignotant : alterne entre rouge vif et rouge atténué
     ctx.beginPath();
     ctx.arc(W-66,H-12,4,0,Math.PI*2);
     ctx.fillStyle=Math.sin(t*.1)>0?'#e74c3c':'rgba(231,76,60,.3)';
     ctx.fill();
 
     t++;
+    // Stocke l'ID pour pouvoir annuler l'animation plus tard
     camAnimators[canvasId] = requestAnimationFrame(draw);
   }
   draw();
 }
 
-// ─────────────────────────────────────────────────────
-// Rendu des caméras
-// ─────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+//  RENDU DE LA GRILLE CAMÉRAS
+// ════════════════════════════════════════════════════════
+
+// Stocke les timeouts des fausses alertes mouvement (pour les annuler au re-rendu)
 let motionTimers = {};
 
-function renderCameras(){
-  const cams = SGI3D_DB.getCameras();
+// Récupère toutes les caméras depuis l'API, génère les cartes HTML,
+// met à jour les compteurs et lance les simulations canvas.
+async function renderCameras(){
+  const cams = await SGI3D_DB.getCameras();
   const grid = document.getElementById('cameras-grid');
 
-  // Arrêter les anciens animateurs
+  // Annuler toutes les animations et timers existants avant de régénérer
   Object.values(camAnimators).forEach(id=>cancelAnimationFrame(id));
   Object.values(motionTimers).forEach(t=>clearTimeout(t));
 
+  // Mise à jour des compteurs dans l'en-tête
   document.getElementById('cam-count').textContent = cams.length;
-  document.getElementById('cam-online').textContent = cams.filter(c=>c.status==='online').length;
-  document.getElementById('sb-alerts').textContent = SGI3D_DB.getAlerts(false).length;
+  document.getElementById('cam-online').textContent = cams.filter(c=>c.statut==='en_ligne').length;
 
+  // Mise à jour du badge d'alertes dans la sidebar
+  SGI3D_DB.getAlerts(false).then(a=>{ document.getElementById('sb-alerts').textContent = a.length; });
+
+  // Message si aucune caméra n'est enregistrée
   if(!cams.length){
     grid.innerHTML='<div class="no-cam">📷 Aucune caméra configurée<br><small>Cliquez sur "Ajouter caméra" pour commencer</small></div>';
     return;
   }
 
+  // Génération du HTML de chaque carte caméra :
+  // - En-tête : nom, emplacement, indicateur en ligne/hors ligne
+  // - Corps   : canvas (si en ligne) ou overlay "hors ligne"
+  //           + barre d'infos avec numéro et badge mouvement
+  // - Pied    : boutons activer/désactiver, plein écran, badge détection, supprimer
   grid.innerHTML = cams.map((c,i)=>`
-    <div class="cam-card ${c.status}" id="card-${c.id}">
+    <div class="cam-card ${c.statut==='en_ligne'?'online':'offline'}" id="card-${c.id}">
       <div class="cam-header">
         <div>
           <h3>${c.name}</h3>
           <div class="cam-loc">📍 ${c.location}</div>
         </div>
-        <div class="cam-status ${c.status}">
-          ${c.status==='online'?'🟢 En ligne':'🔴 Hors ligne'}
+        <div class="cam-status ${c.statut==='en_ligne'?'online':'offline'}">
+          ${c.statut==='en_ligne'?'🟢 En ligne':'🔴 Hors ligne'}
         </div>
       </div>
       <div class="cam-body">
-        ${c.status==='online'
+        ${c.statut==='en_ligne'
           ? `<canvas id="canvas-${c.id}" class="cam-canvas"></canvas>`
           : `<div class="cam-overlay">📷<br><small style="font-size:.7rem;margin-top:.5rem;display:block">Caméra hors ligne</small></div>`
         }
         <div class="cam-info-bar">
           <span>CAM ${String(i+1).padStart(2,'0')} · ${c.name.toUpperCase()}</span>
+          <!-- Badge mouvement : masqué par défaut, affiché par scheduleMotionAlert() -->
           <span id="motion-${c.id}" class="motion-badge">⚠️ MOUVEMENT</span>
         </div>
       </div>
       <div class="cam-footer">
-        <button class="btn btn-ghost btn-xs" onclick="toggleCamStatus(${c.id})">${c.status==='online'?'🔴 Désactiver':'🟢 Activer'}</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleCam(${c.id})">${c.statut==='en_ligne'?'🔴 Désactiver':'🟢 Activer'}</button>
         <button class="btn btn-accent btn-xs" onclick="goFullscreen(${c.id})">⛶ Plein écran</button>
-        ${c.motionDetect?`<span class="badge badge-info" style="font-size:.7rem">🎯 Détection mvt</span>`:`<span class="badge badge-neutral" style="font-size:.7rem">Pas de détection</span>`}
+        ${c.detection_mvt?`<span class="badge badge-info" style="font-size:.7rem">🎯 Détection mvt</span>`:`<span class="badge badge-neutral" style="font-size:.7rem">Pas de détection</span>`}
         <button class="btn btn-danger btn-xs" style="margin-left:auto" onclick="deleteCam(${c.id})">🗑️</button>
       </div>
     </div>`).join('');
 
-  // Lancer les simulations pour les caméras en ligne
+  // Pour chaque caméra en ligne :
+  // - Démarre la simulation canvas après 50 ms (le DOM doit être prêt)
+  // - Planifie une fausse alerte mouvement si la détection est activée
   cams.forEach((c,i)=>{
-    if(c.status==='online'){
+    if(c.statut==='en_ligne'){
       setTimeout(()=>startCamSimulation('canvas-'+c.id, i), 50);
-      if(c.motionDetect) scheduleMotionAlert(c.id);
+      if(c.detection_mvt) scheduleMotionAlert(c.id);
     }
   });
 }
 
-// Fausses alertes de mouvement aléatoires
+// ════════════════════════════════════════════════════════
+//  SIMULATION DE DÉTECTION DE MOUVEMENT
+//  Après un délai aléatoire (8–28 s), affiche le badge
+//  "⚠️ MOUVEMENT" pendant 5 secondes, crée une alerte en base
+//  et replanifie une prochaine détection.
+// ════════════════════════════════════════════════════════
 function scheduleMotionAlert(camId){
-  const delay = 8000 + Math.random()*20000;
+  const delay = 8000 + Math.random()*20000; // Entre 8 et 28 secondes
   motionTimers[camId] = setTimeout(()=>{
     const badge = document.getElementById('motion-'+camId);
     if(!badge) return;
+
+    // Affiche le badge clignotant
     badge.style.display='inline-block';
-    SGI3D_DB.addAlert({type:'warning',title:'Mouvement détecté',message:'Mouvement détecté sur '+SGI3D_DB.getCameras().find(c=>c.id===camId)?.name||'Caméra',source:'Caméra '+camId});
-    document.getElementById('sb-alerts').textContent = SGI3D_DB.getAlerts(false).length;
+
+    // Crée une alerte "avertissement" dans la base de données
+    SGI3D_DB.getCameras().then(cams=>{
+      SGI3D_DB.addAlert({
+        type:'avertissement',
+        titre:'Mouvement détecté',
+        message:'Mouvement détecté sur '+(cams.find(c=>c.id===camId)?.nom||'Caméra'),
+        source:'Caméra '+camId
+      });
+    });
+
+    // Met à jour le badge d'alertes dans la sidebar
+    SGI3D_DB.getAlerts(false).then(a=>{ document.getElementById('sb-alerts').textContent = a.length; });
+
+    // Cache le badge après 5 secondes et replanifie la prochaine détection
     setTimeout(()=>{ badge.style.display='none'; scheduleMotionAlert(camId); },5000);
   }, delay);
 }
 
-function toggleCamStatus(id){
-  const c=SGI3D_DB.getCameras().find(c=>c.id===id);
-  if(!c)return;
-  SGI3D_DB.updateCamera(id,{status:c.status==='online'?'offline':'online'});
+// ── ACTIONS SUR LES CAMÉRAS ──────────────────────────────
+
+// Bascule le statut d'une caméra entre "en_ligne" et "offline"
+async function toggleCam(id) {
+  const cams = await SGI3D_DB.getCameras();
+  const cam = cams.find(c => c.id === id);
+  if (!cam) return;
+  await SGI3D_DB.updateCamera(id, { statut: cam.statut === 'en_ligne' ? 'hors_ligne' : 'en_ligne' });
   renderCameras();
 }
 
-function deleteCam(id){
-  if(!confirm('Supprimer cette caméra ?'))return;
-  SGI3D_DB.deleteCamera(id); renderCameras(); showToast('📷 Caméra supprimée','warning');
+// Supprime définitivement une caméra après confirmation utilisateur
+async function deleteCam(id) {
+  if (!confirm('Supprimer cette caméra ?')) return;
+  await SGI3D_DB.deleteCamera(id);
+  renderCameras();
+  showToast('📷 Caméra supprimée', 'warning');
 }
 
+// Passe le canvas en plein écran via l'API Fullscreen du navigateur
 function goFullscreen(id){
   const canvas=document.getElementById('canvas-'+id);
   if(canvas && canvas.requestFullscreen) canvas.requestFullscreen();
   else showToast('Plein écran non disponible dans ce navigateur','warning');
 }
 
-function toggleAllMotion(){
-  const cams=SGI3D_DB.getCameras();
-  const allOn=cams.every(c=>c.motionDetect);
-  cams.forEach(c=>SGI3D_DB.updateCamera(c.id,{motionDetect:!allOn}));
+// Active ou désactive la détection de mouvement sur TOUTES les caméras.
+// Si toutes sont déjà actives → désactive tout ; sinon → active tout.
+async function toggleAllMotion(){
+  const cams = await SGI3D_DB.getCameras();
+  const allOn = cams.every(c=>c.detection_mvt==1);
+  for(const cam of cams) await SGI3D_DB.updateCamera(cam.id,{detection_mvt: allOn?0:1});
   renderCameras();
   showToast(allOn?'🎯 Détection mouvement désactivée':'🎯 Détection mouvement activée','info');
 }
 
+// Recharge toutes les cartes caméras (simulations incluses)
 function refreshAll(){ renderCameras(); showToast('🔄 Rafraîchi','info'); }
 
-function doAddCam(){
+// Valide les champs du formulaire, appelle l'API pour créer la caméra,
+// ferme le modal et rafraîchit la grille.
+async function doAddCam(){
   const n=document.getElementById('ac-name').value.trim();
   const l=document.getElementById('ac-loc').value.trim();
   const u=document.getElementById('ac-url').value.trim();
   const m=document.getElementById('ac-motion').checked;
   if(!n||!l){showToast('Nom et emplacement requis','warning');return;}
-  SGI3D_DB.addCamera({name:n,location:l,url:u,motionDetect:m});
+  await SGI3D_DB.addCamera({nom:n,localisation:l,url_flux:u,detection_mvt:m?1:0});
   document.getElementById('addCamModal').classList.remove('open');
   renderCameras(); showToast('📷 Caméra ajoutée','success');
 }
 
+// ── NOTIFICATIONS TOAST ──────────────────────────────────
+// Crée une bulle temporaire (disparaît après 3,5 s).
+// Types : 'info' | 'success' | 'warning' | 'error'
 function showToast(msg,type='info'){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
@@ -316,9 +455,13 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),3500);
 }
 
+// ── INITIALISATION ───────────────────────────────────────
+// Rendu initial de la grille au chargement de la page
 renderCameras();
+
+// Mise à jour du badge d'alertes toutes les 10 secondes
 setInterval(()=>{
-  document.getElementById('sb-alerts').textContent=SGI3D_DB.getAlerts(false).length;
+  SGI3D_DB.getAlerts(false).then(a=>{ document.getElementById('sb-alerts').textContent=a.length; });
 },10000);
 </script>
 </body>

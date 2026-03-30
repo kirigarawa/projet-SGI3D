@@ -1,28 +1,74 @@
 /* =============================================
-   SGI3D – Navigation partagée + tokens de design
+   SGI3D – Feuille de style globale
+   Partagée par toutes les pages du projet.
+   Contient : tokens de design, reset, navigation,
+   sidebar, cards, boutons, formulaires, tableaux,
+   badges, alertes, toasts, modals et responsive.
    ============================================= */
 
-/* ── Tokens ── */
+
+/* ════════════════════════════════════════════════════════
+   TOKENS DE DESIGN (variables CSS globales)
+   Définis sur :root pour être accessibles partout via var().
+   Centralise toutes les couleurs, rayons et polices du projet.
+   ════════════════════════════════════════════════════════ */
 :root {
+  /* Dégradé de fond principal : du gris bleuté au noir (utilisé sur body) */
   --bg-grad:   linear-gradient(135deg, #2c3e50 0%, #1a1a1a 100%);
+
+  /* Fond des cartes claires (pages Imprimantes) : blanc quasi opaque */
   --card-bg:   rgba(255,255,255,0.95);
+
+  /* Fond des cartes sombres (dashboard, database…) : blanc très transparent */
   --card-dark: rgba(255,255,255,0.08);
+
+  /* Dégradé des boutons primaires et de la navbar : du gris anthracite au noir */
   --btn-grad:  linear-gradient(135deg,#4a4a4a,#2a2a2a);
+
+  /* Couleur d'accentuation principale : bleu SGI3D */
   --accent:    #3498db;
+
+  /* Couleur d'accentuation secondaire : vert succès */
   --accent2:   #2ecc71;
+
+  /* Couleur de danger / erreur : rouge */
   --danger:    #e74c3c;
+
+  /* Couleur d'avertissement : orange */
   --warning:   #f39c12;
+
+  /* Rayon de bordure standard (grands éléments : cards, modals) */
   --radius:    20px;
+
+  /* Rayon de bordure réduit (petits éléments : inputs, badges) */
   --radius-sm: 12px;
+
+  /* Ombre portée standard utilisée sur les cards */
   --shadow:    0 20px 40px rgba(0,0,0,0.3);
+
+  /* Police système native : priorise les polices OS (Apple/Windows/Linux)
+     pour un rendu natif et des performances maximales (pas de chargement externe) */
   --font:      -apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
 }
 
-/* ── Reset ── */
+
+/* ════════════════════════════════════════════════════════
+   RESET CSS
+   Supprime tous les marges/paddings par défaut du navigateur
+   et force le modèle de boîte border-box sur tous les éléments.
+   body : fond dégradé couvrant au minimum tout l'écran, texte blanc.
+   ════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg-grad);min-height:100vh;color:#fff}
 
-/* ── Barre de navigation publique ── */
+
+/* ════════════════════════════════════════════════════════
+   BARRE DE NAVIGATION PRINCIPALE (.site-nav)
+   Fixée en haut de l'écran (position:fixed), z-index:1000
+   pour passer au-dessus de tout le contenu.
+   Effet glassmorphism : fond sombre semi-transparent + flou.
+   Les pages utilisent padding-top:60px pour compenser la hauteur.
+   ════════════════════════════════════════════════════════ */
 .site-nav{
   position:fixed;top:0;left:0;right:0;z-index:1000;
   background:rgba(20,30,40,0.92);backdrop-filter:blur(12px);
@@ -30,12 +76,19 @@ body{font-family:var(--font);background:var(--bg-grad);min-height:100vh;color:#f
   display:flex;align-items:center;justify-content:space-between;
   padding:0 2rem;height:60px;
 }
+
+/* Logo "SGI3D" à gauche : texte avec dégradé blanc → gris.
+   Même technique que les titres : background-clip:text */
 .site-nav .nav-logo{
   font-size:1.4rem;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(135deg,#fff,#aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background:linear-gradient(135deg,#fff,#aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   text-decoration:none;
 }
+
+/* Liens de navigation à droite : flex horizontale avec espacement */
 .site-nav .nav-links{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+
+/* Lien de navigation par défaut : blanc atténué, fond au survol et quand actif */
 .site-nav .nav-links a{
   color:rgba(255,255,255,0.8);text-decoration:none;font-size:.85rem;font-weight:500;
   padding:.4rem .9rem;border-radius:20px;transition:all .2s;letter-spacing:.5px;
@@ -43,159 +96,347 @@ body{font-family:var(--font);background:var(--bg-grad);min-height:100vh;color:#f
 .site-nav .nav-links a:hover,.site-nav .nav-links a.active{
   background:rgba(255,255,255,0.15);color:#fff;
 }
+
+/* Bouton spécial "Connexion" / "Déconnexion" (.btn-nav) :
+   dégradé sombre + bordure subtile pour le distinguer des liens */
 .site-nav .nav-links a.btn-nav{
   background:var(--btn-grad);color:#fff;border:1px solid rgba(255,255,255,0.2);
 }
 
-/* ── Sidebar admin ── */
+
+/* ════════════════════════════════════════════════════════
+   MISE EN PAGE ADMIN (.admin-layout)
+   Structure de toutes les pages d'administration :
+   sidebar fixe à gauche + contenu principal à droite.
+   ════════════════════════════════════════════════════════ */
 .admin-layout{display:flex;min-height:100vh;padding-top:60px}
+
+/* Sidebar : panneau latéral fixe de 240 px, fond très sombre,
+   défile indépendamment si le contenu est plus long que l'écran */
 .sidebar{
   width:240px;background:rgba(15,20,30,0.95);backdrop-filter:blur(12px);
   border-right:1px solid rgba(255,255,255,0.08);
   display:flex;flex-direction:column;padding:1.5rem 0;
   position:fixed;top:60px;bottom:0;left:0;overflow-y:auto;z-index:900;
 }
-.sidebar .s-section{padding:.5rem 1.2rem;font-size:.7rem;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:1rem}
+
+/* Titre de section dans la sidebar (ex: "Navigation", "Administration") :
+   texte grisé en petites majuscules espacées */
+.sidebar .s-section{
+  padding:.5rem 1.2rem;font-size:.7rem;font-weight:700;
+  letter-spacing:2px;color:rgba(255,255,255,0.4);
+  text-transform:uppercase;margin-top:1rem;
+}
+
+/* Lien de la sidebar : icône + texte, bordure gauche colorée au survol/actif */
 .sidebar a{
   display:flex;align-items:center;gap:.8rem;
   padding:.75rem 1.5rem;color:rgba(255,255,255,0.7);text-decoration:none;
   font-size:.88rem;transition:all .2s;border-left:3px solid transparent;
 }
+/* Survol : fond légèrement blanc + bordure gauche blanche */
 .sidebar a:hover{background:rgba(255,255,255,0.06);color:#fff;border-left-color:rgba(255,255,255,0.3)}
+
+/* Lien actif (page courante) : fond bleu transparent + texte + bordure bleue */
 .sidebar a.active{background:rgba(52,152,219,0.15);color:#3498db;border-left-color:#3498db}
+
+/* Icône à gauche de chaque lien sidebar : largeur fixe pour aligner les textes */
 .sidebar a .s-icon{font-size:1.1rem;width:20px;text-align:center}
+
+/* Badge rouge d'alerte (ex: nombre d'alertes non résolues) :
+   placé à droite du lien via margin-left:auto */
 .sidebar .s-badge{
   margin-left:auto;background:var(--danger);color:#fff;
   font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px;
 }
+
+/* Zone de contenu principal : décalée de 240 px à gauche pour éviter la sidebar */
 .admin-content{margin-left:240px;flex:1;padding:2rem}
 
-/* ── Cards ── */
+
+/* ════════════════════════════════════════════════════════
+   CARDS (conteneurs de contenu)
+   Deux variantes :
+   .card      → fond blanc (pages claires : Imprimantes, Login)
+   .card-dark → fond transparent sur fond sombre (admin)
+   ════════════════════════════════════════════════════════ */
+
+/* Card claire : fond blanc, texte foncé, ombre portée */
 .card{
   background:var(--card-bg);border-radius:var(--radius);
   box-shadow:var(--shadow);color:#2c3e50;overflow:hidden;
 }
+
+/* Card sombre : fond semi-transparent sur le dégradé de fond */
 .card-dark{
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
   border-radius:var(--radius);color:#fff;
 }
+
+/* En-tête de card : padding + bordure basse + flex pour titre/action côte à côte */
 .card-header{
   padding:1.5rem 2rem;border-bottom:1px solid rgba(0,0,0,0.08);
   display:flex;align-items:center;justify-content:space-between;
 }
+
+/* Corps de card : padding uniforme */
 .card-body{padding:1.5rem 2rem}
 
-/* ── Stat cards ── */
+
+/* ════════════════════════════════════════════════════════
+   CARTES DE STATISTIQUES (.stat-card)
+   Utilisées sur le dashboard pour afficher les compteurs globaux.
+   Grille responsive : colonnes de minimum 180 px.
+   Couleur de la valeur selon la variante (blue/green/orange/red/purple).
+   ════════════════════════════════════════════════════════ */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.2rem;margin-bottom:2rem}
+
 .stat-card{
   background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
   border-radius:var(--radius-sm);padding:1.3rem;text-align:center;
 }
+/* Grande valeur numérique centrée */
 .stat-card .s-val{font-size:2rem;font-weight:700}
-.stat-card .s-label{font-size:.8rem;color:rgba(255,255,255,0.6);margin-top:.3rem}
-.stat-card.blue   .s-val{color:#3498db}
-.stat-card.green  .s-val{color:#2ecc71}
-.stat-card.orange .s-val{color:#f39c12}
-.stat-card.red    .s-val{color:#e74c3c}
-.stat-card.purple .s-val{color:#9b59b6}
 
-/* ── Boutons ── */
+/* Libellé sous la valeur : plus petit et atténué */
+.stat-card .s-label{font-size:.8rem;color:rgba(255,255,255,0.6);margin-top:.3rem}
+
+/* Variantes de couleur pour la valeur : une par thème */
+.stat-card.blue   .s-val{color:#3498db}  /* Utilisateurs */
+.stat-card.green  .s-val{color:#2ecc71}  /* Connexions réussies */
+.stat-card.orange .s-val{color:#f39c12}  /* Travaux impression */
+.stat-card.red    .s-val{color:#e74c3c}  /* Alertes actives */
+.stat-card.purple .s-val{color:#9b59b6}  /* Caméras */
+
+
+/* ════════════════════════════════════════════════════════
+   BOUTONS (.btn)
+   Classe de base commune à tous les boutons.
+   Les variantes (.btn-primary, .btn-success…) ajoutent la couleur.
+   Les tailles (.btn-sm, .btn-xs) réduisent le padding et la police.
+   ════════════════════════════════════════════════════════ */
 .btn{
   display:inline-flex;align-items:center;gap:.5rem;
   padding:.7rem 1.6rem;border-radius:25px;border:none;cursor:pointer;
-  font-weight:600;font-size:.88rem;transition:all .25s;text-decoration:none;font-family:var(--font);
+  font-weight:600;font-size:.88rem;transition:all .25s;
+  text-decoration:none;font-family:var(--font);
 }
+
+/* Bouton primaire : dégradé sombre (même que la navbar) */
 .btn-primary{background:var(--btn-grad);color:#fff;border:1px solid rgba(255,255,255,0.15)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.3)}
+
+/* Bouton accent : dégradé bleu (actions principales secondaires) */
 .btn-accent{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff}
+
+/* Bouton succès : dégradé vert */
 .btn-success{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
+
+/* Bouton danger : dégradé rouge (suppression, erreur) */
 .btn-danger{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff}
+
+/* Bouton avertissement : dégradé orange */
 .btn-warning{background:linear-gradient(135deg,#f39c12,#e67e22);color:#fff}
+
+/* Bouton fantôme (ghost) : fond transparent avec bordure, discret */
 .btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2)}
 .btn-ghost:hover{background:rgba(255,255,255,0.2)}
+
+/* Taille petite : moins de padding, police réduite */
 .btn-sm{padding:.4rem 1rem;font-size:.8rem}
+
+/* Taille très petite : utilisée dans les tableaux (colonnes Actions) */
 .btn-xs{padding:.3rem .7rem;font-size:.75rem}
 
-/* ── Inputs ── */
+
+/* ════════════════════════════════════════════════════════
+   FORMULAIRES (.form-group, .form-control)
+   .form-group  : conteneur avec espacement bas (label + input)
+   .form-control: style uniforme pour input, select, textarea
+   Variante .light pour les formulaires sur fond clair (page Imprimantes)
+   ════════════════════════════════════════════════════════ */
+
+/* Espacement bas entre chaque groupe label/input */
 .form-group{margin-bottom:1.2rem}
+
+/* Label : texte légèrement blanc, semi-gras */
 .form-group label{display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem;color:rgba(255,255,255,0.85)}
+
+/* Champ de formulaire standard (sur fond sombre) :
+   fond semi-transparent, bordure blanche subtile, texte blanc */
 .form-control{
   width:100%;padding:.75rem 1rem;border-radius:var(--radius-sm);
   background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
   color:#fff;font-size:.9rem;font-family:var(--font);transition:border-color .2s;
 }
+/* Placeholder atténué */
 .form-control::placeholder{color:rgba(255,255,255,0.4)}
+
+/* Au focus : bordure bleue (--accent) + fond légèrement plus opaque */
 .form-control:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,0.15)}
+
+/* Variante claire (page Imprimantes) : fond gris clair, texte foncé */
 .form-control.light{background:#f8f9fa;border-color:#ddd;color:#2c3e50}
 .form-control.light::placeholder{color:#aaa}
 .form-control.light:focus{border-color:var(--accent);background:#fff}
 
-/* ── Tables ── */
+
+/* ════════════════════════════════════════════════════════
+   TABLEAUX (.table-wrap, table)
+   .table-wrap permet le défilement horizontal sur petit écran.
+   En-têtes : fond légèrement blanc, texte en petites majuscules.
+   Lignes : bordure basse subtile + fond au survol.
+   ════════════════════════════════════════════════════════ */
+
+/* Conteneur avec défilement horizontal si le tableau dépasse la largeur */
 .table-wrap{overflow-x:auto;border-radius:var(--radius-sm)}
+
 table{width:100%;border-collapse:collapse}
+
+/* En-tête : fond grisé, texte en petites majuscules espacées */
 table th{
   background:rgba(255,255,255,0.08);padding:.75rem 1rem;
-  text-align:left;font-size:.8rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.5px;color:rgba(255,255,255,0.6);
+  text-align:left;font-size:.8rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,0.6);
 }
+
+/* Cellule standard : padding + séparateur bas très discret */
 table td{padding:.75rem 1rem;font-size:.88rem;border-bottom:1px solid rgba(255,255,255,0.06)}
+
+/* Fond au survol d'une ligne pour faciliter la lecture */
 table tr:hover td{background:rgba(255,255,255,0.04)}
 
-/* ── Badges ── */
+
+/* ════════════════════════════════════════════════════════
+   BADGES (.badge)
+   Petites étiquettes inline pour les statuts, rôles, niveaux…
+   Fond semi-transparent coloré + bordure légère de même couleur.
+   Variantes : success (vert), danger (rouge), warning (orange),
+               info (bleu), neutral (gris blanc)
+   ════════════════════════════════════════════════════════ */
 .badge{display:inline-block;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;font-weight:700}
+
+/* Vert : actif, terminé, succès, public */
 .badge-success{background:rgba(46,204,113,.2);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+
+/* Rouge : inactif, erreur, critique */
 .badge-danger {background:rgba(231,76,60,.2); color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+
+/* Orange : avertissement */
 .badge-warning{background:rgba(243,156,18,.2);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+
+/* Bleu : info, login requis, admin */
 .badge-info   {background:rgba(52,152,219,.2);color:#3498db;border:1px solid rgba(52,152,219,.3)}
+
+/* Gris : neutre, fichier JS/CSS, statut non défini */
 .badge-neutral{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2)}
 
-/* ── Alertes UI ── */
+
+/* ════════════════════════════════════════════════════════
+   BOÎTES D'ALERTE UI (.alert-box)
+   Blocs inline pour afficher des messages contextuels.
+   Bordure gauche colorée selon le niveau de gravité.
+   Différentes des alertes système (table alertes en DB).
+   ════════════════════════════════════════════════════════ */
 .alert-box{border-radius:var(--radius-sm);padding:1rem 1.2rem;margin-bottom:1rem;display:flex;gap:.8rem;align-items:flex-start}
+
+/* Fond rouge léger + trait rouge gauche : erreur critique */
 .alert-box.error  {background:rgba(231,76,60,.15);border-left:4px solid #e74c3c}
+
+/* Fond orange léger + trait orange : avertissement */
 .alert-box.warning{background:rgba(243,156,18,.15);border-left:4px solid #f39c12}
+
+/* Fond bleu léger + trait bleu : information */
 .alert-box.info   {background:rgba(52,152,219,.15);border-left:4px solid #3498db}
+
+/* Fond vert léger + trait vert : succès / confirmation */
 .alert-box.success{background:rgba(46,204,113,.15);border-left:4px solid #2ecc71}
 
-/* ── Toast notifications ── */
+
+/* ════════════════════════════════════════════════════════
+   NOTIFICATIONS TOAST (#toast-container, .toast)
+   Pile de toasts empilée en bas à droite de l'écran.
+   Chaque toast glisse depuis la droite via l'animation slideIn.
+   Supprimés dynamiquement après 3,5–4 s selon la page.
+   ════════════════════════════════════════════════════════ */
+
+/* Conteneur fixe en bas à droite, au-dessus de tout (z-index:9999) */
 #toast-container{position:fixed;bottom:2rem;right:2rem;z-index:9999;display:flex;flex-direction:column;gap:.6rem}
+
+/* Bulle toast : fond très sombre semi-transparent + flou, bords arrondis */
 .toast{
   background:rgba(20,30,40,0.97);backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,0.12);border-radius:12px;
   padding:.9rem 1.3rem;color:#fff;font-size:.88rem;min-width:250px;
   display:flex;align-items:center;gap:.7rem;animation:slideIn .3s ease;
 }
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.toast.success{border-left:4px solid #2ecc71}
-.toast.error  {border-left:4px solid #e74c3c}
-.toast.warning{border-left:4px solid #f39c12}
-.toast.info   {border-left:4px solid #3498db}
 
-/* ── Page header ── */
+/* Animation d'entrée : glisse depuis la droite (hors écran → position normale) */
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Variantes : bordure gauche colorée selon le type de message */
+.toast.success{border-left:4px solid #2ecc71}  /* Vert : succès */
+.toast.error  {border-left:4px solid #e74c3c}  /* Rouge : erreur */
+.toast.warning{border-left:4px solid #f39c12}  /* Orange : avertissement */
+.toast.info   {border-left:4px solid #3498db}  /* Bleu : information */
+
+
+/* ════════════════════════════════════════════════════════
+   EN-TÊTE DE PAGE (.page-header)
+   Bloc standard en haut de chaque page admin :
+   titre h1 + sous-titre descriptif.
+   ════════════════════════════════════════════════════════ */
 .page-header{margin-bottom:2rem}
 .page-header h1{font-size:1.8rem;font-weight:700}
 .page-header p{color:rgba(255,255,255,0.6);margin-top:.4rem;font-size:.95rem}
 
-/* ── Modal ── */
+
+/* ════════════════════════════════════════════════════════
+   MODALS (.modal-overlay, .modal)
+   Superposition couvrant tout l'écran avec fond flouté.
+   Masqué par défaut (display:none), affiché via la classe .open.
+   La boîte modale est centrée avec align/justify:center sur l'overlay.
+   ════════════════════════════════════════════════════════ */
+
+/* Overlay : couvre tout l'écran, z-index:2000 (au-dessus de la sidebar) */
 .modal-overlay{
   display:none;position:fixed;inset:0;z-index:2000;
   background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);
   align-items:center;justify-content:center;
 }
+/* Classe ajoutée dynamiquement en JS pour afficher le modal */
 .modal-overlay.open{display:flex}
+
+/* Boîte modale : dégradé sombre, bordure subtile, coins arrondis */
 .modal{
   background:linear-gradient(135deg,#2c3e50,#1a1a1a);
   border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);
   padding:2rem;min-width:360px;max-width:90vw;color:#fff;position:relative;
 }
 .modal h2{margin-bottom:1.5rem;font-size:1.2rem}
+
+/* Bouton ✕ de fermeture : positionné en absolu en haut à droite du modal */
 .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.4rem;cursor:pointer}
 
-/* ── Responsive ── */
+
+/* ════════════════════════════════════════════════════════
+   RESPONSIVE (media queries)
+   Adapte la mise en page pour les petits écrans.
+   ════════════════════════════════════════════════════════ */
+
+/* Tablette (≤ 768 px) : sidebar réduite à 200 px, stats sur 2 colonnes */
 @media(max-width:768px){
   .sidebar{width:200px}
   .admin-content{margin-left:200px;padding:1rem}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* Mobile (≤ 600 px) :
+   - La sidebar se cache à gauche hors de l'écran (translateX(-100%))
+     et revient via la classe .open (ajoutée par un bouton hamburger)
+   - Le contenu prend toute la largeur (margin-left:0)
+   - Les libellés texte des liens nav (balises <span>) sont masqués
+     pour ne conserver que les icônes et gagner de la place */
 @media(max-width:600px){
   .sidebar{transform:translateX(-100%);transition:transform .3s}
   .sidebar.open{transform:translateX(0)}

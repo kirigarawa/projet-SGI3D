@@ -4,54 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SGI3D – Connexion</title>
+<!-- Feuille de styles globale (tokens CSS, nav, cards, boutons, modals…) -->
 <link rel="stylesheet" href="style.css">
 <style>
+  /* ── Mise en page pleine hauteur ──
+     Flexbox colonne pour coller le footer en bas de page,
+     padding-top pour ne pas passer sous la navbar fixe (60 px). */
   body{display:flex;flex-direction:column;min-height:100vh;padding-top:60px}
+
+  /* ── Conteneur centré verticalement et horizontalement ── */
   .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+
+  /* ── Boîte de connexion (carte glassmorphique) ──
+     Fond blanc semi-transparent via --card-bg, largeur max 440 px,
+     ombre portée via --shadow défini dans :root de style.css. */
   .login-box{
     background:var(--card-bg);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:3rem 2.5rem;width:100%;max-width:440px;color:#2c3e50;
   }
+
+  /* ── Logo SGI3D en haut de la carte ── */
   .login-logo{text-align:center;margin-bottom:2rem}
+  /* Texte dégradé : --btn-grad clipé sur le texte, compatible webkit + standard */
   .login-logo .logo-text{
     font-size:3rem;font-weight:900;letter-spacing:5px;
     background:var(--btn-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    background-clip:text; /* Added for cross-browser compatibility */
+    background-clip:text; /* Propriété standard pour la compatibilité cross-browser */
   }
   .login-logo p{color:#666;font-size:.9rem;margin-top:.3rem}
+
+  /* ── Champs de formulaire ── */
   .login-box .form-group label{color:#444}
+  /* Input sur fond gris très léger ; devient blanc au focus avec bordure accent */
   .login-box input{background:#f8f9fa;border:1.5px solid #e0e0e0;color:#2c3e50;border-radius:12px;padding:.85rem 1rem;width:100%;font-family:var(--font);font-size:.95rem;transition:border-color .2s}
   .login-box input:focus{outline:none;border-color:var(--accent);background:#fff}
+
+  /* ── Ligne "Se souvenir de moi" + lien mot de passe oublié ── */
   .remember-row{display:flex;align-items:center;justify-content:space-between;margin:1rem 0;font-size:.85rem;color:#555}
   .remember-row label{display:flex;align-items:center;gap:.5rem;cursor:pointer}
   .remember-row a{color:var(--accent);text-decoration:none}
+
+  /* ── Bouton principal "Se connecter" ──
+     Pleine largeur, dégradé --btn-grad, effet de survol
+     avec élévation (translateY) et ombre renforcée. */
   .btn-login{
     width:100%;padding:1rem;border-radius:25px;border:none;cursor:pointer;
     background:var(--btn-grad);color:#fff;font-size:1rem;font-weight:700;
     font-family:var(--font);transition:all .3s;letter-spacing:.5px;
   }
   .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.25)}
+
+  /* ── Séparateur "ou continuer avec" ──
+     Texte centré avec deux pseudo-éléments ::before / ::after
+     formant une ligne horizontale de part et d'autre. */
   .divider{text-align:center;margin:1.5rem 0;color:#aaa;font-size:.85rem;position:relative}
   .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#e0e0e0}
   .divider::before{left:0}.divider::after{right:0}
-  .oauth-row{display:flex;gap:1rem}
-  .btn-oauth{
-    flex:1;display:flex;align-items:center;justify-content:center;gap:.6rem;
-    padding:.75rem;border-radius:var(--radius-sm);border:1.5px solid #e0e0e0;
-    background:#fff;cursor:pointer;font-size:.88rem;font-weight:600;color:#444;
-    font-family:var(--font);transition:all .2s;
-  }
+
   .btn-oauth:hover{background:#f8f9fa;border-color:#ccc}
+
+  /* ── Liens bas de carte (créer un compte, retour accueil) ── */
   .login-links{text-align:center;margin-top:1.5rem;font-size:.85rem;color:#666}
   .login-links a{color:var(--accent);text-decoration:none;font-weight:600}
+
+  /* ── Message d'erreur (email/mot de passe incorrect) ──
+     Masqué par défaut (display:none), affiché en JS si l'API refuse la connexion. */
   .error-msg{background:#ffeaea;border:1px solid #f5c6cb;color:#721c24;padding:.75rem 1rem;border-radius:10px;font-size:.88rem;margin-bottom:1rem;display:none}
+
+  /* ── Pied de page ── */
   footer.site-footer{text-align:center;padding:1.5rem;color:rgba(255,255,255,.4);font-size:.8rem}
   footer.site-footer a{color:rgba(255,255,255,.6);text-decoration:none}
 </style>
 </head>
 <body>
 
-<!-- Navigation -->
+<!-- ── Barre de navigation fixe ──
+     Le lien "Connexion" est marqué active + btn-nav sur cette page. -->
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">SGI3D</a>
   <div class="nav-links">
@@ -63,37 +91,49 @@
   </div>
 </nav>
 
+<!-- ── Wrapper centré : occupe tout l'espace vertical restant ── -->
 <div class="login-wrap">
   <div class="login-box">
+
+    <!-- Logo + titre descriptif -->
     <div class="login-logo">
       <div class="logo-text">SGI3D</div>
       <p>Système de Gestion d'Impression 3D</p>
     </div>
 
+    <!-- Message d'erreur : masqué par défaut, affiché si login échoue -->
     <div class="error-msg" id="errorMsg">❌ Email ou mot de passe incorrect.</div>
 
+    <!-- Formulaire de connexion principal -->
+    <!-- La soumission est interceptée en JS pour éviter le rechargement de page -->
     <form id="loginForm">
       <div class="form-group">
+        <!-- autocomplete="username" améliore la suggestion du gestionnaire de mots de passe -->
         <label for="email">Adresse email</label>
         <input type="email" id="email" placeholder="admin@sgi3d.fr" required autocomplete="username">
       </div>
       <div class="form-group">
+        <!-- autocomplete="current-password" pour la complétion automatique -->
         <label for="password">Mot de passe</label>
         <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
       </div>
+
+      <!-- Ligne checkbox "Se souvenir de moi" + lien mot de passe oublié -->
+      <!-- Note : la checkbox est déclarative mais non implémentée côté serveur -->
       <div class="remember-row">
         <label><input type="checkbox" id="remember"> Se souvenir de moi</label>
-        <a href="#">Mot de passe oublié ?</a>
       </div>
+
+      <!-- Bouton de soumission pleine largeur -->
       <button type="submit" class="btn-login">Se connecter →</button>
     </form>
 
+    <!-- Séparateur visuel avant les boutons OAuth -->
     <div class="divider">ou continuer avec</div>
-    <div class="oauth-row">
-      <button class="btn-oauth" onclick="oauthNotice()">🔵 Google</button>
-      <button class="btn-oauth" onclick="oauthNotice()">📘 Facebook</button>
-    </div>
 
+    
+
+    <!-- Liens secondaires : créer un compte (ouvre la modal) + retour -->
     <div class="login-links">
       <p>Pas encore de compte ? <a href="#" onclick="showRegister()">Créer un compte</a></p>
       <p style="margin-top:.5rem"><a href="printers.html">🖨️ Voir nos imprimantes</a> · <a href="index.html">🏠 Accueil</a></p>
@@ -101,71 +141,158 @@
   </div>
 </div>
 
-<!-- Modal inscription -->
+<!-- ══════════════════════════════════════════════════════════
+     MODAL INSCRIPTION
+     Masquée par défaut (.modal-overlay sans .open).
+     Affichée via showRegister() → classList.add('open').
+     Fermée via closeModal() → classList.remove('open').
+══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="registerModal">
   <div class="modal">
+    <!-- Bouton de fermeture en haut à droite -->
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h2>✏️ Créer un compte</h2>
+
+    <!-- Champ nom complet (utilisé pour générer l'avatar initiales) -->
     <div class="form-group">
       <label>Nom complet</label>
       <input type="text" id="regName" class="form-control" placeholder="Jean Dupont">
     </div>
+
+    <!-- Champ email (vérifié côté JS pour éviter les doublons) -->
     <div class="form-group">
       <label>Email</label>
       <input type="email" id="regEmail" class="form-control" placeholder="jean@sgi3d.fr">
     </div>
+
+    <!-- Champ mot de passe -->
     <div class="form-group">
       <label>Mot de passe</label>
       <input type="password" id="regPass" class="form-control" placeholder="••••••••">
     </div>
+
+    <!-- Boutons Créer / Annuler -->
     <div style="display:flex;gap:1rem;margin-top:1.5rem">
       <button class="btn btn-primary" onclick="doRegister()">✅ Créer</button>
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
     </div>
+
+    <!-- Message de retour (erreur ou succès) affiché sous les boutons -->
     <p id="regMsg" style="margin-top:1rem;font-size:.85rem"></p>
   </div>
 </div>
 
+<!-- ── Pied de page avec liens rapides ── -->
 <footer class="site-footer">
   <a href="sitemap.html">🗺️ Plan du site</a> · <a href="index.html">Accueil</a> · <a href="printers.html">Imprimantes</a>
 </footer>
 
+<!-- Conteneur des toasts (notifications éphémères) -->
 <div id="toast-container"></div>
+
+<!-- Moteur de données SGI3D (fetch → api.php) -->
 <script src="db.js"></script>
 <script>
-// Rediriger si déjà connecté
+
+// ── Redirection si déjà connecté ──────────────────────────────────────────
+// Si une session est déjà active dans sessionStorage, on envoie directement
+// l'utilisateur au dashboard (inutile de revoir la page de connexion).
 if(SGI3D_DB.isLoggedIn()){ window.location.href='dashboard.html'; }
 
-document.getElementById('loginForm').addEventListener('submit',function(e){
+// ── Soumission du formulaire de connexion ────────────────────────────────
+// e.preventDefault() empêche le rechargement de la page.
+// SGI3D_DB.login() envoie email + mot de passe à api.php (action "login").
+// En cas de succès : toast de bienvenue + redirection dashboard après 800 ms.
+// En cas d'échec  : affichage du message d'erreur rouge + vidage du champ mdp.
+document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  const email    = document.getElementById('email').value.trim();
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const user     = SGI3D_DB.login(email, password);
-  if(user){
-    showToast('✅ Connexion réussie ! Bienvenue '+user.name,'success');
-    setTimeout(()=>{ window.location.href='dashboard.html'; },800);
-  } else {
-    document.getElementById('errorMsg').style.display='block';
-    document.getElementById('password').value='';
+
+  try {
+    const response = await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+
+    const text = await response.text();
+    console.log('Réponse brute:', text); // Debugging log
+
+    const user = JSON.parse(text); // Remplacez par response.json() si la réponse est correcte
+    if (user) {
+      showToast('✅ Connexion réussie ! Bienvenue ' + user.nom, 'success');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+    } else {
+      document.getElementById('errorMsg').style.display = 'block';
+      document.getElementById('password').value = '';
+    }
+  } catch (error) {
+    console.error('Erreur lors de la connexion:', error);
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('password').value = '';
   }
 });
 
+// ── Contrôle de la modal d'inscription ──────────────────────────────────
+// showRegister() : ouvre la modal en ajoutant la classe CSS "open"
+// closeModal()   : ferme la modal en retirant la classe "open"
 function showRegister(){ document.getElementById('registerModal').classList.add('open'); }
 function closeModal()  { document.getElementById('registerModal').classList.remove('open'); }
+
+// ── OAuth (Google / Facebook) ────────────────────────────────────────────
+// Non implémenté : affiche simplement un toast d'information.
 function oauthNotice() { showToast('⚠️ OAuth non disponible en mode hors-ligne','warning'); }
 
-function doRegister(){
+// ── Création d'un nouveau compte utilisateur ─────────────────────────────
+// Étapes :
+//   1. Validation : tous les champs doivent être remplis
+//   2. Vérification d'unicité de l'email via SGI3D_DB.getUserByEmail()
+//   3. Création en base via SGI3D_DB.createUser() avec :
+//      - rôle "operateur" (ne peut pas accéder au dashboard admin)
+//      - avatar généré automatiquement à partir des initiales du nom
+//        ex. "Jean Dupont" → "JD"
+//   4. Message de succès en vert + fermeture de la modal après 1,5 s
+async function doRegister(){
   const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
-  if(!name||!email||!pass){ document.getElementById('regMsg').textContent='Remplissez tous les champs.'; return; }
-  if(SGI3D_DB.getUserByEmail(email)){ document.getElementById('regMsg').textContent='Cet email est déjà utilisé.'; return; }
-  SGI3D_DB.createUser({name,email,password:pass,role:'operator',avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
-  document.getElementById('regMsg').style.color='#2ecc71';
-  document.getElementById('regMsg').textContent='✅ Compte créé ! Vous pouvez vous connecter.';
-  setTimeout(closeModal,1500);
+  const msg   = document.getElementById('regMsg');
+  const btn   = document.querySelector('#registerModal .btn-primary');
+
+  msg.style.color = '#e74c3c';
+  msg.textContent = '';
+
+  if(!name||!email||!pass){ msg.textContent='Remplissez tous les champs.'; return; }
+  if(pass.length < 4){ msg.textContent='Mot de passe trop court (min. 4 car.).'; return; }
+
+  btn.textContent = '⏳ Vérification…';
+  btn.disabled = true;
+
+  try {
+    const existing = await SGI3D_DB.getUserByEmail(email);
+    if(existing){ msg.textContent='❌ Cet email est déjà utilisé.'; return; }
+
+    await SGI3D_DB.createUser({
+      nom: name, email, mot_de_passe: pass, role: 'operateur',
+      avatar: name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+    });
+
+    msg.style.color = '#2ecc71';
+    msg.textContent = '✅ Compte créé ! Vous pouvez vous connecter.';
+    setTimeout(closeModal, 1500);
+  } catch(e) {
+    msg.textContent = '❌ Erreur : ' + (e.message || 'Impossible de créer le compte.');
+  } finally {
+    btn.textContent = '✅ Créer';
+    btn.disabled = false;
+  }
 }
 
+// ── Affichage d'une notification toast ──────────────────────────────────
+// msg  : texte affiché
+// type : 'info' | 'success' | 'warning' | 'error' (classe CSS du toast)
+// Durée d'affichage : 3 secondes, puis suppression du DOM.
 function showToast(msg,type='info'){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');

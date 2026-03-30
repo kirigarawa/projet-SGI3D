@@ -4,24 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Dashboard</title>
+<!-- Feuille de style globale partagée par toutes les pages -->
 <link rel="stylesheet" href="style.css">
 <style>
+  /* Décalage vers le bas pour ne pas passer sous la barre de navigation fixe */
   body{padding-top:60px}
+
+  /* Titres de section à l'intérieur du contenu admin */
   .admin-content h2{font-size:1rem;font-weight:700;margin:1.5rem 0 .8rem;color:rgba(255,255,255,.8)}
+
+  /* Ligne d'activité dans les flux (connexions, impressions, alertes, caméras) */
   .feed-item{display:flex;gap:1rem;align-items:flex-start;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.07)}
   .feed-item:last-child{border:none}
+
+  /* Icône circulaire colorée à gauche de chaque élément de flux */
   .feed-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-  .feed-icon.login{background:rgba(52,152,219,.2)}
-  .feed-icon.print{background:rgba(46,204,113,.2)}
-  .feed-icon.alert{background:rgba(231,76,60,.2)}
+  .feed-icon.login{background:rgba(52,152,219,.2)}   /* Bleu  – connexions */
+  .feed-icon.print{background:rgba(46,204,113,.2)}   /* Vert  – impressions */
+  .feed-icon.alert{background:rgba(231,76,60,.2)}    /* Rouge – alertes */
+
+  /* Métadonnées secondaires sous chaque entrée de flux (heure, IP…) */
   .feed-meta{font-size:.8rem;color:rgba(255,255,255,.5);margin-top:.2rem}
+
+  /* Rangée de boutons d'actions rapides en haut du contenu */
   .quick-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+
+  /* Avatar utilisateur circulaire avec dégradé (initiales) */
   .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--btn-grad);display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff}
 </style>
 </head>
 <body>
 
-<!-- Navigation principale -->
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION PRINCIPALE (barre en haut, fixe sur toutes les pages)
+     ════════════════════════════════════════════════════════ -->
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">SGI3D</a>
   <div class="nav-links">
@@ -30,12 +46,20 @@
     <a href="cameras.html">📷 <span>Caméras</span></a>
     <a href="alerts.html">🔔 <span>Alertes</span></a>
     <a href="dashboard.html" class="active">📊 <span>Dashboard</span></a>
+    <!-- Bouton de déconnexion : appelle doLogout() puis redirige vers login.html -->
     <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
 </nav>
 
+<!-- ════════════════════════════════════════════════════════
+     MISE EN PAGE ADMIN (sidebar gauche + contenu principal)
+     ════════════════════════════════════════════════════════ -->
 <div class="admin-layout">
-  <!-- Sidebar -->
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────
+       Panneau de navigation latéral avec sections groupées.
+       Le badge #sb-alerts est mis à jour dynamiquement par renderStats().
+       ──────────────────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
     <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
@@ -45,38 +69,51 @@
     <a href="dashboard.html" class="active"><span class="s-icon">📊</span> Dashboard</a>
     <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <!-- Le badge affiche le nombre d'alertes non résolues (mis à jour en JS) -->
     <a href="alerts.html"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
 
     <div class="s-section">Compte</div>
     <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <!-- Export/import JSON de toute la base de données -->
     <a href="#" onclick="SGI3D_DB.exportJSON()"><span class="s-icon">📤</span> Exporter JSON</a>
     <a href="#" onclick="importFile()"><span class="s-icon">📥</span> Importer JSON</a>
     <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
   </aside>
 
-  <!-- Contenu principal -->
+  <!-- ── CONTENU PRINCIPAL ────────────────────────────────
+       Zone centrale du dashboard : stats, actions, flux d'activité.
+       ──────────────────────────────────────────────────── -->
   <main class="admin-content">
+
+    <!-- En-tête de page avec message de bienvenue personnalisé -->
     <div class="page-header">
       <h1>📊 Tableau de bord</h1>
       <p>Vue d'ensemble de l'activité SGI3D · <span id="welcome-msg"></span></p>
     </div>
 
-    <!-- Statistiques -->
+    <!-- Grille de statistiques : remplie dynamiquement par renderStats()
+         (nb utilisateurs, connexions, travaux, alertes, caméras) -->
     <div class="stats-grid" id="stats-grid"></div>
 
-    <!-- Actions rapides -->
+    <!-- Actions rapides : raccourcis vers les pages principales
+         et boutons pour export/import DB et test d'impression -->
     <div class="quick-actions">
       <a href="database.html" class="btn btn-accent">🗄️ Base de données</a>
       <a href="cameras.html"  class="btn btn-success">📷 Caméras live</a>
       <a href="alerts.html"   class="btn btn-warning">🔔 Gérer alertes</a>
       <button class="btn btn-primary" onclick="SGI3D_DB.exportJSON()">📤 Exporter DB</button>
       <button class="btn btn-ghost"   onclick="importFile()">📥 Importer DB</button>
+      <!-- Crée un travail d'impression fictif pour tester l'interface -->
       <button class="btn btn-danger"  onclick="addTestJob()">➕ Test impression</button>
     </div>
 
-    <!-- Grille activité -->
+    <!-- ── GRILLE D'ACTIVITÉ (2 colonnes) ───────────────────
+         Quatre panneaux côte à côte : connexions, impressions, alertes, caméras.
+         Chaque panneau est rechargé toutes les 15 secondes via renderAll().
+         ──────────────────────────────────────────────────── -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-      <!-- Connexions récentes -->
+
+      <!-- Flux des 8 dernières connexions/déconnexions -->
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🔐 Connexions récentes</h2>
@@ -85,7 +122,7 @@
         <div id="login-feed"></div>
       </div>
 
-      <!-- Travaux d'impression récents -->
+      <!-- Flux des 8 derniers travaux d'impression 3D -->
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🖨️ Impressions récentes</h2>
@@ -94,7 +131,7 @@
         <div id="print-feed"></div>
       </div>
 
-      <!-- Alertes actives -->
+      <!-- Liste des 6 alertes actives (non résolues) les plus récentes -->
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🔔 Alertes actives</h2>
@@ -103,7 +140,7 @@
         <div id="alert-feed"></div>
       </div>
 
-      <!-- Caméras -->
+      <!-- État de toutes les caméras (en ligne / hors ligne / détection mouvement) -->
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">📷 État caméras</h2>
@@ -113,7 +150,10 @@
       </div>
     </div>
 
-    <!-- Utilisateurs (admin only) -->
+    <!-- ── SECTION UTILISATEURS (visible uniquement pour les admins) ──
+         Tableau complet des comptes avec boutons activer/désactiver et supprimer.
+         Affiché seulement si session.role === 'admin' (géré dans renderUsers()).
+         ──────────────────────────────────────────────────────────────── -->
     <div id="users-section" style="margin-top:1.5rem;display:none">
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
@@ -126,9 +166,14 @@
   </main>
 </div>
 
-<!-- Modal ajouter utilisateur -->
+<!-- ════════════════════════════════════════════════════════
+     MODAL – AJOUT D'UN UTILISATEUR
+     Formulaire déclenché par le bouton "➕ Ajouter" de la section admin.
+     Validations : champs obligatoires + email unique avant création.
+     ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="addUserModal">
   <div class="modal">
+    <!-- Bouton de fermeture du modal -->
     <button class="modal-close" onclick="document.getElementById('addUserModal').classList.remove('open')">✕</button>
     <h2>➕ Ajouter un utilisateur</h2>
     <div class="form-group"><label>Nom</label><input id="au-name" class="form-control" placeholder="Jean Dupont"></div>
@@ -148,22 +193,38 @@
   </div>
 </div>
 
+<!-- Champ fichier caché utilisé pour l'import JSON (déclenché par importFile()) -->
 <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<!-- Conteneur des notifications toast (ajoutées dynamiquement par showToast()) -->
 <div id="toast-container"></div>
 
+<!-- ════════════════════════════════════════════════════════
+     SCRIPTS
+     db.js expose l'objet global SGI3D_DB avec toutes les
+     fonctions d'accès à l'API (getStats, getAlerts, etc.)
+     ════════════════════════════════════════════════════════ -->
 <script src="db.js"></script>
 <script>
+// ── GARDE D'AUTHENTIFICATION ─────────────────────────────
+// Redirige vers login.html si l'utilisateur n'est pas connecté
 if(!SGI3D_DB.requireAuth()) {}
 
+// Affiche le nom et le rôle de l'utilisateur connecté dans l'en-tête
 const session = SGI3D_DB.getSession();
 if(session){
   document.getElementById('welcome-msg').textContent = 'Connecté : ' + session.name + ' (' + session.role + ')';
 }
 
-function doLogout(){ SGI3D_DB.logout(); window.location.href='login.html'; }
+// Déconnexion : enregistre l'événement dans les journaux puis redirige
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
 
-function renderStats(){
-  const s = SGI3D_DB.getStats();
+// ── STATISTIQUES ─────────────────────────────────────────
+// Récupère les compteurs globaux depuis l'API et génère
+// les cartes stat-card colorées en haut du dashboard.
+// Met aussi à jour le badge d'alertes dans la sidebar.
+async function renderStats(){
+  const s = await SGI3D_DB.getStats();
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card blue"><div class="s-val">${s.totalUsers}</div><div class="s-label">Utilisateurs</div></div>
     <div class="stat-card green"><div class="s-val">${s.successLogins}</div><div class="s-label">Connexions réussies</div></div>
@@ -172,121 +233,158 @@ function renderStats(){
     <div class="stat-card purple"><div class="s-val">${s.onlineCameras}/${s.totalCameras}</div><div class="s-label">Caméras en ligne</div></div>
     <div class="stat-card blue"><div class="s-val">${s.activePrintJobs}</div><div class="s-label">Impressions en cours</div></div>
   `;
+  // Mise à jour du badge rouge dans la sidebar
   document.getElementById('sb-alerts').textContent = s.unresolvedAlerts;
 }
 
-function renderLoginFeed(){
-  const logs = SGI3D_DB.getLoginLogs(8);
+// ── FLUX CONNEXIONS ──────────────────────────────────────
+// Affiche les 8 dernières entrées du journal de connexion.
+// Icône : ✅ succès | 🚪 déconnexion | ❌ échec
+async function renderLoginFeed(){
+  const logs = await SGI3D_DB.getLoginLogs(8);
   const el = document.getElementById('login-feed');
   if(!logs.length){ el.innerHTML='<p style="color:rgba(255,255,255,.4);font-size:.85rem">Aucune connexion enregistrée</p>'; return; }
   el.innerHTML = logs.map(l=>`
     <div class="feed-item">
-      <div class="feed-icon login">${l.success===true?'✅':l.success==='logout'?'🚪':'❌'}</div>
-      <div><strong>${l.userName||l.email}</strong><br>
-      <div class="feed-meta">${l.success===true?'Connexion réussie':l.success==='logout'?'Déconnexion':'Échec connexion'} · ${SGI3D_DB.timeAgo(l.timestamp)} · ${l.ip||''}</div></div>
+      <div class="feed-icon login">${l.succes==='oui'?'✅':l.succes==='deconnexion'?'🚪':'❌'}</div>
+      <div><strong>${l.nom_utilisateur||l.email}</strong><br>
+      <div class="feed-meta">${l.succes==='oui'?'Connexion réussie':l.succes==='deconnexion'?'Déconnexion':'Échec connexion'} · ${SGI3D_DB.timeAgo(l.horodatage)} · ${l.ip||''}</div></div>
     </div>`).join('');
 }
 
-function renderPrintFeed(){
-  const jobs = SGI3D_DB.getPrintJobs(8);
+// ── FLUX IMPRESSIONS ─────────────────────────────────────
+// Affiche les 8 derniers travaux d'impression 3D.
+// Icône : ✅ terminé | ❌ erreur | 🔄 en cours
+async function renderPrintFeed(){
+  const jobs = await SGI3D_DB.getPrintJobs(8);
   const el = document.getElementById('print-feed');
   if(!jobs.length){ el.innerHTML='<p style="color:rgba(255,255,255,.4);font-size:.85rem">Aucun travail d\'impression</p>'; return; }
-  const statusIcon = s => s==='terminé'?'✅':s==='erreur'?'❌':'🔄';
+  const statusIcon = s => s==='termine'?'✅':s==='erreur'?'❌':'🔄';
   el.innerHTML = jobs.map(j=>`
     <div class="feed-item">
-      <div class="feed-icon print">${statusIcon(j.status)}</div>
-      <div><strong>${j.fileName||'Impression'}</strong> – ${j.printer||'N/A'}<br>
-      <div class="feed-meta">${j.userName} · ${SGI3D_DB.timeAgo(j.startedAt)} · <span class="badge badge-${j.status==='terminé'?'success':j.status==='erreur'?'danger':'info'}">${j.status}</span></div></div>
+      <div class="feed-icon print">${statusIcon(j.statut)}</div>
+      <div><strong>${j.nom_fichier||'Impression'}</strong><br>
+      <div class="feed-meta">${j.nom_utilisateur||'—'} · ${SGI3D_DB.timeAgo(j.demarre_le)} · <span class="badge badge-${j.statut==='termine'?'success':j.statut==='erreur'?'danger':'info'}">${j.statut}</span></div></div>
     </div>`).join('');
 }
 
-function renderAlertFeed(){
-  const alerts = SGI3D_DB.getAlerts(false).slice(0,6);
+// ── FLUX ALERTES ─────────────────────────────────────────
+// Affiche les 6 alertes non résolues les plus récentes.
+// Icône par type : 🔴 erreur | 🟡 avertissement | 🔵 info
+async function renderAlertFeed(){
+  const all = await SGI3D_DB.getAlerts(false); // false = alertes non résolues seulement
+  const alerts = all.slice(0,6);
   const el = document.getElementById('alert-feed');
   if(!alerts.length){ el.innerHTML='<p style="color:rgba(255,255,255,.4);font-size:.85rem">✅ Aucune alerte active</p>'; return; }
-  const icon = t=>t==='error'?'🔴':t==='warning'?'🟡':'🔵';
+  const icon = t=>t==='erreur'?'🔴':t==='avertissement'?'🟡':'🔵';
   el.innerHTML = alerts.map(a=>`
     <div class="feed-item">
       <div class="feed-icon alert">${icon(a.type)}</div>
-      <div><strong>${a.title}</strong><br>
-      <div class="feed-meta">${a.message.slice(0,60)}… · ${SGI3D_DB.timeAgo(a.createdAt)}</div></div>
+      <div><strong>${a.titre}</strong><br>
+      <div class="feed-meta">${a.message.slice(0,60)}… · ${SGI3D_DB.timeAgo(a.cree_le)}</div></div>
     </div>`).join('');
 }
 
-function renderCameraFeed(){
-  const cameras = SGI3D_DB.getCameras();
+// ── FLUX CAMÉRAS ─────────────────────────────────────────
+// Affiche l'état de chaque caméra : 🟢 en ligne | 🔴 hors ligne
+// + indication si la détection de mouvement est activée
+async function renderCameraFeed(){
+  const cameras = await SGI3D_DB.getCameras();
   const el = document.getElementById('camera-feed');
   el.innerHTML = cameras.map(c=>`
     <div class="feed-item">
-      <div class="feed-icon login">${c.status==='online'?'🟢':'🔴'}</div>
-      <div><strong>${c.name}</strong><br>
-      <div class="feed-meta">${c.location} · ${c.status==='online'?'En ligne':'Hors ligne'}${c.motionDetect?' · Détection mouvement':''}</div></div>
+      <div class="feed-icon login">${c.statut==='en_ligne'?'🟢':'🔴'}</div>
+      <div><strong>${c.nom}</strong><br>
+      <div class="feed-meta">${c.localisation} · ${c.statut==='en_ligne'?'En ligne':'Hors ligne'}${c.detection_mvt?' · Détection mouvement':''}</div></div>
     </div>`).join('');
 }
 
-function renderUsers(){
+// ── TABLEAU UTILISATEURS (admin seulement) ───────────────
+// Visible uniquement si le rôle de la session est "admin".
+// Génère un tableau HTML avec avatar, nom, email, rôle, statut
+// et boutons d'action (activer/désactiver, supprimer).
+async function renderUsers(){
   const s = SGI3D_DB.getSession();
   if(s && s.role==='admin'){
     document.getElementById('users-section').style.display='block';
-    const users = SGI3D_DB.getUsers();
+    const users = await SGI3D_DB.getUsers();
     document.getElementById('users-table').innerHTML = `
       <thead><tr><th>Avatar</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
       <tbody>${users.map(u=>`
         <tr>
-          <td><div class="user-avatar">${u.avatar||u.name[0]}</div></td>
-          <td>${u.name}</td>
+          <td><div class="user-avatar">${u.avatar||u.nom[0]}</div></td>
+          <td>${u.nom}</td>
           <td>${u.email}</td>
           <td><span class="badge badge-${u.role==='admin'?'info':'neutral'}">${u.role}</span></td>
-          <td><span class="badge badge-${u.active?'success':'danger'}">${u.active?'Actif':'Inactif'}</span></td>
+          <td><span class="badge badge-${u.actif?'success':'danger'}">${u.actif?'Actif':'Inactif'}</span></td>
           <td>
-            <button class="btn btn-warning btn-xs" onclick="toggleUser(${u.id})">${u.active?'Désactiver':'Activer'}</button>
+            <button class="btn btn-warning btn-xs" onclick="toggleUser(${u.id})">${u.actif?'Désactiver':'Activer'}</button>
             <button class="btn btn-danger btn-xs" onclick="deleteUser(${u.id})">🗑️</button>
           </td>
         </tr>`).join('')}</tbody>`;
   }
 }
 
+// ── ACTIONS UTILISATEURS ─────────────────────────────────
+
+// Ouvre le modal d'ajout d'utilisateur
 function showAddUser(){ document.getElementById('addUserModal').classList.add('open'); }
-function doAddUser(){
+
+// Valide les champs du formulaire, vérifie que l'email n'est pas déjà pris,
+// crée l'utilisateur via l'API, ferme le modal et rafraîchit l'affichage.
+// L'avatar est généré automatiquement à partir des initiales du nom.
+async function doAddUser(){
   const name=document.getElementById('au-name').value.trim();
   const email=document.getElementById('au-email').value.trim();
   const pass=document.getElementById('au-pass').value;
   const role=document.getElementById('au-role').value;
   if(!name||!email||!pass){showToast('Remplissez tous les champs','warning');return;}
-  if(SGI3D_DB.getUserByEmail(email)){showToast('Email déjà utilisé','warning');return;}
-  SGI3D_DB.createUser({name,email,password:pass,role,avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
+  const existing = await SGI3D_DB.getUserByEmail(email);
+  if(existing){showToast('Email déjà utilisé','warning');return;}
+  await SGI3D_DB.createUser({nom:name,email,mot_de_passe:pass,role,avatar:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()});
   document.getElementById('addUserModal').classList.remove('open');
   renderAll(); showToast('✅ Utilisateur créé','success');
 }
 
-function toggleUser(id){
-  const u=SGI3D_DB.getUserById(id);
+// Bascule l'état actif/inactif d'un utilisateur (0 ↔ 1)
+async function toggleUser(id){
+  const u = await SGI3D_DB.getUserById(id);
   if(!u)return;
-  SGI3D_DB.updateUser(id,{active:!u.active});
+  await SGI3D_DB.updateUser(id,{actif: u.actif?0:1});
   renderAll(); showToast('Utilisateur mis à jour','info');
 }
-function deleteUser(id){
+
+// Demande confirmation puis supprime définitivement un utilisateur
+async function deleteUser(id){
   if(!confirm('Supprimer cet utilisateur ?'))return;
-  SGI3D_DB.deleteUser(id); renderAll(); showToast('Utilisateur supprimé','warning');
+  await SGI3D_DB.deleteUser(id); renderAll(); showToast('Utilisateur supprimé','warning');
 }
 
-function addTestJob(){
-  const printers=['Ultimaker 2+','Geeetech A20T'];
-  const files=['Pièce_moteur.stl','Support_caméra.stl','Coque_boitier.stl','Engrenage.stl','Prototype_v2.stl'];
-  const job = SGI3D_DB.createPrintJob({
-    printer:printers[Math.floor(Math.random()*2)],
-    fileName:files[Math.floor(Math.random()*files.length)],
-    duration:Math.floor(Math.random()*180+30)+'min',
-    material:['PLA','ABS','TPU'][Math.floor(Math.random()*3)]
+// ── TEST D'IMPRESSION ────────────────────────────────────
+// Crée un travail d'impression fictif avec un fichier aléatoire,
+// une durée estimée et un matériau. Après 3 secondes, le travail
+// se termine automatiquement (80% de succès, 20% d'erreur).
+async function addTestJob(){
+  const files=['Piece_moteur.stl','Support_camera.stl','Coque_boitier.stl','Engrenage.stl','Prototype_v2.stl'];
+  const job = await SGI3D_DB.createPrintJob({
+    nom_fichier: files[Math.floor(Math.random()*files.length)],
+    duree_estimee: Math.floor(Math.random()*180+30)+'min',
+    materiau: ['PLA','ABS','TPU'][Math.floor(Math.random()*3)]
   });
-  setTimeout(()=>{
-    SGI3D_DB.finishPrintJob(job.id, Math.random()>.2);
+  renderAll(); showToast('🖨️ Impression lancée : '+job.nom_fichier,'info');
+  // Simulation de fin d'impression après 3 secondes
+  setTimeout(async ()=>{
+    await SGI3D_DB.finishPrintJob(job.id, Math.random()>.2);
     renderAll();
   },3000);
-  renderAll(); showToast('🖨️ Impression lancée : '+job.fileName,'info');
 }
 
+// ── IMPORT JSON ──────────────────────────────────────────
+// Ouvre le sélecteur de fichier natif (input type="file" caché).
 function importFile(){ document.getElementById('importInput').click(); }
+
+// Lit le fichier JSON sélectionné, l'importe via SGI3D_DB,
+// affiche un toast de résultat et rafraîchit l'affichage si succès.
 function handleImport(e){
   const file=e.target.files[0]; if(!file)return;
   const r=new FileReader();
@@ -298,10 +396,16 @@ function handleImport(e){
   r.readAsText(file);
 }
 
-function renderAll(){
-  renderStats(); renderLoginFeed(); renderPrintFeed(); renderAlertFeed(); renderCameraFeed(); renderUsers();
+// ── RENDU GLOBAL ─────────────────────────────────────────
+// Lance tous les rendus en parallèle (Promise.all) pour minimiser
+// le temps d'affichage. Appelé au chargement et toutes les 15 secondes.
+async function renderAll(){
+  await Promise.all([renderStats(), renderLoginFeed(), renderPrintFeed(), renderAlertFeed(), renderCameraFeed(), renderUsers()]);
 }
 
+// ── NOTIFICATIONS TOAST ──────────────────────────────────
+// Crée une bulle de notification temporaire (disparaît après 3,5 s).
+// Types : 'info' | 'success' | 'warning' | 'error'
 function showToast(msg,type='info'){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
@@ -309,8 +413,11 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),3500);
 }
 
+// ── INITIALISATION ───────────────────────────────────────
+// Premier rendu au chargement de la page
 renderAll();
-setInterval(renderAll,15000);
+// Rafraîchissement automatique toutes les 15 secondes
+setInterval(renderAll, 15000);
 </script>
 </body>
 </html>

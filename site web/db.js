@@ -1,272 +1,338 @@
 /**
- * SGI3D - Moteur de base de données localStorage
- * v3.0 - Compatible export USB
+ * SGI3D - Moteur API v4.0
+ *
+ * Objet global unique (SGI3D_DB) qui centralise TOUS les accès aux données.
+ * Chaque méthode envoie une requête POST fetch vers api.php avec un paramètre
+ * "action" qui détermine l'opération à effectuer côté serveur.
+ *
+ * Ancienne version : les données étaient stockées dans localStorage (navigateur).
+ * Version actuelle : toutes les données transitent par api.php → base MySQL.
+ *
+ * Structure des réponses de l'API :
+ *   { ok: true,  data: <résultat> }  → succès
+ *   { ok: false, error: <message> }  → erreur
  */
 
 const SGI3D_DB = {
-  VERSION: '3.0',
 
-  // ─── Initialisation ──────────────────────────────────────────────────────
-  init() {
-    if (!localStorage.getItem('sgi3d_initialized')) {
-      this._createDefaultData();
-      localStorage.setItem('sgi3d_initialized', 'true');
+  // URL du point d'entrée de l'API (relatif à la page courante)
+  API: 'api.php',
+
+  // ════════════════════════════════════════════════════════
+  //  MÉTHODE CENTRALE D'APPEL API
+  //  Toutes les méthodes publiques passent par _call().
+  //  Elle construit la requête POST, parse le JSON de réponse,
+  //  lève une erreur si l'API renvoie ok:false, et retourne data.
+  // ════════════════════════════════════════════════════════
+  async _call(action, params = {}) {
+    try {
+      const res = await fetch(this.API, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Corps JSON : l'action + tous les paramètres fusionnés
+        body:    JSON.stringify({ action, ...params })
+      });
+      const json = await res.json();
+      // Si l'API signale une erreur, on la propage comme exception JS
+      if (!json.ok) throw new Error(json.error || 'Erreur API');
+      return json.data;
+    } catch (e) {
+      // Log dans la console pour faciliter le débogage
+      console.error('[SGI3D API]', action, e.message);
+      throw e;
     }
   },
 
-  _createDefaultData() {
-    // Utilisateurs par défaut
-    const users = [
-      { id: 1, email: 'admin@sgi3d.fr',    password: 'admin123', name: 'Administrateur', role: 'admin',    avatar: 'AD', active: true,  createdAt: new Date().toISOString() },
-      { id: 2, email: 'marie@sgi3d.fr',    password: 'marie456', name: 'Marie Dupont',   role: 'operator', avatar: 'MD', active: true,  createdAt: new Date().toISOString() },
-      { id: 3, email: 'thomas@sgi3d.fr',   password: 'thomas789',name: 'Thomas Martin',  role: 'operator', avatar: 'TM', active: true,  createdAt: new Date().toISOString() }
-    ];
-    this.set('users', users);
+  // ════════════════════════════════════════════════════════
+  //  GESTION DE SESSION
+  //  La session est stockée dans sessionStorage (mémoire du
+  //  navigateur, effacée à la fermeture de l'onglet).
+  //  Elle contient : userId, email, name, role, loginAt.
+  // ════════════════════════════════════════════════════════
 
-    // Journaux de connexion vides
-    this.set('login_logs', []);
-
-    // Travaux d'impression vides
-    this.set('print_jobs', []);
-
-    // Caméras par défaut
-    const cameras = [
-      { id: 1, name: 'Caméra Atelier 1',   location: 'Zone Ultimaker',   status: 'online',  url: '', motionDetect: true,  addedAt: new Date().toISOString() },
-      { id: 2, name: 'Caméra Atelier 2',   location: 'Zone Geeetech',    status: 'online',  url: '', motionDetect: true,  addedAt: new Date().toISOString() },
-      { id: 3, name: 'Caméra Entrée',       location: 'Hall d\'entrée',   status: 'online',  url: '', motionDetect: false, addedAt: new Date().toISOString() },
-      { id: 4, name: 'Caméra Stockage',     location: 'Zone matériaux',   status: 'offline', url: '', motionDetect: true,  addedAt: new Date().toISOString() }
-    ];
-    this.set('cameras', cameras);
-
-    // Alertes par défaut
-    const alerts = [
-      { id: 1, type: 'warning', title: 'Filament faible',         message: 'Ultimaker 2+ : niveau filament PLA < 10%',         source: 'Système',        resolved: false, createdAt: new Date(Date.now()-3600000).toISOString(), resolvedAt: null },
-      { id: 2, type: 'info',    title: 'Maintenance planifiée',   message: 'Entretien préventif Geeetech A20T prévu demain',    source: 'Admin',          resolved: false, createdAt: new Date(Date.now()-7200000).toISOString(), resolvedAt: null },
-      { id: 3, type: 'error',   title: 'Erreur température',      message: 'Buse Ultimaker 2+ température anormale détectée',  source: 'Capteur',        resolved: true,  createdAt: new Date(Date.now()-86400000).toISOString(), resolvedAt: new Date(Date.now()-3000000).toISOString() }
-    ];
-    this.set('alerts', alerts);
-
-    // Paramètres système
-    this.set('settings', { siteName: 'SGI3D', version: '3.0', exportDate: null });
+  // Retourne l'objet session ou null si l'utilisateur n'est pas connecté
+  getSession() {
+    try { return JSON.parse(sessionStorage.getItem('sgi3d_session')); } catch { return null; }
   },
 
-  // ─── CRUD générique ───────────────────────────────────────────────────────
-  get(key)        { try { return JSON.parse(localStorage.getItem('sgi3d_' + key)) || []; } catch { return []; } },
-  set(key, value) { localStorage.setItem('sgi3d_' + key, JSON.stringify(value)); },
-  getObj(key)     { try { return JSON.parse(localStorage.getItem('sgi3d_' + key)) || {}; } catch { return {}; } },
+  // Retourne true si une session est active (utilisateur connecté)
+  isLoggedIn() { return !!this.getSession(); },
 
-  // ─── Utilisateurs ─────────────────────────────────────────────────────────
-  getUsers()      { return this.get('users'); },
-  getUserById(id) { return this.getUsers().find(u => u.id === id); },
-  getUserByEmail(email) { return this.getUsers().find(u => u.email === email); },
+  // Retourne true si l'utilisateur connecté a le rôle "admin"
+  isAdmin()    { const s = this.getSession(); return s && s.role === 'admin'; },
 
-  createUser(data) {
-    const users = this.getUsers();
-    const newUser = { ...data, id: Date.now(), createdAt: new Date().toISOString(), active: true };
-    users.push(newUser);
-    this.set('users', users);
-    return newUser;
-  },
-
-  updateUser(id, data) {
-    const users = this.getUsers().map(u => u.id === id ? { ...u, ...data } : u);
-    this.set('users', users);
-  },
-
-  deleteUser(id) {
-    this.set('users', this.getUsers().filter(u => u.id !== id));
-  },
-
-  // ─── Authentification ─────────────────────────────────────────────────────
-  login(email, password) {
-    const user = this.getUserByEmail(email);
-    const success = user && user.password === password && user.active;
-    this.logLogin({ userId: user ? user.id : null, email, success, userName: user ? user.name : 'Inconnu' });
-    if (success) {
-      sessionStorage.setItem('sgi3d_session', JSON.stringify({ userId: user.id, email: user.email, name: user.name, role: user.role, loginAt: new Date().toISOString() }));
+  // Vérifie qu'une session est active.
+  // Si non, redirige vers login.html (ou l'URL fournie) et retourne false.
+  // Utilisé en haut de chaque page protégée : if(!SGI3D_DB.requireAuth()){}
+  requireAuth(redirect) {
+    if (!this.isLoggedIn()) {
+      window.location.href = redirect || 'login.html';
+      return false;
     }
-    return success ? user : null;
-  },
-
-  logout() {
-    const session = this.getSession();
-    if (session) this.logLogin({ userId: session.userId, email: session.email, success: 'logout', userName: session.name });
-    sessionStorage.removeItem('sgi3d_session');
-  },
-
-  getSession() { try { return JSON.parse(sessionStorage.getItem('sgi3d_session')); } catch { return null; } },
-  isLoggedIn()  { return !!this.getSession(); },
-  isAdmin()     { const s = this.getSession(); return s && s.role === 'admin'; },
-
-  requireAuth(redirectUrl) {
-    if (!this.isLoggedIn()) { window.location.href = redirectUrl || 'login.html'; return false; }
     return true;
   },
 
-  // ─── Journaux de connexion ────────────────────────────────────────────────
-  logLogin(data) {
-    const logs = this.get('login_logs');
-    logs.unshift({ id: Date.now(), ...data, ip: '192.168.1.' + Math.floor(Math.random()*50+10), browser: navigator.userAgent.split(' ').pop(), timestamp: new Date().toISOString() });
-    if (logs.length > 500) logs.splice(500);
-    this.set('login_logs', logs);
+  // ════════════════════════════════════════════════════════
+  //  AUTHENTIFICATION
+  // ════════════════════════════════════════════════════════
+
+  // Tente de connecter l'utilisateur avec email + mot de passe.
+  // En cas de succès : stocke la session dans sessionStorage et retourne l'objet user.
+  // En cas d'échec  : retourne null.
+  // L'API journalise chaque tentative (réussie ou non) dans journaux_connexion.
+  async login(email, password) {
+    const res = await this._call('login', { email, mot_de_passe: password });
+    if (res.success) {
+      // Sauvegarde les infos essentielles de la session (sans le mot de passe)
+      sessionStorage.setItem('sgi3d_session', JSON.stringify({
+        userId:  res.user.id,
+        email:   res.user.email,
+        name:    res.user.nom,
+        role:    res.user.role,
+        loginAt: new Date().toISOString()  // Heure de connexion côté client
+      }));
+      return res.user;
+    }
+    return null;
   },
 
-  getLoginLogs(limit) {
-    const logs = this.get('login_logs');
-    return limit ? logs.slice(0, limit) : logs;
+  // Déconnecte l'utilisateur :
+  // 1. Envoie un événement "déconnexion" à l'API pour journalisation
+  // 2. Supprime la session du sessionStorage
+  async logout() {
+    const s = this.getSession();
+    if (s) {
+      await this._call('logout', { userId: s.userId, email: s.email, nom: s.name });
+    }
+    sessionStorage.removeItem('sgi3d_session');
   },
 
-  // ─── Travaux d'impression ─────────────────────────────────────────────────
-  getPrintJobs(limit) {
-    const jobs = this.get('print_jobs');
-    return limit ? jobs.slice(0, limit) : jobs;
+  // ════════════════════════════════════════════════════════
+  //  UTILISATEURS
+  //  CRUD complet sur la table `utilisateurs`.
+  // ════════════════════════════════════════════════════════
+
+  // Retourne tous les utilisateurs (tableau)
+  async getUsers()          { return this._call('getUsers'); },
+
+  // Retourne un utilisateur par son id (objet ou null)
+  async getUserById(id)     { return this._call('getUserById',    { id }); },
+
+  // Retourne un utilisateur par son email (objet ou null)
+  // Utilisé pour vérifier l'unicité d'un email avant création
+  async getUserByEmail(e)   { return this._call('getUserByEmail', { email: e }); },
+
+  // Crée un nouvel utilisateur.
+  // Accepte les deux conventions de nommage (anglais : name/password, français : nom/mot_de_passe)
+  // pour la compatibilité avec les différents formulaires du projet.
+  async createUser(data) {
+    return this._call('createUser', {
+      nom:          data.name  || data.nom,
+      email:        data.email,
+      mot_de_passe: data.password || data.mot_de_passe,
+      role:         data.role  || 'operateur',
+      avatar:       data.avatar || ''
+    });
   },
 
-  createPrintJob(data) {
-    const session = this.getSession();
-    const jobs = this.get('print_jobs');
-    const job = {
-      id: Date.now(),
-      userId: session ? session.userId : null,
-      userName: session ? session.name : 'Inconnu',
-      ...data,
-      status: 'en_cours',
-      startedAt: new Date().toISOString(),
-      finishedAt: null
-    };
-    jobs.unshift(job);
-    this.set('print_jobs', jobs);
-    return job;
+  // Met à jour un ou plusieurs champs d'un utilisateur.
+  // Les champs autorisés sont filtrés côté api.php (liste blanche).
+  async updateUser(id, data) {
+    return this._call('updateUser', { id, ...data });
   },
 
-  updatePrintJob(id, data) {
-    const jobs = this.getPrintJobs().map(j => j.id === id ? { ...j, ...data } : j);
-    this.set('print_jobs', jobs);
+  // Supprime définitivement un utilisateur par son id
+  async deleteUser(id) { return this._call('deleteUser', { id }); },
+
+  // ════════════════════════════════════════════════════════
+  //  JOURNAUX DE CONNEXION
+  //  Historique de toutes les tentatives de connexion/déconnexion.
+  // ════════════════════════════════════════════════════════
+
+  // Retourne les N dernières entrées du journal (défaut : 500)
+  async getLoginLogs(limit) { return this._call('getLoginLogs', { limit: limit || 500 }); },
+
+  // ════════════════════════════════════════════════════════
+  //  TRAVAUX D'IMPRESSION
+  //  Suivi du cycle de vie des impressions 3D.
+  // ════════════════════════════════════════════════════════
+
+  // Retourne les N derniers travaux d'impression (défaut : 500)
+  async getPrintJobs(limit) { return this._call('getPrintJobs', { limit: limit || 500 }); },
+
+  // Crée un nouveau travail d'impression avec le statut "en_cours".
+  // Attache automatiquement l'utilisateur connecté (userId + name) depuis la session.
+  // Accepte les deux conventions de nommage (anglais/français).
+  async createPrintJob(data) {
+    const s = this.getSession();
+    return this._call('createPrintJob', {
+      nom_fichier:     data.fileName     || data.nom_fichier,
+      materiau:        data.material     || data.materiau,
+      duree_estimee:   data.duration     || data.duree_estimee,
+      utilisateur_id:  s ? s.userId : null,     // null si non connecté
+      nom_utilisateur: s ? s.name   : 'Inconnu',
+      imprimante_id:   data.imprimante_id || null
+    });
   },
 
-  finishPrintJob(id, success) {
-    this.updatePrintJob(id, { status: success ? 'terminé' : 'erreur', finishedAt: new Date().toISOString() });
+  // Clôture un travail d'impression.
+  // success=true → statut "termine" | success=false → statut "erreur"
+  // L'API calcule automatiquement la durée réelle (TIMESTAMPDIFF).
+  async finishPrintJob(id, success) {
+    return this._call('finishPrintJob', { id, success });
   },
 
-  // ─── Caméras ──────────────────────────────────────────────────────────────
-  getCameras()  { return this.get('cameras'); },
+  // ════════════════════════════════════════════════════════
+  //  CAMÉRAS
+  //  CRUD complet sur la table `cameras`.
+  // ════════════════════════════════════════════════════════
 
-  addCamera(data) {
-    const cameras = this.getCameras();
-    const cam = { ...data, id: Date.now(), status: 'online', addedAt: new Date().toISOString() };
-    cameras.push(cam);
-    this.set('cameras', cameras);
-    return cam;
+  // Retourne toutes les caméras enregistrées (tableau)
+  async getCameras() { return this._call('getCameras'); },
+
+  // Ajoute une nouvelle caméra.
+  // La détection de mouvement est activée (1) par défaut si non précisée.
+  // Accepte les deux conventions de nommage (anglais/français).
+  async addCamera(data) {
+    return this._call('addCamera', {
+      nom:           data.name         || data.nom,
+      localisation:  data.location     || data.localisation,
+      url_flux:      data.url          || data.url_flux       || null,
+      detection_mvt: data.motionDetect !== undefined ? (data.motionDetect ? 1 : 0) : 1
+    });
   },
 
-  updateCamera(id, data) {
-    this.set('cameras', this.getCameras().map(c => c.id === id ? { ...c, ...data } : c));
+  // Met à jour une ou plusieurs propriétés d'une caméra.
+  // Gère la traduction du statut anglais → français :
+  //   'online' → 'en_ligne' | 'offline' → 'hors_ligne'
+  // Accepte aussi directement la valeur française (statut).
+  async updateCamera(id, data) {
+    const mapped = { id };
+    // Traduction du statut anglais vers la valeur attendue par l'API
+    if (data.status       !== undefined) mapped.statut        = data.status === 'online' ? 'en_ligne' : 'hors_ligne';
+    if (data.statut       !== undefined) mapped.statut        = data.statut;
+    // Conversion booléen → 0/1 pour la détection de mouvement
+    if (data.motionDetect !== undefined) mapped.detection_mvt = data.motionDetect ? 1 : 0;
+    if (data.detection_mvt !== undefined) mapped.detection_mvt = data.detection_mvt;
+    return this._call('updateCamera', mapped);
   },
 
-  deleteCamera(id) {
-    this.set('cameras', this.getCameras().filter(c => c.id !== id));
+  // Supprime définitivement une caméra par son id
+  async deleteCamera(id) { return this._call('deleteCamera', { id }); },
+
+  // ════════════════════════════════════════════════════════
+  //  ALERTES
+  //  Gestion complète des notifications système.
+  // ════════════════════════════════════════════════════════
+
+  // Retourne les alertes selon leur état :
+  //   resolved=true  → alertes résolues uniquement
+  //   resolved=false → alertes actives uniquement
+  //   resolved=undefined → toutes les alertes
+  async getAlerts(resolved) {
+    const params = {};
+    if (resolved !== undefined) params.resolved = resolved ? '1' : '0';
+    return this._call('getAlerts', params);
   },
 
-  // ─── Alertes ──────────────────────────────────────────────────────────────
-  getAlerts(resolved) {
-    const alerts = this.get('alerts');
-    if (resolved === undefined) return alerts;
-    return alerts.filter(a => a.resolved === resolved);
+  // Crée une nouvelle alerte (non résolue par défaut).
+  // Accepte les deux conventions de nommage (title/titre).
+  async addAlert(data) {
+    return this._call('addAlert', {
+      type:    data.type,
+      titre:   data.title   || data.titre,
+      message: data.message,
+      source:  data.source  || null
+    });
   },
 
-  addAlert(data) {
-    const alerts = this.get('alerts');
-    const alert = { ...data, id: Date.now(), resolved: false, createdAt: new Date().toISOString(), resolvedAt: null };
-    alerts.unshift(alert);
-    this.set('alerts', alerts);
-    return alert;
-  },
+  // Marque une alerte spécifique comme résolue (resolue=1, resolue_le=NOW())
+  async resolveAlert(id)   { return this._call('resolveAlert',        { id }); },
 
-  resolveAlert(id) {
-    this.set('alerts', this.get('alerts').map(a => a.id === id ? { ...a, resolved: true, resolvedAt: new Date().toISOString() } : a));
-  },
+  // Supprime définitivement une alerte par son id
+  async deleteAlert(id)    { return this._call('deleteAlert',         { id }); },
 
-  deleteAlert(id) {
-    this.set('alerts', this.get('alerts').filter(a => a.id !== id));
-  },
+  // Résout toutes les alertes actives en une seule opération
+  async resolveAllAlerts() { return this._call('resolveAllAlerts'); },
 
-  // ─── Statistiques ─────────────────────────────────────────────────────────
-  getStats() {
+  // Supprime toutes les alertes déjà résolues (nettoyage de l'historique)
+  async deleteResolvedAlerts() { return this._call('deleteResolvedAlerts'); },
+
+  // ════════════════════════════════════════════════════════
+  //  STATISTIQUES
+  //  Agrégats globaux pour le dashboard.
+  //  Traduit les clés snake_case de l'API en camelCase JS
+  //  pour une utilisation plus naturelle dans les templates.
+  // ════════════════════════════════════════════════════════
+  async getStats() {
+    const d = await this._call('getStats');
     return {
-      totalUsers:     this.getUsers().length,
-      activeUsers:    this.getUsers().filter(u => u.active).length,
-      totalLogins:    this.getLoginLogs().length,
-      successLogins:  this.getLoginLogs().filter(l => l.success === true).length,
-      totalPrintJobs: this.getPrintJobs().length,
-      activePrintJobs:this.getPrintJobs().filter(j => j.status === 'en_cours').length,
-      totalCameras:   this.getCameras().length,
-      onlineCameras:  this.getCameras().filter(c => c.status === 'online').length,
-      totalAlerts:    this.getAlerts().length,
-      unresolvedAlerts:this.getAlerts(false).length
+      totalUsers:       parseInt(d.total_utilisateurs),   // Nb total de comptes
+      activeUsers:      parseInt(d.utilisateurs_actifs),  // Comptes actifs (actif=1)
+      successLogins:    parseInt(d.connexions_reussies),  // Connexions réussies
+      totalPrintJobs:   parseInt(d.total_print_jobs),     // Tous les travaux d'impression
+      activePrintJobs:  parseInt(d.impressions_en_cours), // Travaux "en_cours"
+      totalCameras:     parseInt(d.total_cameras),        // Toutes les caméras
+      onlineCameras:    parseInt(d.cameras_en_ligne),     // Caméras "en_ligne"
+      totalAlerts:      parseInt(d.total_alertes),        // Toutes les alertes
+      unresolvedAlerts: parseInt(d.alertes_actives)       // Alertes non résolues
     };
   },
 
-  // ─── Export / Import USB ──────────────────────────────────────────────────
-  exportJSON() {
-    const data = {
-      version: this.VERSION,
-      exportDate: new Date().toISOString(),
-      users:      this.getUsers(),
-      login_logs: this.getLoginLogs(),
-      print_jobs: this.getPrintJobs(),
-      cameras:    this.getCameras(),
-      alerts:     this.getAlerts(),
-      settings:   this.getObj('settings')
-    };
+  // ════════════════════════════════════════════════════════
+  //  EXPORT JSON
+  //  Télécharge un fichier JSON contenant l'intégralité des
+  //  données (utilisateurs, journaux, impressions, caméras,
+  //  alertes) pour sauvegarde ou transfert sur clé USB.
+  //  Le nom du fichier inclut la date du jour (AAAA-MM-JJ).
+  // ════════════════════════════════════════════════════════
+  async exportJSON() {
+    const data = await this._call('exportJSON');
+    // Crée un Blob JSON formaté (indenté de 2 espaces pour lisibilité)
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'sgi3d_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    // Crée un lien <a> temporaire pour déclencher le téléchargement
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = 'sgi3d_backup_' + new Date().toISOString().slice(0, 10) + '.json';
     a.click();
+    // Note : URL.revokeObjectURL() pourrait être appelé ici pour libérer la mémoire
   },
 
-  importJSON(jsonStr) {
-    try {
-      const data = JSON.parse(jsonStr);
-      if (data.users)      this.set('users',      data.users);
-      if (data.login_logs) this.set('login_logs',  data.login_logs);
-      if (data.print_jobs) this.set('print_jobs',  data.print_jobs);
-      if (data.cameras)    this.set('cameras',     data.cameras);
-      if (data.alerts)     this.set('alerts',      data.alerts);
-      if (data.settings)   this.set('settings',    data.settings);
-      return true;
-    } catch(e) { console.error('Import error:', e); return false; }
-  },
+  // ════════════════════════════════════════════════════════
+  //  HELPERS UTILITAIRES
+  //  Fonctions de formatage partagées par toutes les pages.
+  // ════════════════════════════════════════════════════════
 
-  exportCSV(tableName) {
-    const data = this.get(tableName);
-    if (!data.length) return;
-    const headers = Object.keys(data[0]);
-    const rows = data.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','));
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'sgi3d_' + tableName + '_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-  },
-
-  // ─── Helpers UI ───────────────────────────────────────────────────────────
+  // Formate une date ISO en "JJ/MM/AAAA HH:MM" selon la locale française.
+  // Retourne "—" si la valeur est absente ou invalide.
   formatDate(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
     return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   },
 
+  // Retourne le temps écoulé depuis une date ISO sous forme lisible :
+  //   < 1 min  → "A l'instant"
+  //   < 1 h    → "X min"
+  //   < 1 jour → "Xh"
+  //   sinon    → "Xj"
+  // Utilisé dans les flux d'activité (connexions, alertes, impressions).
   timeAgo(iso) {
     if (!iso) return '—';
     const diff = Date.now() - new Date(iso).getTime();
-    if (diff < 60000)   return 'À l\'instant';
-    if (diff < 3600000) return Math.floor(diff/60000) + ' min';
-    if (diff < 86400000)return Math.floor(diff/3600000) + 'h';
-    return Math.floor(diff/86400000) + 'j';
-  }
+    if (diff < 60000)    return 'A l\'instant';
+    if (diff < 3600000)  return Math.floor(diff / 60000)   + ' min';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+    return Math.floor(diff / 86400000) + 'j';
+  },
+
+  // Méthode vide conservée pour la rétrocompatibilité.
+  // Dans l'ancienne version (localStorage), init() chargeait les données initiales.
+  // Aujourd'hui les données viennent de l'API, donc init() ne fait plus rien.
+  init() {}
 };
 
-// Auto-initialisation
+// Déclenchement automatique d'init() au chargement du DOM.
+// No-op (ne fait rien), mais préserve la compatibilité avec
+// les pages qui s'attendaient à ce comportement.
 document.addEventListener('DOMContentLoaded', () => SGI3D_DB.init());
