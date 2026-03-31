@@ -214,6 +214,7 @@ const SGI3D_DB = {
     // Conversion booléen → 0/1 pour la détection de mouvement
     if (data.motionDetect !== undefined) mapped.detection_mvt = data.motionDetect ? 1 : 0;
     if (data.detection_mvt !== undefined) mapped.detection_mvt = data.detection_mvt;
+    if (data.url_flux      !== undefined) mapped.url_flux      = data.url_flux;
     return this._call('updateCamera', mapped);
   },
 

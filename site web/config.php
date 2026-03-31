@@ -4,6 +4,13 @@
 //  A modifier selon votre environnement (XAMPP, WAMP...)
 // ============================================================
 
+// ── OctoPrint : liste des imprimantes configurées ───────
+// Ajoutez une entrée par imprimante avec son IP, port et clé API OctoPrint.
+define('OCTOPRINT_PRINTERS', [
+    // ['id' => 'printer1', 'name' => 'Ultimaker 2+',     'model' => 'Ultimaker',  'ip' => '192.168.0.100', 'port' => 5000, 'api_key' => 'VOTRE_CLE_API'],
+    // ['id' => 'printer2', 'name' => 'Creality Ender V2', 'model' => 'Creality',   'ip' => '192.168.0.101', 'port' => 5000, 'api_key' => 'VOTRE_CLE_API'],
+]);
+
 define('DB_HOST',     'localhost');
 define('DB_NAME',     'sgi3d');
 define('DB_USER',     'sgi3d_user');       // Votre utilisateur MySQL

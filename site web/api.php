@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 // ============================================================
 //  SGI3D - API REST
@@ -9,7 +6,7 @@ error_reporting(E_ALL);
 // ============================================================
 
 require_once 'config.php';
-require_once 'octoprint_sync.php';
+require_once 'octoprint_api.php';
 
 // Headers CORS + JSON
 header('Content-Type: application/json; charset=utf-8');
@@ -195,6 +192,12 @@ try {
             $result = $db->query('SELECT * FROM cameras ORDER BY id')->fetchAll();
             break;
 
+        case 'getCameraById':
+            $st = $db->prepare('SELECT * FROM cameras WHERE id = ?');
+            $st->execute([$data['id']]);
+            $result = $st->fetch() ?: null;
+            break;
+
         case 'addCamera':
             $st = $db->prepare('INSERT INTO cameras (nom, localisation, statut, url_flux, detection_mvt, ajoute_le)
                                 VALUES (?, ?, "en_ligne", ?, ?, NOW())');
@@ -236,6 +239,10 @@ try {
                 $resolved = $data['resolved'] === 'true' || $data['resolved'] === '1' ? 1 : 0;
                 $st = $db->prepare('SELECT * FROM alertes WHERE resolue = ? ORDER BY cree_le DESC');
                 $st->execute([$resolved]);
+            } elseif (!empty($data['unread'])) {
+                // alertes non résolues uniquement (badge sidebar, compteur caméras)
+                $st = $db->prepare('SELECT * FROM alertes WHERE resolue = 0 ORDER BY cree_le DESC');
+                $st->execute();
             } else {
                 $st = $db->query('SELECT * FROM alertes ORDER BY cree_le DESC');
             }
@@ -301,74 +308,34 @@ try {
             ];
             break;
 
-        // ── OCTOPRINT : ÉTAT ───────────────────────────────
+        // ── OCTOPRINT ─────────────────────────────────────
         case 'syncOctoPrint':
-            $sync   = new OctoPrintSync($db);
-            $result = ['results' => $sync->syncAll(), 'synced_at' => date('c')];
+            $octo   = new OctoPrintManager();
+            $result = ['results' => $octo->getAllStatuses(), 'synced_at' => date('c')];
             break;
 
         case 'octoprintState':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->getFullState((int)($data['printer_id'] ?? 0));
+            $octo   = new OctoPrintManager();
+            $pid    = $data['printer_id'] ?? null;
+            $result = [
+                'printer' => $octo->getPrinterStatus($pid),
+                'job'     => $octo->getJobStatus($pid),
+                'temp'    => $octo->getTemperature($pid),
+            ];
             break;
 
-        // ── OCTOPRINT : CONTRÔLE ───────────────────────────
         case 'octoprintJobControl':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->controlJob((int)($data['printer_id'] ?? 0), $data['command'] ?? '');
-            break;
-
-        case 'octoprintSetTemp':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->setTemperature((int)($data['printer_id'] ?? 0), $data['heater'] ?? 'tool0', (float)($data['temp'] ?? 0));
-            break;
-
-        case 'octoprintConnection':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->setConnection((int)($data['printer_id'] ?? 0), $data['action'] ?? 'connect');
-            break;
-
-        case 'octoprintJog':
-            $sync = new OctoPrintSync($db);
-            $axes = [];
-            if (isset($data['x'])) $axes['x'] = (float)$data['x'];
-            if (isset($data['y'])) $axes['y'] = (float)$data['y'];
-            if (isset($data['z'])) $axes['z'] = (float)$data['z'];
-            $result = $sync->jogPrinthead((int)($data['printer_id'] ?? 0), $axes);
-            break;
-
-        case 'octoprintHome':
-            $sync  = new OctoPrintSync($db);
-            $axes  = is_array($data['axes'] ?? null) ? $data['axes'] : ['x','y','z'];
-            $result = $sync->homePrinthead((int)($data['printer_id'] ?? 0), $axes);
-            break;
-
-        case 'octoprintFan':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->setFanSpeed((int)($data['printer_id'] ?? 0), (int)($data['speed'] ?? 0));
-            break;
-
-        case 'octoprintFiles':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->getFiles((int)($data['printer_id'] ?? 0));
+            $octo    = new OctoPrintManager();
+            $pid     = $data['printer_id'] ?? null;
+            $command = $data['command'] ?? '';
+            $result  = $command === 'cancel'
+                ? $octo->stopPrint($pid)
+                : $octo->startPrint($pid, $data['filename'] ?? '');
             break;
 
         case 'octoprintStartPrint':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->startPrint(
-                (int)($data['printer_id'] ?? 0),
-                $data['filename'] ?? '',
-                $data['location'] ?? 'local'
-            );
-            break;
-
-        case 'octoprintGcode':
-            $sync   = new OctoPrintSync($db);
-            $result = $sync->getGcodeFile(
-                (int)($data['printer_id'] ?? 0),
-                $data['filename'] ?? '',
-                $data['location'] ?? 'local'
-            );
+            $octo   = new OctoPrintManager();
+            $result = $octo->startPrint($data['printer_id'] ?? null, $data['filename'] ?? '');
             break;
 
         default:
@@ -384,8 +351,4 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
-} finally {
-    if (!isset($result)) {
-        echo json_encode(['ok' => false, 'error' => 'Aucune donnée renvoyée.']);
-    }
 }

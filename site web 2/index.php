@@ -97,12 +97,12 @@
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">SGI3D</a>
   <div class="nav-links">
-    <a href="index.html" class="active">🏠 <span>Accueil</span></a>
-    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
-    <a href="cameras.html">📷 <span>Caméras</span></a>
+    <a href="index.php" class="active">🏠 <span>Accueil</span></a>
+    <a href="printers.php">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.php">📷 <span>Caméras</span></a>
     <a href="alerts.html">🔔 <span>Alertes</span></a>
-    <a href="dashboard.html">📊 <span>Dashboard</span></a>
-    <a href="login.html" class="btn-nav">🔐 <span>Connexion</span></a>
+    <a href="dashboard.php">📊 <span>Dashboard</span></a>
+    <a href="login.php" class="btn-nav">🔐 <span>Connexion</span></a>
   </div>
 </nav>
 

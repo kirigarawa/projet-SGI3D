@@ -1,3 +1,28 @@
+<?php
+// ── Authentification ──────────────────────────────────────────
+session_start();
+if (empty($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// ── Config imprimantes (depuis DB ou tableau statique) ────────
+// Option A : depuis la base de données
+/*
+require_once 'db.php'; // ton fichier de connexion PDO
+$stmt = $pdo->query("SELECT id, name, host, port FROM printers ORDER BY id");
+$printers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+*/
+
+// Option B : tableau statique (identique à l'ancien JS)
+$printers = [
+    ['id' => 1, 'name' => 'Ultimaker 2+',          'host' => '192.168.0.19',  'port' => 5000],
+    ['id' => 2, 'name' => 'Creality Ender V2 Neo', 'host' => '192.168.1.101', 'port' => 5000],
+];
+
+// Serialisation JSON pour injection dans le JS
+$printersJson = json_encode($printers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -111,30 +136,30 @@ body{padding-top:60px}
 <body>
 
 <nav class="site-nav">
-  <a href="index.html" class="nav-logo">SGI3D</a>
+  <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
-    <a href="index.html">🏠 <span>Accueil</span></a>
-    <a href="printers.html" class="active">🖨️ <span>Imprimantes</span></a>
-    <a href="cameras.html">📷 <span>Caméras</span></a>
-    <a href="alerts.html">🔔 <span>Alertes</span></a>
-    <a href="dashboard.html">📊 <span>Dashboard</span></a>
-    <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
+    <a href="index.php">🏠 <span>Accueil</span></a>
+    <a href="printers.php" class="active">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.php">📷 <span>Caméras</span></a>
+    <a href="alerts.php">🔔 <span>Alertes</span></a>
+    <a href="dashboard.php">📊 <span>Dashboard</span></a>
+    <a href="logout.php" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
 </nav>
 
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
-    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
-    <a href="printers.html" class="active"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <a href="index.php"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="printers.php" class="active"><span class="s-icon">🖨️</span> Imprimantes</a>
     <div class="s-section">Administration</div>
-    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
-    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
-    <a href="alerts.html"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <a href="dashboard.php"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="database.php"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
+    <a href="alerts.php"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
-    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
-    <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
+    <a href="sitemap.php"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="logout.php"><span class="s-icon">🚪</span> Déconnexion</a>
   </aside>
 
   <main class="admin-content">
@@ -142,44 +167,73 @@ body{padding-top:60px}
       <div>
         <h1>🖨️ Imprimantes 3D</h1>
         <p>Monitoring et contrôle en temps réel via OctoPrint</p>
+        <?php if (!empty($_SESSION['username'])): ?>
+          <p style="font-size:.75rem;color:rgba(255,255,255,.3);margin-top:.2rem">
+            Connecté en tant que <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>
+          </p>
+        <?php endif; ?>
       </div>
       <div style="display:flex;gap:.8rem;align-items:center">
         <span class="sync-label" id="sync-label">Chargement…</span>
         <button class="btn btn-ghost btn-sm" onclick="refreshAll()">🔄 Rafraîchir</button>
       </div>
     </div>
+
     <div class="printers-grid" id="grid">
-      <div style="text-align:center;padding:3rem;color:rgba(255,255,255,.4);grid-column:1/-1">
-        <span class="spin" style="font-size:2rem">⚙️</span>
-        <p style="margin-top:1rem">Connexion à OctoPrint…</p>
-      </div>
+      <?php foreach ($printers as $p): ?>
+        <!-- Placeholder de chargement par imprimante -->
+        <div id="card-<?= (int)$p['id'] ?>" class="printer-card offline">
+          <div class="pc-header">
+            <div class="pc-title">
+              <span style="font-size:1.5rem">🖨️</span>
+              <div>
+                <h2><?= htmlspecialchars($p['name']) ?></h2>
+                <div class="pc-ip"><?= htmlspecialchars($p['host']) ?>:<?= (int)$p['port'] ?></div>
+              </div>
+            </div>
+            <div class="pc-status st-offline">⚫ Chargement…</div>
+          </div>
+          <div class="pc-body">
+            <div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,.3)">
+              <span class="spin">⚙️</span>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
     </div>
   </main>
 </div>
 
 <div id="toast-container"></div>
-<script src="db.js"></script>
-<script>
-// ── Config : doit correspondre à octoprint_sync.php ──────────
-const PRINTERS = [
-  { id:1, name:'Ultimaker 2+',          host:'192.168.0.19', port:5000 },
-  { id:2, name:'Creality Ender V2 Neo', host:'192.168.1.101', port:5000 },
-];
 
-async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+<script type="application/json" id="printers-data"><?= $printersJson ?></script>
+<script>
+// ── Config injectée depuis PHP ────────────────────────────────
+const PRINTERS = JSON.parse(document.getElementById('printers-data').textContent);
 
 // ── Appel API SGI3D ──────────────────────────────────────────
-async function api(action, params={}) {
-  const r = await fetch('api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...params})});
+async function api(action, params = {}) {
+  const r = await fetch('api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...params })
+  });
+  if (r.status === 401) { window.location.href = 'login.php'; return {}; }
   return r.json();
+}
+
+async function doLogout() {
+  window.location.href = 'logout.php';
 }
 
 // ── Charger l'état d'une imprimante ─────────────────────────
 async function loadPrinter(p) {
   try {
-    const j = await api('octoprintState',{printer_id:p.id});
-    j.ok ? renderCard(p,j.data) : renderOffline(p, j.error||'Erreur API');
-  } catch(e) { renderOffline(p,'Réseau inaccessible'); }
+    const j = await api('octoprintState', { printer_id: p.id });
+    j.ok ? renderCard(p, j.data) : renderOffline(p, j.error || 'Erreur API');
+  } catch (e) {
+    renderOffline(p, 'Réseau inaccessible');
+  }
 }
 
 // ── Rafraîchir tout ──────────────────────────────────────────
@@ -187,44 +241,43 @@ async function refreshAll() {
   document.getElementById('sync-label').textContent = '⏳ Sync…';
   await Promise.all(PRINTERS.map(loadPrinter));
   document.getElementById('sync-label').textContent =
-    'Sync ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  SGI3D_DB.getAlerts(false).then(a=>{ document.getElementById('sb-alerts').textContent=a.length; });
+    'Sync ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  // Badges alertes via API
+  api('getAlerts', { unread: true }).then(a => {
+    const el = document.getElementById('sb-alerts');
+    if (el) el.textContent = Array.isArray(a.data) ? a.data.length : 0;
+  }).catch(() => {});
 }
 
-// ── Obtenir ou créer la carte ────────────────────────────────
+// ── Obtenir la carte existante (déjà créée par PHP) ──────────
 function card(p) {
-  let el = document.getElementById('card-'+p.id);
-  if (!el) {
-    document.querySelector('#grid > div:not(.printer-card)')?.remove();
-    el = Object.assign(document.createElement('div'),{id:'card-'+p.id, className:'printer-card'});
-    document.getElementById('grid').appendChild(el);
-  }
-  return el;
+  return document.getElementById('card-' + p.id);
 }
 
 // ── Rendu carte opérationnelle ───────────────────────────────
 function renderCard(p, s) {
   const el = card(p);
-  if (!s.online) { el.className='printer-card offline'; el.innerHTML=offHtml(p,s.error||'OctoPrint inaccessible'); return; }
+  if (!el) return;
+  if (!s.online) { el.className = 'printer-card offline'; el.innerHTML = offHtml(p, s.error || 'OctoPrint inaccessible'); return; }
 
   const cs = s.connection?.state || 'Unknown';
-  const isPrint = cs==='Printing', isPause=cs==='Paused', isOp=cs==='Operational';
-  const isClosed = ['Closed','Detecting serial connection'].includes(cs);
+  const isPrint = cs === 'Printing', isPause = cs === 'Paused', isOp = cs === 'Operational';
+  const isClosed = ['Closed', 'Detecting serial connection'].includes(cs);
 
   const stMap = {
-    'Printing':    ['st-printing','🔵 En impression'],
-    'Paused':      ['st-paused',  '🟡 En pause'],
-    'Operational': ['st-online',  '🟢 Opérationnelle'],
-    'Cancelling':  ['st-paused',  '🔴 Annulation…'],
-    'Finishing':   ['st-online',  '🟢 Finalisation…'],
-    'Closed':      ['st-offline', '⚫ Déconnectée'],
+    'Printing':    ['st-printing', '🔵 En impression'],
+    'Paused':      ['st-paused',   '🟡 En pause'],
+    'Operational': ['st-online',   '🟢 Opérationnelle'],
+    'Cancelling':  ['st-paused',   '🔴 Annulation…'],
+    'Finishing':   ['st-online',   '🟢 Finalisation…'],
+    'Closed':      ['st-offline',  '⚫ Déconnectée'],
   };
-  const [stCls,stLbl] = stMap[cs]||['st-offline','⚫ '+cs];
-  const t = s.temperatures||{};
+  const [stCls, stLbl] = stMap[cs] || ['st-offline', '⚫ ' + cs];
+  const t = s.temperatures || {};
 
   if (!DIST[p.id]) DIST[p.id] = 1;
-  el.className='printer-card';
-  el.innerHTML=`
+  el.className = 'printer-card';
+  el.innerHTML = `
     <div class="pc-header">
       <div class="pc-title">
         <span style="font-size:1.5rem">🖨️</span>
@@ -234,16 +287,16 @@ function renderCard(p, s) {
     </div>
     <div class="pc-body">
       <div class="temps-row">
-        ${gauge('Buse (tool0)', t.tool0?.actual??null, t.tool0?.target??0, 300, p.id, 'tool0')}
-        ${gauge('Lit chauffant', t.bed?.actual??null, t.bed?.target??0, 120, p.id, 'bed')}
+        ${gauge('Buse (tool0)', t.tool0?.actual ?? null, t.tool0?.target ?? 0, 300, p.id, 'tool0')}
+        ${gauge('Lit chauffant', t.bed?.actual ?? null, t.bed?.target ?? 0, 120, p.id, 'bed')}
       </div>
       ${s.job?.file ? jobHtml(s.job) : '<div class="no-job">Aucune impression en cours</div>'}
       <div class="ctrl-row">
         ${isPrint ? `<button class="cb cb-pause"  onclick="cmd(${p.id},'pause')">⏸ Pause</button>` : ''}
         ${isPause ? `<button class="cb cb-resume" onclick="cmd(${p.id},'resume')">▶ Reprendre</button>` : ''}
-        ${(isPrint||isPause) ? `<button class="cb cb-cancel" onclick="cancelConfirm(${p.id})">⏹ Annuler</button>` : ''}
-        ${isOp    ? `<button class="cb cb-neutral" onclick="setConn(${p.id},'disconnect')">🔌 Déconnecter</button>` : ''}
-        ${isClosed? `<button class="cb cb-connect" onclick="setConn(${p.id},'connect')">🔌 Connecter</button>` : ''}
+        ${(isPrint || isPause) ? `<button class="cb cb-cancel" onclick="cancelConfirm(${p.id})">⏹ Annuler</button>` : ''}
+        ${isOp     ? `<button class="cb cb-neutral" onclick="setConn(${p.id},'disconnect')">🔌 Déconnecter</button>` : ''}
+        ${isClosed ? `<button class="cb cb-connect" onclick="setConn(${p.id},'connect')">🔌 Connecter</button>` : ''}
         <button class="cb cb-neutral" style="margin-left:auto" title="Rafraîchir" onclick="loadPrinter(PRINTERS.find(x=>x.id===${p.id}))">🔄</button>
       </div>
       ${printStartHtml(p.id)}
@@ -256,8 +309,7 @@ function renderCard(p, s) {
 
 function renderOffline(p, msg) {
   const el = card(p);
-  el.className='printer-card offline';
-  el.innerHTML=offHtml(p,msg);
+  if (el) { el.className = 'printer-card offline'; el.innerHTML = offHtml(p, msg); }
 }
 
 function offHtml(p, msg) {
@@ -280,19 +332,19 @@ function offHtml(p, msg) {
 
 // ── Jauge de température ─────────────────────────────────────
 function gauge(lbl, actual, target, max, pid, heater) {
-  const pct = actual!==null ? Math.min(100,(actual/max)*100) : 0;
-  const cls = actual===null ? 't-cold' : actual>max*.9 ? 't-hot' : actual>max*.5 ? 't-warm' : actual>30 ? 't-ok' : 't-cold';
-  const barClr = {'t-hot':'#e74c3c','t-warm':'#f39c12','t-ok':'#2ecc71','t-cold':'rgba(255,255,255,.15)'}[cls] || '#2ecc71';
+  const pct = actual !== null ? Math.min(100, (actual / max) * 100) : 0;
+  const cls = actual === null ? 't-cold' : actual > max * .9 ? 't-hot' : actual > max * .5 ? 't-warm' : actual > 30 ? 't-ok' : 't-cold';
+  const barClr = { 't-hot': '#e74c3c', 't-warm': '#f39c12', 't-ok': '#2ecc71', 't-cold': 'rgba(255,255,255,.15)' }[cls] || '#2ecc71';
   return `
     <div class="temp-gauge">
       <div class="temp-label">${lbl}</div>
       <div class="temp-vals">
-        <span class="temp-val ${cls}">${actual!==null ? actual.toFixed(1)+'°C' : '—'}</span>
-        <span class="temp-tgt">${target>0 ? '→ '+target+'°C' : 'éteint'}</span>
+        <span class="temp-val ${cls}">${actual !== null ? actual.toFixed(1) + '°C' : '—'}</span>
+        <span class="temp-tgt">${target > 0 ? '→ ' + target + '°C' : 'éteint'}</span>
       </div>
       <div class="tbar-wrap"><div class="tbar" style="width:${pct}%;background:${barClr}"></div></div>
       <div class="temp-ctrl">
-        <input type="number" id="t-${pid}-${heater}" value="${target||''}" min="0" max="${max}" placeholder="°C">
+        <input type="number" id="t-${pid}-${heater}" value="${target || ''}" min="0" max="${max}" placeholder="°C">
         <button class="tbtn" onclick="setTemp(${pid},'${heater}')">✓ Appliquer</button>
         <button class="tbtn off" onclick="setTempOff(${pid},'${heater}')">Off</button>
       </div>
@@ -301,7 +353,7 @@ function gauge(lbl, actual, target, max, pid, heater) {
 
 // ── Barre de progression ─────────────────────────────────────
 function jobHtml(job) {
-  const pct = job.progress||0;
+  const pct = job.progress || 0;
   return `
     <div class="pbar-section">
       <div class="pbar-head">
@@ -318,70 +370,72 @@ function jobHtml(job) {
 }
 
 function ftime(s) {
-  if (!s && s!==0) return '—';
-  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60);
-  return h>0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m ${String(sec).padStart(2,'0')}s`;
+  if (!s && s !== 0) return '—';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(sec).padStart(2, '0')}s`;
 }
 
 // ── Contrôles ────────────────────────────────────────────────
 async function cmd(pid, command) {
-  toast({pause:'⏸ Pause envoyée…',resume:'▶ Reprise…',cancel:'⏹ Annulation…'}[command]||command,'info');
-  const j = await api('octoprintJobControl',{printer_id:pid, command});
+  toast({ pause: '⏸ Pause envoyée…', resume: '▶ Reprise…', cancel: '⏹ Annulation…' }[command] || command, 'info');
+  const j = await api('octoprintJobControl', { printer_id: pid, command });
   if (j.ok && j.data?.ok) {
-    toast('✅ Commande envoyée','success');
-    setTimeout(()=>loadPrinter(PRINTERS.find(p=>p.id===pid)), 1500);
+    toast('✅ Commande envoyée', 'success');
+    setTimeout(() => loadPrinter(PRINTERS.find(p => p.id === pid)), 1500);
   } else {
-    toast('❌ '+(j.error||j.data?.error||'Erreur OctoPrint'),'error');
+    toast('❌ ' + (j.error || j.data?.error || 'Erreur OctoPrint'), 'error');
   }
 }
 
-function cancelConfirm(pid){
-  if(!confirm('Annuler l\'impression en cours ?\nCette action est irréversible.')) return;
-  cmd(pid,'cancel');
+function cancelConfirm(pid) {
+  if (!confirm('Annuler l\'impression en cours ?\nCette action est irréversible.')) return;
+  cmd(pid, 'cancel');
 }
 
 async function setTemp(pid, heater) {
   const inp = document.getElementById(`t-${pid}-${heater}`);
   const temp = parseFloat(inp?.value);
-  if (isNaN(temp)||temp<0) { toast('Température invalide','warning'); return; }
-  const j = await api('octoprintSetTemp',{printer_id:pid, heater, temp});
-  toast(j.ok ? `🌡️ Cible ${temp}°C envoyée` : '❌ '+(j.error||'Erreur'), j.ok?'success':'error');
+  if (isNaN(temp) || temp < 0) { toast('Température invalide', 'warning'); return; }
+  const j = await api('octoprintSetTemp', { printer_id: pid, heater, temp });
+  toast(j.ok ? `🌡️ Cible ${temp}°C envoyée` : '❌ ' + (j.error || 'Erreur'), j.ok ? 'success' : 'error');
 }
 
 async function setTempOff(pid, heater) {
   const inp = document.getElementById(`t-${pid}-${heater}`);
-  if(inp) inp.value='';
-  const j = await api('octoprintSetTemp',{printer_id:pid, heater, temp:0});
-  toast(j.ok?'🌡️ Chauffage éteint':'❌ Erreur', j.ok?'info':'error');
+  if (inp) inp.value = '';
+  const j = await api('octoprintSetTemp', { printer_id: pid, heater, temp: 0 });
+  toast(j.ok ? '🌡️ Chauffage éteint' : '❌ Erreur', j.ok ? 'info' : 'error');
 }
 
 async function setConn(pid, action) {
-  toast(action==='connect'?'🔌 Connexion…':'🔌 Déconnexion…','info');
-  const j = await api('octoprintConnection',{printer_id:pid, action});
-  if(j.ok) setTimeout(()=>loadPrinter(PRINTERS.find(p=>p.id===pid)), 2500);
-  else toast('❌ '+(j.error||'Erreur'),'error');
+  toast(action === 'connect' ? '🔌 Connexion…' : '🔌 Déconnexion…', 'info');
+  const j = await api('octoprintConnection', { printer_id: pid, action });
+  if (j.ok) setTimeout(() => loadPrinter(PRINTERS.find(p => p.id === pid)), 2500);
+  else toast('❌ ' + (j.error || 'Erreur'), 'error');
 }
 
-function toast(msg, type='info'){
-  const c=document.getElementById('toast-container');
-  const t=document.createElement('div');
-  t.className='toast '+type; t.textContent=msg; c.appendChild(t);
-  setTimeout(()=>t.remove(),3500);
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
 }
 
 // ── Déplacements & ventilateur ───────────────────────────────
 const DIST = {};
 
 function moveHtml(pid) {
-  const d = DIST[pid]||1;
+  const d = DIST[pid] || 1;
   return `
     <div class="move-section">
       <div class="sect-title">🕹️ Déplacements</div>
       <div class="dist-row">
         <span class="dist-lbl">Pas :</span>
-        <button class="dbtn${d===0.1?' active':''}" onclick="setDist(${pid},0.1,this)">0.1</button>
-        <button class="dbtn${d===1?' active':''}"   onclick="setDist(${pid},1,this)">1</button>
-        <button class="dbtn${d===10?' active':''}"  onclick="setDist(${pid},10,this)">10</button>
+        <button class="dbtn${d === 0.1 ? ' active' : ''}" onclick="setDist(${pid},0.1,this)">0.1</button>
+        <button class="dbtn${d === 1   ? ' active' : ''}" onclick="setDist(${pid},1,this)">1</button>
+        <button class="dbtn${d === 10  ? ' active' : ''}" onclick="setDist(${pid},10,this)">10</button>
         <span class="dist-lbl">mm</span>
       </div>
       <div class="move-body">
@@ -431,30 +485,30 @@ function setDist(pid, d, btn) {
 }
 
 async function jog(pid, axes) {
-  const j = await api('octoprintJog', {printer_id:pid, ...axes});
+  const j = await api('octoprintJog', { printer_id: pid, ...axes });
   if (!j.ok || !j.data?.ok) toast('❌ Erreur déplacement', 'error');
 }
 
 async function home(pid, axes) {
   toast('⌂ Homing…', 'info');
-  const j = await api('octoprintHome', {printer_id:pid, axes});
+  const j = await api('octoprintHome', { printer_id: pid, axes });
   if (!j.ok || !j.data?.ok) toast('❌ Erreur home', 'error');
 }
 
 async function setFan(pid) {
-  const speed = parseInt(document.getElementById('fan-'+pid).value);
-  const j = await api('octoprintFan', {printer_id:pid, speed});
-  toast(j.ok ? '🌀 Ventilateur '+speed+'%' : '❌ Erreur', j.ok?'success':'error');
+  const speed = parseInt(document.getElementById('fan-' + pid).value);
+  const j = await api('octoprintFan', { printer_id: pid, speed });
+  toast(j.ok ? '🌀 Ventilateur ' + speed + '%' : '❌ Erreur', j.ok ? 'success' : 'error');
 }
 
 async function setFanOff(pid) {
-  const inp = document.getElementById('fan-'+pid);
-  if(inp){ inp.value=0; document.getElementById('fan-val-'+pid).textContent='0%'; }
-  const j = await api('octoprintFan', {printer_id:pid, speed:0});
-  toast(j.ok?'🌀 Ventilateur éteint':'❌ Erreur', j.ok?'info':'error');
+  const inp = document.getElementById('fan-' + pid);
+  if (inp) { inp.value = 0; document.getElementById('fan-val-' + pid).textContent = '0%'; }
+  const j = await api('octoprintFan', { printer_id: pid, speed: 0 });
+  toast(j.ok ? '🌀 Ventilateur éteint' : '❌ Erreur', j.ok ? 'info' : 'error');
 }
 
-// ── Lancer / Pause / Arrêt ───────────────────────────────────
+// ── Lancer une impression ────────────────────────────────────
 function printStartHtml(pid) {
   return `
     <div class="print-section">
@@ -470,31 +524,31 @@ function printStartHtml(pid) {
 }
 
 async function loadFiles(pid) {
-  const sel = document.getElementById('fsel-'+pid);
+  const sel = document.getElementById('fsel-' + pid);
   sel.innerHTML = '<option>⏳ Chargement…</option>';
-  const j = await api('octoprintFiles', {printer_id: pid});
+  const j = await api('octoprintFiles', { printer_id: pid });
   if (!j.ok || !j.data?.ok) {
-    sel.innerHTML = '<option>❌ ' + (j.data?.error||'Erreur') + '</option>';
+    sel.innerHTML = '<option>❌ ' + (j.data?.error || 'Erreur') + '</option>';
     return;
   }
-  const files = (j.data.files||[]).filter(f => f.type==='machinecode');
+  const files = (j.data.files || []).filter(f => f.type === 'machinecode');
   if (!files.length) { sel.innerHTML = '<option>Aucun fichier G-code</option>'; return; }
   sel.innerHTML = '<option value="">— Sélectionner un fichier —</option>'
-    + files.map(f => `<option value="${f.name}|${f.origin||'local'}">${f.name}</option>`).join('');
+    + files.map(f => `<option value="${f.name}|${f.origin || 'local'}">${f.name}</option>`).join('');
 }
 
 async function startPrint(pid) {
-  const sel = document.getElementById('fsel-'+pid);
+  const sel = document.getElementById('fsel-' + pid);
   if (!sel?.value) { toast('Sélectionnez un fichier d\'abord', 'warning'); return; }
   const [filename, location] = sel.value.split('|');
   if (!confirm('Démarrer l\'impression de "' + filename + '" ?')) return;
   toast('▶ Lancement…', 'info');
-  const j = await api('octoprintStartPrint', {printer_id:pid, filename, location});
+  const j = await api('octoprintStartPrint', { printer_id: pid, filename, location });
   if (j.ok && j.data?.ok) {
     toast('✅ Impression lancée', 'success');
-    setTimeout(() => loadPrinter(PRINTERS.find(p => p.id===pid)), 2000);
+    setTimeout(() => loadPrinter(PRINTERS.find(p => p.id === pid)), 2000);
   } else {
-    toast('❌ ' + (j.data?.error||j.error||'Erreur OctoPrint'), 'error');
+    toast('❌ ' + (j.data?.error || j.error || 'Erreur OctoPrint'), 'error');
   }
 }
 
@@ -502,9 +556,8 @@ async function startPrint(pid) {
 const COST_DATA = {};
 
 function costHtml(pid) {
-  const hasData = !!COST_DATA[pid];
   return `
-    <div class="cost-section" id="cost-section-${pid}"${hasData?'':' style="display:none"'}>
+    <div class="cost-section" id="cost-section-${pid}" style="display:none">
       <div class="sect-title">💰 Coût d'impression</div>
       <div class="cost-inputs">
         <div class="cost-field"><label>Prix filament (€/kg)</label><input id="ci-kg-${pid}"  type="number" value="25"   min="0" step="1"></div>
@@ -525,70 +578,64 @@ function costHtml(pid) {
 }
 
 function parseCostMetrics(text) {
-  let totalE=0, e=0, eAbs=true, f=3000;
-  let x=0, y=0, z=0, abs=true, totalTime=0;
-
+  let totalE = 0, e = 0, eAbs = true, f = 3000;
+  let x = 0, y = 0, z = 0, abs = true, totalTime = 0;
   for (const raw of text.split('\n')) {
     const line = raw.split(';')[0].trim();
     if (!line) continue;
     const tok = line.toUpperCase().split(/\s+/);
     const cmd = tok[0];
-
-    if (cmd==='G90'){abs=true;continue;}
-    if (cmd==='G91'){abs=false;continue;}
-    if (cmd==='M82'){eAbs=true;continue;}
-    if (cmd==='M83'){eAbs=false;continue;}
-    if (cmd==='G92'){
-      const p={};
-      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
-      if(p.E!==undefined) e=p.E;
+    if (cmd === 'G90') { abs = true; continue; }
+    if (cmd === 'G91') { abs = false; continue; }
+    if (cmd === 'M82') { eAbs = true; continue; }
+    if (cmd === 'M83') { eAbs = false; continue; }
+    if (cmd === 'G92') {
+      const p = {};
+      for (let i = 1; i < tok.length; i++) { const v = parseFloat(tok[i].slice(1)); if (!isNaN(v)) p[tok[i][0]] = v; }
+      if (p.E !== undefined) e = p.E;
       continue;
     }
-    if(cmd==='G0'||cmd==='G1'){
-      const p={};
-      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
-      if(p.F!==undefined) f=p.F;
-      const nx=p.X!==undefined?(abs?p.X:x+p.X):x;
-      const ny=p.Y!==undefined?(abs?p.Y:y+p.Y):y;
-      const nz=p.Z!==undefined?(abs?p.Z:z+p.Z):z;
-      const de=p.E!==undefined?(eAbs?p.E-e:p.E):0;
-      if(p.E!==undefined) e=eAbs?p.E:e+p.E;
-      if(de>0) totalE+=de;
-      const dist=Math.sqrt((nx-x)**2+(ny-y)**2+(nz-z)**2);
-      if(dist>0&&f>0) totalTime+=dist/(f/60);
-      x=nx;y=ny;z=nz;
+    if (cmd === 'G0' || cmd === 'G1') {
+      const p = {};
+      for (let i = 1; i < tok.length; i++) { const v = parseFloat(tok[i].slice(1)); if (!isNaN(v)) p[tok[i][0]] = v; }
+      if (p.F !== undefined) f = p.F;
+      const nx = p.X !== undefined ? (abs ? p.X : x + p.X) : x;
+      const ny = p.Y !== undefined ? (abs ? p.Y : y + p.Y) : y;
+      const nz = p.Z !== undefined ? (abs ? p.Z : z + p.Z) : z;
+      const de = p.E !== undefined ? (eAbs ? p.E - e : p.E) : 0;
+      if (p.E !== undefined) e = eAbs ? p.E : e + p.E;
+      if (de > 0) totalE += de;
+      const dist = Math.sqrt((nx - x) ** 2 + (ny - y) ** 2 + (nz - z) ** 2);
+      if (dist > 0 && f > 0) totalTime += dist / (f / 60);
+      x = nx; y = ny; z = nz;
     }
   }
-  return {totalExtrusion:totalE, estimatedTime:totalTime};
+  return { totalExtrusion: totalE, estimatedTime: totalTime };
 }
 
 function calcCost(pid) {
   const d = COST_DATA[pid];
   if (!d) { toast('Chargez d\'abord un G-code', 'warning'); return; }
-
-  const priceKg  = parseFloat(document.getElementById('ci-kg-'+pid).value)  || 25;
-  const priceKwh = parseFloat(document.getElementById('ci-kwh-'+pid).value) || 0.20;
-  const power    = parseFloat(document.getElementById('ci-pow-'+pid).value) || 200;
-  const diameter = parseFloat(document.getElementById('ci-dia-'+pid).value) || 1.75;
-  const density  = parseFloat(document.getElementById('ci-den-'+pid).value) || 1.24;
-
-  const volumeMm3   = d.totalExtrusion * Math.PI * (diameter/2)**2;
-  const weightG     = (volumeMm3 / 1000) * density;
-  const filCost     = (weightG / 1000) * priceKg;
-  const elecCost    = (power / 1000) * (d.estimatedTime / 3600) * priceKwh;
-  const totalCost   = filCost + elecCost;
-
+  const priceKg  = parseFloat(document.getElementById('ci-kg-' + pid).value)  || 25;
+  const priceKwh = parseFloat(document.getElementById('ci-kwh-' + pid).value) || 0.20;
+  const power    = parseFloat(document.getElementById('ci-pow-' + pid).value) || 200;
+  const diameter = parseFloat(document.getElementById('ci-dia-' + pid).value) || 1.75;
+  const density  = parseFloat(document.getElementById('ci-den-' + pid).value) || 1.24;
+  const volumeMm3 = d.totalExtrusion * Math.PI * (diameter / 2) ** 2;
+  const weightG   = (volumeMm3 / 1000) * density;
+  const filCost   = (weightG / 1000) * priceKg;
+  const elecCost  = (power / 1000) * (d.estimatedTime / 3600) * priceKwh;
+  const totalCost = filCost + elecCost;
   const s = Math.round(d.estimatedTime);
-  const timeStr = s>=3600
-    ? Math.floor(s/3600)+'h '+String(Math.floor((s%3600)/60)).padStart(2,'0')+'m'
-    : Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
-
-  document.getElementById('cr-fil-'+pid).textContent = weightG.toFixed(1)+'g / '+(d.totalExtrusion/1000).toFixed(2)+'m';
-  document.getElementById('cr-tps-'+pid).textContent = timeStr;
-  document.getElementById('cr-cfl-'+pid).textContent = filCost.toFixed(3)+' €';
-  document.getElementById('cr-cel-'+pid).textContent = elecCost.toFixed(3)+' €';
-  document.getElementById('cr-tot-'+pid).textContent = totalCost.toFixed(2)+' €';
-  document.getElementById('cost-results-'+pid).style.display = '';
+  const timeStr = s >= 3600
+    ? Math.floor(s / 3600) + 'h ' + String(Math.floor((s % 3600) / 60)).padStart(2, '0') + 'm'
+    : Math.floor(s / 60) + 'm ' + String(s % 60).padStart(2, '0') + 's';
+  document.getElementById('cr-fil-' + pid).textContent = weightG.toFixed(1) + 'g / ' + (d.totalExtrusion / 1000).toFixed(2) + 'm';
+  document.getElementById('cr-tps-' + pid).textContent = timeStr;
+  document.getElementById('cr-cfl-' + pid).textContent = filCost.toFixed(3) + ' €';
+  document.getElementById('cr-cel-' + pid).textContent = elecCost.toFixed(3) + ' €';
+  document.getElementById('cr-tot-' + pid).textContent = totalCost.toFixed(2) + ' €';
+  document.getElementById('cost-results-' + pid).style.display = '';
 }
 
 // ── G-code Viewer ────────────────────────────────────────────
@@ -615,39 +662,39 @@ function gcodeHtml(pid) {
 }
 
 function toggleGcode(pid) {
-  const body = document.getElementById('gcode-body-'+pid);
-  const chev = document.getElementById('gcode-chev-'+pid);
+  const body = document.getElementById('gcode-body-' + pid);
+  const chev = document.getElementById('gcode-chev-' + pid);
   const open = body.classList.toggle('open');
   chev.textContent = open ? '▲' : '▼';
   if (open) initCanvas(pid);
 }
 
 function initCanvas(pid) {
-  const cv = document.getElementById('gcode-cv-'+pid);
+  const cv = document.getElementById('gcode-cv-' + pid);
   if (!cv) return;
-  cv.width  = cv.offsetWidth * (window.devicePixelRatio||1);
-  cv.height = 260       * (window.devicePixelRatio||1);
-  cv.style.width  = cv.offsetWidth+'px';
+  cv.width  = cv.offsetWidth * (window.devicePixelRatio || 1);
+  cv.height = 260            * (window.devicePixelRatio || 1);
+  cv.style.width  = cv.offsetWidth + 'px';
   cv.style.height = '260px';
-  GCODE_DATA[pid] ? renderLayer(pid, +document.getElementById('gcode-sl-'+pid).value) : drawEmpty(pid);
+  GCODE_DATA[pid] ? renderLayer(pid, +document.getElementById('gcode-sl-' + pid).value) : drawEmpty(pid);
 }
 
 function drawEmpty(pid) {
-  const cv = document.getElementById('gcode-cv-'+pid);
+  const cv = document.getElementById('gcode-cv-' + pid);
   if (!cv) return;
   const ctx = cv.getContext('2d');
   ctx.fillStyle = '#0d1117';
-  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.fillStyle = 'rgba(255,255,255,.2)';
   ctx.font = '13px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('Cliquez sur "Charger G-code"', cv.width/2, cv.height/2);
+  ctx.fillText('Cliquez sur "Charger G-code"', cv.width / 2, cv.height / 2);
 }
 
 async function loadGcode(pid) {
-  const st = document.getElementById('gcode-st-'+pid);
+  const st = document.getElementById('gcode-st-' + pid);
   st.textContent = '⏳ Téléchargement…';
-  const j = await api('octoprintGcode', {printer_id: pid});
+  const j = await api('octoprintGcode', { printer_id: pid });
   if (!j.ok || !j.data?.ok) {
     st.textContent = '❌ ' + (j.data?.error || j.error || 'Erreur');
     return;
@@ -657,127 +704,110 @@ async function loadGcode(pid) {
     const parsed = parseGcode(j.data.content);
     GCODE_DATA[pid] = parsed;
     COST_DATA[pid]  = parseCostMetrics(j.data.content);
-    const sl = document.getElementById('gcode-sl-'+pid);
+    const sl = document.getElementById('gcode-sl-' + pid);
     sl.max   = Math.max(0, parsed.layers.length - 1);
     sl.value = sl.max;
     renderLayer(pid, +sl.value);
     st.textContent = j.data.filename
       + ' — ' + parsed.layers.length + ' couche(s)'
       + (j.data.truncated ? ' (aperçu 500 Ko)' : '');
-    const cs = document.getElementById('cost-section-'+pid);
+    const cs = document.getElementById('cost-section-' + pid);
     if (cs) cs.style.display = '';
   }, 10);
 }
 
 function parseGcode(text) {
-  const layers = [[]];
-  const zH     = [0];
-  let x=0, y=0, z=0, e=0;
-  let abs=true, eAbs=true;
-  let path=[];
-  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-
+  const layers = [[]], zH = [0];
+  let x = 0, y = 0, z = 0, e = 0, abs = true, eAbs = true, path = [];
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const raw of text.split('\n')) {
     const line = raw.split(';')[0].trim();
     if (!line) continue;
     const tok = line.toUpperCase().split(/\s+/);
     const cmd = tok[0];
-
-    if (cmd==='G90'){abs=true;continue;}
-    if (cmd==='G91'){abs=false;continue;}
-    if (cmd==='M82'){eAbs=true;continue;}
-    if (cmd==='M83'){eAbs=false;continue;}
-    if (cmd==='G92'){
-      const p={};
-      for(let i=1;i<tok.length;i++){const v=parseFloat(tok[i].slice(1));if(!isNaN(v))p[tok[i][0]]=v;}
-      if(p.E!==undefined) e=p.E;
+    if (cmd === 'G90') { abs = true; continue; }
+    if (cmd === 'G91') { abs = false; continue; }
+    if (cmd === 'M82') { eAbs = true; continue; }
+    if (cmd === 'M83') { eAbs = false; continue; }
+    if (cmd === 'G92') {
+      const p = {};
+      for (let i = 1; i < tok.length; i++) { const v = parseFloat(tok[i].slice(1)); if (!isNaN(v)) p[tok[i][0]] = v; }
+      if (p.E !== undefined) e = p.E;
       continue;
     }
-
-    if (cmd==='G0'||cmd==='G1') {
-      const p={};
-      for (let i=1;i<tok.length;i++){
-        const v=parseFloat(tok[i].slice(1));
-        if(!isNaN(v)) p[tok[i][0]]=v;
-      }
-      const nx = p.X!==undefined?(abs?p.X:x+p.X):x;
-      const ny = p.Y!==undefined?(abs?p.Y:y+p.Y):y;
-      const nz = p.Z!==undefined?(abs?p.Z:z+p.Z):z;
-      const de = p.E!==undefined?(eAbs?p.E-e:p.E):0;
-      if(p.E!==undefined) e=eAbs?p.E:e+p.E;
-
-      if (nz!==z) {
-        if(path.length>1) layers[layers.length-1].push([...path]);
-        path=[];
+    if (cmd === 'G0' || cmd === 'G1') {
+      const p = {};
+      for (let i = 1; i < tok.length; i++) { const v = parseFloat(tok[i].slice(1)); if (!isNaN(v)) p[tok[i][0]] = v; }
+      const nx = p.X !== undefined ? (abs ? p.X : x + p.X) : x;
+      const ny = p.Y !== undefined ? (abs ? p.Y : y + p.Y) : y;
+      const nz = p.Z !== undefined ? (abs ? p.Z : z + p.Z) : z;
+      const de = p.E !== undefined ? (eAbs ? p.E - e : p.E) : 0;
+      if (p.E !== undefined) e = eAbs ? p.E : e + p.E;
+      if (nz !== z) {
+        if (path.length > 1) layers[layers.length - 1].push([...path]);
+        path = [];
         layers.push([]);
         zH.push(nz);
-        z=nz;
+        z = nz;
       }
-      if (de>0) {
-        if(!path.length) path.push({x,y});
-        path.push({x:nx,y:ny});
-        minX=Math.min(minX,nx);maxX=Math.max(maxX,nx);
-        minY=Math.min(minY,ny);maxY=Math.max(maxY,ny);
+      if (de > 0) {
+        if (!path.length) path.push({ x, y });
+        path.push({ x: nx, y: ny });
+        minX = Math.min(minX, nx); maxX = Math.max(maxX, nx);
+        minY = Math.min(minY, ny); maxY = Math.max(maxY, ny);
       } else {
-        if(path.length>1) layers[layers.length-1].push([...path]);
-        path=[];
+        if (path.length > 1) layers[layers.length - 1].push([...path]);
+        path = [];
       }
-      x=nx;y=ny;
+      x = nx; y = ny;
     }
   }
-  if(path.length>1) layers[layers.length-1].push([...path]);
-  return {layers, zH, bounds:{minX,maxX,minY,maxY}};
+  if (path.length > 1) layers[layers.length - 1].push([...path]);
+  return { layers, zH, bounds: { minX, maxX, minY, maxY } };
 }
 
 function renderLayer(pid, idx) {
   const d  = GCODE_DATA[pid];
-  const cv = document.getElementById('gcode-cv-'+pid);
+  const cv = document.getElementById('gcode-cv-' + pid);
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const W=cv.width, H=cv.height;
-
-  ctx.fillStyle='#0d1117';
-  ctx.fillRect(0,0,W,H);
+  const W = cv.width, H = cv.height;
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, W, H);
   if (!d) return;
-
-  const {layers,zH,bounds:{minX,maxX,minY,maxY}} = d;
-  const pad=20*window.devicePixelRatio;
-  const sx=(W-pad*2)/((maxX-minX)||1);
-  const sy=(H-pad*2)/((maxY-minY)||1);
-  const sc=Math.min(sx,sy);
-  const ox=pad+(W-pad*2-(maxX-minX)*sc)/2;
-  const oy=pad+(H-pad*2-(maxY-minY)*sc)/2;
-  const tx=x=>ox+(x-minX)*sc;
-  const ty=y=>H-oy-(y-minY)*sc;
-
-  // Couches précédentes (estompées)
-  ctx.lineWidth=.8;
-  for (let li=0;li<idx&&li<layers.length;li++) {
-    ctx.strokeStyle='rgba(52,152,219,.12)';
+  const { layers, zH, bounds: { minX, maxX, minY, maxY } } = d;
+  const pad = 20 * window.devicePixelRatio;
+  const sx = (W - pad * 2) / ((maxX - minX) || 1);
+  const sy = (H - pad * 2) / ((maxY - minY) || 1);
+  const sc = Math.min(sx, sy);
+  const ox = pad + (W - pad * 2 - (maxX - minX) * sc) / 2;
+  const oy = pad + (H - pad * 2 - (maxY - minY) * sc) / 2;
+  const tx = x => ox + (x - minX) * sc;
+  const ty = y => H - oy - (y - minY) * sc;
+  ctx.lineWidth = .8;
+  for (let li = 0; li < idx && li < layers.length; li++) {
+    ctx.strokeStyle = 'rgba(52,152,219,.12)';
     for (const path of layers[li]) {
-      if(path.length<2) continue;
+      if (path.length < 2) continue;
       ctx.beginPath();
-      ctx.moveTo(tx(path[0].x),ty(path[0].y));
-      for(let i=1;i<path.length;i++) ctx.lineTo(tx(path[i].x),ty(path[i].y));
+      ctx.moveTo(tx(path[0].x), ty(path[0].y));
+      for (let i = 1; i < path.length; i++) ctx.lineTo(tx(path[i].x), ty(path[i].y));
       ctx.stroke();
     }
   }
-
-  // Couche active (lumineuse)
-  ctx.strokeStyle='#3498db';
-  ctx.lineWidth=1.5;
-  for (const path of (layers[idx]||[])) {
-    if(path.length<2) continue;
+  ctx.strokeStyle = '#3498db';
+  ctx.lineWidth = 1.5;
+  for (const path of (layers[idx] || [])) {
+    if (path.length < 2) continue;
     ctx.beginPath();
-    ctx.moveTo(tx(path[0].x),ty(path[0].y));
-    for(let i=1;i<path.length;i++) ctx.lineTo(tx(path[i].x),ty(path[i].y));
+    ctx.moveTo(tx(path[0].x), ty(path[0].y));
+    for (let i = 1; i < path.length; i++) ctx.lineTo(tx(path[i].x), ty(path[i].y));
     ctx.stroke();
   }
-
-  const lbl = document.getElementById('gcode-lbl-'+pid);
+  const lbl = document.getElementById('gcode-lbl-' + pid);
   if (lbl) lbl.textContent =
-    'Couche '+(idx+1)+'/'+layers.length
-    +(zH[idx]!==undefined?' — Z='+zH[idx].toFixed(2)+'mm':'');
+    'Couche ' + (idx + 1) + '/' + layers.length
+    + (zH[idx] !== undefined ? ' — Z=' + zH[idx].toFixed(2) + 'mm' : '');
 }
 
 // ── Démarrage ────────────────────────────────────────────────
