@@ -39,13 +39,13 @@
      NAVIGATION PRINCIPALE (barre en haut, fixe sur toutes les pages)
      ════════════════════════════════════════════════════════ -->
 <nav class="site-nav">
-  <a href="index.html" class="nav-logo">SGI3D</a>
+  <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
-    <a href="index.html">🏠 <span>Accueil</span></a>
-    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
-    <a href="cameras.html">📷 <span>Caméras</span></a>
-    <a href="alerts.html">🔔 <span>Alertes</span></a>
-    <a href="dashboard.html" class="active">📊 <span>Dashboard</span></a>
+    <a href="index.php">🏠 <span>Accueil</span></a>
+    <a href="Printers.php">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.php">📷 <span>Caméras</span></a>
+    <a href="alerts.php">🔔 <span>Alertes</span></a>
+    <a href="dashboard.php" class="active">📊 <span>Dashboard</span></a>
     <!-- Bouton de déconnexion : appelle doLogout() puis redirige vers login.html -->
     <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
@@ -62,18 +62,18 @@
        ──────────────────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
-    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
-    <a href="printers.html"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <a href="index.php"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="Printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
 
     <div class="s-section">Administration</div>
-    <a href="dashboard.html" class="active"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
-    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
+    <a href="dashboard.php" class="active"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="dashboard.php"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
     <!-- Le badge affiche le nombre d'alertes non résolues (mis à jour en JS) -->
-    <a href="alerts.html"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <a href="alerts.php"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
 
     <div class="s-section">Compte</div>
-    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="sitemap.php"><span class="s-icon">🗺️</span> Plan du site</a>
     <!-- Export/import JSON de toute la base de données -->
     <a href="#" onclick="SGI3D_DB.exportJSON()"><span class="s-icon">📤</span> Exporter JSON</a>
     <a href="#" onclick="importFile()"><span class="s-icon">📥</span> Importer JSON</a>
@@ -98,9 +98,9 @@
     <!-- Actions rapides : raccourcis vers les pages principales
          et boutons pour export/import DB et test d'impression -->
     <div class="quick-actions">
-      <a href="database.html" class="btn btn-accent">🗄️ Base de données</a>
-      <a href="cameras.html"  class="btn btn-success">📷 Caméras live</a>
-      <a href="alerts.html"   class="btn btn-warning">🔔 Gérer alertes</a>
+      <a href="dashboard.php" class="btn btn-accent">🗄️ Base de données</a>
+      <a href="cameras.php"  class="btn btn-success">📷 Caméras live</a>
+      <a href="alerts.php"   class="btn btn-warning">🔔 Gérer alertes</a>
       <button class="btn btn-primary" onclick="SGI3D_DB.exportJSON()">📤 Exporter DB</button>
       <button class="btn btn-ghost"   onclick="importFile()">📥 Importer DB</button>
       <!-- Crée un travail d'impression fictif pour tester l'interface -->
@@ -117,7 +117,7 @@
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🔐 Connexions récentes</h2>
-          <a href="database.html" class="btn btn-ghost btn-xs">Voir tout</a>
+          <a href="dashboard.php" class="btn btn-ghost btn-xs">Voir tout</a>
         </div>
         <div id="login-feed"></div>
       </div>
@@ -126,7 +126,7 @@
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🖨️ Impressions récentes</h2>
-          <a href="database.html" class="btn btn-ghost btn-xs">Voir tout</a>
+          <a href="dashboard.php" class="btn btn-ghost btn-xs">Voir tout</a>
         </div>
         <div id="print-feed"></div>
       </div>
@@ -135,7 +135,7 @@
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">🔔 Alertes actives</h2>
-          <a href="alerts.html" class="btn btn-ghost btn-xs">Gérer</a>
+          <a href="alerts.php" class="btn btn-ghost btn-xs">Gérer</a>
         </div>
         <div id="alert-feed"></div>
       </div>
@@ -144,7 +144,7 @@
       <div class="card-dark" style="padding:1.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <h2 style="margin:0;font-size:1rem">📷 État caméras</h2>
-          <a href="cameras.html" class="btn btn-ghost btn-xs">Live</a>
+          <a href="cameras.php" class="btn btn-ghost btn-xs">Live</a>
         </div>
         <div id="camera-feed"></div>
       </div>
@@ -217,7 +217,7 @@ if(session){
 }
 
 // Déconnexion : enregistre l'événement dans les journaux puis redirige
-async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='Login.php'; }
 
 // ── STATISTIQUES ─────────────────────────────────────────
 // Récupère les compteurs globaux depuis l'API et génère

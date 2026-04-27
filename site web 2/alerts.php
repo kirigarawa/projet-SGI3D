@@ -107,13 +107,13 @@
 <body>
 
 <nav class="site-nav">
-  <a href="index.html" class="nav-logo">SGI3D</a>
+  <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
-    <a href="index.html">🏠 <span>Accueil</span></a>
-    <a href="printers.html">🖨️ <span>Imprimantes</span></a>
-    <a href="cameras.html">📷 <span>Caméras</span></a>
-    <a href="alerts.html" class="active">🔔 <span>Alertes</span></a>
-    <a href="dashboard.html">📊 <span>Dashboard</span></a>
+    <a href="index.php">🏠 <span>Accueil</span></a>
+    <a href="Printers.php">🖨️ <span>Imprimantes</span></a>
+    <a href="cameras.php">📷 <span>Caméras</span></a>
+    <a href="alerts.php" class="active">🔔 <span>Alertes</span></a>
+    <a href="dashboard.php">📊 <span>Dashboard</span></a>
     <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
 </nav>
@@ -121,15 +121,15 @@
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
-    <a href="index.html"><span class="s-icon">🏠</span> Accueil</a>
-    <a href="printers.html"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <a href="index.php"><span class="s-icon">🏠</span> Accueil</a>
+    <a href="Printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
     <div class="s-section">Administration</div>
-    <a href="dashboard.html"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="database.html"><span class="s-icon">🗄️</span> Base de données</a>
-    <a href="cameras.html"><span class="s-icon">📷</span> Caméras</a>
-    <a href="alerts.html" class="active"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
+    <a href="dashboard.php"><span class="s-icon">📊</span> Dashboard</a>
+    <a href="dashboard.php"><span class="s-icon">🗄️</span> Base de données</a>
+    <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
+    <a href="alerts.php" class="active"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
-    <a href="sitemap.html"><span class="s-icon">🗺️</span> Plan du site</a>
+    <a href="sitemap.php"><span class="s-icon">🗺️</span> Plan du site</a>
     <a href="#" onclick="SGI3D_DB.exportJSON()"><span class="s-icon">📤</span> Exporter JSON</a>
     <a href="#" onclick="doLogout()"><span class="s-icon">🚪</span> Déconnexion</a>
   </aside>
@@ -212,7 +212,7 @@ let currentFilter = 'all'; // Filtre actif : 'all' | 'error' | 'warning' | 'info
 let soundEnabled = true;   // Active/désactive le son pour les alertes critiques
 
 /* ── Authentification ── */
-async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.html'; }
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='Login.php'; }
 
 /* ── Modale : nouvelle alerte ── */
 function showAddAlert(){ document.getElementById('addAlertModal').classList.add('open'); }

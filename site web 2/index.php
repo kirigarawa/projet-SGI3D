@@ -95,12 +95,12 @@
      l'utilisateur s'il est déjà connecté (voir script en bas).
      ════════════════════════════════════════════════════════ -->
 <nav class="site-nav">
-  <a href="index.html" class="nav-logo">SGI3D</a>
+  <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
     <a href="index.php" class="active">🏠 <span>Accueil</span></a>
     <a href="printers.php">🖨️ <span>Imprimantes</span></a>
     <a href="cameras.php">📷 <span>Caméras</span></a>
-    <a href="alerts.html">🔔 <span>Alertes</span></a>
+    <a href="alerts.php">🔔 <span>Alertes</span></a>
     <a href="dashboard.php">📊 <span>Dashboard</span></a>
     <a href="login.php" class="btn-nav">🔐 <span>Connexion</span></a>
   </div>
@@ -129,37 +129,37 @@
   <!-- Grille de 6 cartes d'accès rapide aux modules du site -->
   <div class="action-grid">
     <!-- Carte : accès à la page des imprimantes 3D -->
-    <a href="printers.html" class="action-card">
+    <a href="Printers.php" class="action-card">
       <div class="ac-icon">🖨️</div>
       <h3>Nos Imprimantes</h3>
       <p>Ultimaker 2+ &amp; Geeetech A20T – Spécifications et modèles 3D interactifs</p>
     </a>
     <!-- Carte : accès à la page de connexion -->
-    <a href="login.html" class="action-card">
+    <a href="Login.php" class="action-card">
       <div class="ac-icon">🔐</div>
       <h3>Se Connecter</h3>
       <p>Accéder au tableau de bord, gérer les impressions et les utilisateurs</p>
     </a>
     <!-- Carte : accès à la surveillance par caméras -->
-    <a href="cameras.html" class="action-card">
+    <a href="cameras.php" class="action-card">
       <div class="ac-icon">📷</div>
       <h3>Surveillance</h3>
       <p>Flux caméras en temps réel, détection de mouvement, monitoring atelier</p>
     </a>
     <!-- Carte : accès aux alertes système -->
-    <a href="alerts.html" class="action-card">
+    <a href="alerts.php" class="action-card">
       <div class="ac-icon">🔔</div>
       <h3>Alertes</h3>
       <p>Notifications système, pannes, alertes filament et températures</p>
     </a>
     <!-- Carte : accès au tableau de bord admin -->
-    <a href="dashboard.html" class="action-card">
+    <a href="dashboard.php" class="action-card">
       <div class="ac-icon">📊</div>
       <h3>Dashboard</h3>
       <p>Statistiques globales, journaux d'activité et gestion complète</p>
     </a>
     <!-- Carte : plan du site (vue d'ensemble de toutes les pages) -->
-    <a href="sitemap.html" class="action-card">
+    <a href="sitemap.php" class="action-card">
       <div class="ac-icon">🗺️</div>
       <h3>Plan du site</h3>
       <p>Vue d'ensemble de toutes les pages et fonctionnalités disponibles</p>
@@ -169,7 +169,7 @@
 
 <!-- Pied de page avec liens vers le plan du site et la base de données -->
 <footer class="site-footer">
-  <p>© 2025 SGI3D – <a href="sitemap.html">Plan du site</a> · <a href="database.html">Base de données</a> · v3.0</p>
+  <p>© 2025 SGI3D – <a href="sitemap.php">Plan du site</a> · <a href="dashboard.php">Base de données</a> · v3.0</p>
 </footer>
 
 <!-- db.js : objet global SGI3D_DB pour accéder aux données (session, alertes…) -->
@@ -316,11 +316,11 @@
   const s = SGI3D_DB.getSession();
   if(s){
     const nav = document.querySelector('.nav-links');
-    const loginLink = nav.querySelector('a[href="login.html"]');
+    const loginLink = nav.querySelector('a[href="Login.php"]');
     if(loginLink){
       // Affiche uniquement le prénom (premier mot du nom complet)
       loginLink.innerHTML='👤 '+s.name.split(' ')[0];
-      loginLink.href='dashboard.html';
+      loginLink.href='dashboard.php';
     }
   }
 })();
