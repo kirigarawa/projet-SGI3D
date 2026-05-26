@@ -6,6 +6,7 @@
 <title>SGI3D – Accueil</title>
 <!-- Feuille de style globale partagée par toutes les pages -->
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   /* Cache le défilement horizontal causé par les particules animées */
   body{overflow-x:hidden}
@@ -102,6 +103,8 @@
     <a href="cameras.php">📷 <span>Caméras</span></a>
     <a href="alerts.php">🔔 <span>Alertes</span></a>
     <a href="dashboard.php">📊 <span>Dashboard</span></a>
+    <a href="etudiant.php">🎓 <span>Étudiant</span></a>
+    <a href="collaborateur.php">🤝 <span>Collaborateur</span></a>
     <a href="login.php" class="btn-nav">🔐 <span>Connexion</span></a>
   </div>
 </nav>
@@ -129,13 +132,13 @@
   <!-- Grille de 6 cartes d'accès rapide aux modules du site -->
   <div class="action-grid">
     <!-- Carte : accès à la page des imprimantes 3D -->
-    <a href="Printers.php" class="action-card">
+    <a href="printers.php" class="action-card">
       <div class="ac-icon">🖨️</div>
       <h3>Nos Imprimantes</h3>
       <p>Ultimaker 2+ &amp; Geeetech A20T – Spécifications et modèles 3D interactifs</p>
     </a>
     <!-- Carte : accès à la page de connexion -->
-    <a href="Login.php" class="action-card">
+    <a href="login.php" class="action-card">
       <div class="ac-icon">🔐</div>
       <h3>Se Connecter</h3>
       <p>Accéder au tableau de bord, gérer les impressions et les utilisateurs</p>
@@ -158,6 +161,18 @@
       <h3>Dashboard</h3>
       <p>Statistiques globales, journaux d'activité et gestion complète</p>
     </a>
+    <!-- Carte : espace étudiant (soumission de demandes d'impression) -->
+    <a href="etudiant.php" class="action-card">
+      <div class="ac-icon">🎓</div>
+      <h3>Espace Étudiant</h3>
+      <p>Soumettez vos demandes d'impression et suivez l'avancement de vos projets</p>
+    </a>
+    <!-- Carte : espace collaborateur (vue élargie + demandes d'impression) -->
+    <a href="collaborateur.php" class="action-card">
+      <div class="ac-icon">🤝</div>
+      <h3>Espace Collaborateur</h3>
+      <p>Suivi global de l'atelier, activité récente et gestion de vos impressions</p>
+    </a>
     <!-- Carte : plan du site (vue d'ensemble de toutes les pages) -->
     <a href="sitemap.php" class="action-card">
       <div class="ac-icon">🗺️</div>
@@ -167,9 +182,8 @@
   </div>
 </section>
 
-<!-- Pied de page avec liens vers le plan du site et la base de données -->
 <footer class="site-footer">
-  <p>© 2025 SGI3D – <a href="sitemap.php">Plan du site</a> · <a href="dashboard.php">Base de données</a> · v3.0</p>
+  <p>© 2025 SGI3D – <a href="sitemap.php">Plan du site</a> · v3.0</p>
 </footer>
 
 <!-- db.js : objet global SGI3D_DB pour accéder aux données (session, alertes…) -->
@@ -316,7 +330,7 @@
   const s = SGI3D_DB.getSession();
   if(s){
     const nav = document.querySelector('.nav-links');
-    const loginLink = nav.querySelector('a[href="Login.php"]');
+    const loginLink = nav.querySelector('a[href="login.php"]');
     if(loginLink){
       // Affiche uniquement le prénom (premier mot du nom complet)
       loginLink.innerHTML='👤 '+s.name.split(' ')[0];

@@ -21,6 +21,8 @@ if (empty($_SESSION['user_id'])) {
     header('Content-Type: text/plain');
     exit('Non autorisé');
 }
+$_sessionRole = $_SESSION['role'] ?? 'operateur';
+session_write_close(); // libère le verrou de session pour permettre les requêtes parallèles
 
 require_once __DIR__ . '/config.php';
 
@@ -56,7 +58,7 @@ if ($camId > 0) {
 
 } elseif (!empty($_GET['url'])) {
     // URL directe — réservée aux admins
-    if (($_SESSION['role'] ?? '') !== 'admin') {
+    if ($_sessionRole !== 'admin') {
         http_response_code(403);
         exit('Accès refusé');
     }

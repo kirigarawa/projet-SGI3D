@@ -443,3 +443,151 @@ table tr:hover td{background:rgba(255,255,255,0.04)}
   .admin-content{margin-left:0}
   .site-nav .nav-links a span{display:none}
 }
+
+
+/* ════════════════════════════════════════════════════════
+   BOUTON DE BASCULE DE THÈME (.theme-toggle)
+   Injecté dynamiquement dans .nav-links par theme.js.
+   Stylisé comme les liens de navigation mais en <button>.
+   ════════════════════════════════════════════════════════ */
+.theme-toggle{
+  background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);
+  border:1px solid rgba(255,255,255,0.2);border-radius:20px;
+  cursor:pointer;font-size:.85rem;font-weight:500;
+  padding:.4rem .9rem;transition:all .2s;letter-spacing:.5px;
+  font-family:var(--font);display:inline-flex;align-items:center;gap:.3rem;
+  white-space:nowrap;
+}
+.theme-toggle:hover{background:rgba(255,255,255,0.2);color:#fff}
+
+
+/* ════════════════════════════════════════════════════════
+   THÈME CLAIR  [data-theme="light"]
+   Toutes les surcharges nécessaires pour passer du fond
+   sombre au fond clair sans toucher aux règles d'origine.
+   ════════════════════════════════════════════════════════ */
+
+/* ── Tokens ── */
+[data-theme="light"]{
+  --bg-grad:   linear-gradient(135deg,#e8f0fe 0%,#f5f7fa 100%);
+  --card-bg:   #ffffff;
+  --card-dark: rgba(255,255,255,0.85);
+  --shadow:    0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* ── Body ── */
+[data-theme="light"] body{color:#1a1a2e}
+
+/* ── Navigation ── */
+[data-theme="light"] .site-nav{
+  background:rgba(255,255,255,0.95);
+  border-bottom-color:rgba(0,0,0,0.1);
+}
+[data-theme="light"] .site-nav .nav-logo{
+  background:linear-gradient(135deg,#1a1a2e,#3498db);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+[data-theme="light"] .site-nav .nav-links a{color:rgba(30,40,80,0.8)}
+[data-theme="light"] .site-nav .nav-links a:hover,
+[data-theme="light"] .site-nav .nav-links a.active{
+  background:rgba(0,0,0,0.08);color:#1a1a2e;
+}
+[data-theme="light"] .site-nav .nav-links a.btn-nav{
+  background:var(--btn-grad);color:#fff;
+}
+[data-theme="light"] .theme-toggle{
+  background:rgba(0,0,0,0.07);color:rgba(30,40,80,0.8);
+  border-color:rgba(0,0,0,0.15);
+}
+[data-theme="light"] .theme-toggle:hover{background:rgba(0,0,0,0.14);color:#1a1a2e}
+
+/* ── Sidebar ── */
+[data-theme="light"] .sidebar{
+  background:rgba(240,244,255,0.98);
+  border-right-color:rgba(0,0,0,0.08);
+}
+[data-theme="light"] .sidebar .s-section{color:rgba(30,40,80,0.4)}
+[data-theme="light"] .sidebar a{color:rgba(30,40,80,0.7)}
+[data-theme="light"] .sidebar a:hover{
+  background:rgba(0,0,0,0.05);color:#1a1a2e;border-left-color:rgba(0,0,0,0.25);
+}
+[data-theme="light"] .sidebar a.active{
+  background:rgba(52,152,219,0.12);color:#2980b9;border-left-color:#3498db;
+}
+[data-theme="light"] .sidebar .s-badge{background:var(--danger)}
+
+/* ── Cards ── */
+[data-theme="light"] .card{color:#1a1a2e}
+[data-theme="light"] .card-dark{
+  background:rgba(255,255,255,0.85);
+  border-color:rgba(0,0,0,0.1);color:#1a1a2e;
+}
+[data-theme="light"] .card-header{border-bottom-color:rgba(0,0,0,0.1)}
+
+/* ── Stat cards ── */
+[data-theme="light"] .stat-card{
+  background:rgba(255,255,255,0.8);border-color:rgba(0,0,0,0.1);
+}
+[data-theme="light"] .stat-card .s-label{color:rgba(30,40,80,0.6)}
+
+/* ── Tableaux ── */
+[data-theme="light"] table th{
+  background:rgba(0,0,0,0.05);color:rgba(30,40,80,0.6);
+}
+[data-theme="light"] table td{
+  border-bottom-color:rgba(0,0,0,0.07);color:#1a1a2e;
+}
+[data-theme="light"] table tr:hover td{background:rgba(0,0,0,0.03)}
+
+/* ── Formulaires ── */
+[data-theme="light"] .form-group label{color:rgba(30,40,80,0.85)}
+[data-theme="light"] .form-control{
+  background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.2);color:#1a1a2e;
+}
+[data-theme="light"] .form-control::placeholder{color:rgba(30,40,80,0.4)}
+[data-theme="light"] .form-control:focus{background:rgba(0,0,0,0.08);border-color:var(--accent)}
+
+/* ── Bouton ghost ── */
+[data-theme="light"] .btn-ghost{
+  background:rgba(0,0,0,0.07);color:#1a1a2e;border-color:rgba(0,0,0,0.2);
+}
+[data-theme="light"] .btn-ghost:hover{background:rgba(0,0,0,0.14)}
+
+/* ── Modal ── */
+[data-theme="light"] .modal{
+  background:linear-gradient(135deg,#ffffff,#f0f4ff);
+  border-color:rgba(0,0,0,0.12);color:#1a1a2e;
+}
+[data-theme="light"] .modal-close{color:rgba(30,40,80,0.5)}
+
+/* ── Toast ── */
+[data-theme="light"] .toast{
+  background:rgba(255,255,255,0.97);
+  border-color:rgba(0,0,0,0.1);color:#1a1a2e;
+}
+
+/* ── En-tête de page ── */
+[data-theme="light"] .page-header p{color:rgba(30,40,80,0.6)}
+
+/* ── Badge neutre ── */
+[data-theme="light"] .badge-neutral{
+  background:rgba(0,0,0,0.07);color:rgba(30,40,80,0.7);border-color:rgba(0,0,0,0.15);
+}
+
+/* ── Éléments de flux (dashboard) ── */
+[data-theme="light"] .feed-item{border-bottom-color:rgba(0,0,0,0.07)}
+[data-theme="light"] .feed-meta{color:rgba(30,40,80,0.5)}
+[data-theme="light"] .admin-content h2{color:rgba(30,40,80,0.8)}
+
+/* ── Page d'accueil – éléments inline ── */
+[data-theme="light"] .hero-sub{color:rgba(30,40,80,0.6)}
+[data-theme="light"] .action-card{
+  background:rgba(255,255,255,0.7);border-color:rgba(0,0,0,0.1);color:#1a1a2e;
+}
+[data-theme="light"] .action-card:hover{
+  background:rgba(255,255,255,0.9);border-color:rgba(0,0,0,0.2);
+}
+[data-theme="light"] .action-card p{color:rgba(30,40,80,0.6)}
+[data-theme="light"] footer.site-footer{color:rgba(30,40,80,0.4)}
+[data-theme="light"] footer.site-footer a{color:rgba(30,40,80,0.6)}
+[data-theme="light"] footer.site-footer a:hover{color:#1a1a2e}

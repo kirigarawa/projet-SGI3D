@@ -6,6 +6,7 @@
 <title>SGI3D – Alertes</title>
 <!-- Feuille de style globale du projet -->
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   /* Décalage du contenu sous la barre de navigation fixe */
   body{padding-top:60px}
@@ -110,7 +111,7 @@
   <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
     <a href="index.php">🏠 <span>Accueil</span></a>
-    <a href="Printers.php">🖨️ <span>Imprimantes</span></a>
+    <a href="printers.php">🖨️ <span>Imprimantes</span></a>
     <a href="cameras.php">📷 <span>Caméras</span></a>
     <a href="alerts.php" class="active">🔔 <span>Alertes</span></a>
     <a href="dashboard.php">📊 <span>Dashboard</span></a>
@@ -122,10 +123,9 @@
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
     <a href="index.php"><span class="s-icon">🏠</span> Accueil</a>
-    <a href="Printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <a href="printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
     <div class="s-section">Administration</div>
     <a href="dashboard.php"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="dashboard.php"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
     <a href="alerts.php" class="active"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
@@ -212,7 +212,7 @@ let currentFilter = 'all'; // Filtre actif : 'all' | 'error' | 'warning' | 'info
 let soundEnabled = true;   // Active/désactive le son pour les alertes critiques
 
 /* ── Authentification ── */
-async function doLogout(){ await SGI3D_DB.logout(); window.location.href='Login.php'; }
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.php'; }
 
 /* ── Modale : nouvelle alerte ── */
 function showAddAlert(){ document.getElementById('addAlertModal').classList.add('open'); }
@@ -366,11 +366,11 @@ function showToast(msg,type='info'){
    Génère une alerte aléatoire parmi un ensemble prédéfini (à des fins de démonstration). */
 async function autoAlert(){
   const types=['warning','info','error'];
-  const sources=['Ultimaker 2+','Creality Ender V2 Neo','Capteur T°','Système','Caméra 1'];
+  const sources=['Ultimaker 2+','Elegoo Neptune 4 Pro','Capteur T°','Système','Caméra 1'];
   const msgs=[
     {type:'avertissement',titre:'Température buse élevée',message:'La buse de l\'Ultimaker 2+ dépasse 265°C'},
     {type:'info',   titre:'Maintenance programmée',message:'Calibration automatique dans 24h'},
-    {type:'erreur',  titre:'Panne extrudeur',message:'L\'extrudeur de la Creality Ender V2 Neo ne répond plus'},
+    {type:'erreur',  titre:'Panne extrudeur',message:'L\'extrudeur de la Elegoo Neptune 4 Pro ne répond plus'},
     {type:'avertissement',titre:'Filament presque épuisé',message:'Niveau filament ABS < 5%'},
     {type:'info',   titre:'Impression terminée',message:'Pièce_v3.stl terminée avec succès sur Ultimaker 2+'},
   ];
@@ -407,9 +407,10 @@ async function syncOctoPrint() {
       showToast('❌ Erreur OctoPrint : ' + (json.error||''), 'error');
     }
   } catch(e) {
-    // Erreur réseau : OctoPrint inaccessible
+    // Erreur réseau uniquement (fetch rejeté)
     const printers = document.getElementById('octo-printers');
-    if(printers) printers.innerHTML = '<span style="color:rgba(231,76,60,.7);font-size:.8rem">🔴 OctoPrint inaccessible — vérifiez config.php</span>';
+    if(printers) printers.innerHTML = '<span style="color:rgba(231,76,60,.7);font-size:.8rem">🔴 Erreur réseau — ' + e.message + '</span>';
+    console.error('[syncOctoPrint]', e);
   } finally {
     // Réactivation du bouton dans tous les cas
     if(btn) { btn.disabled = false; btn.textContent = '🔄 Sync'; }
@@ -419,23 +420,34 @@ async function syncOctoPrint() {
 /* ── Barre d'état OctoPrint ──
    Construit les pastilles de statut pour chaque imprimante à partir des logs retournés par l'API. */
 function updateOctoPrinterBar(results) {
-  if (!results) return;
   const container = document.getElementById('octo-printers');
   if (!container) return;
-  const items = Object.entries(results).map(([name, logs]) => {
-    // Détermination du statut à partir des messages de log
-    const isOffline = logs.some(l => l.includes('inaccessible') || l.includes('déconnectée'));
-    const hasError  = logs.some(l => l.startsWith('ERREUR'));
-    const hasWarn   = logs.some(l => l.startsWith('AVERTISSEMENT'));
-    const tempLog   = logs.find(l => l.startsWith('Buse:')) || '';
-    const printLog  = logs.find(l => l.startsWith('Impression:')) || '';
-    // Classe CSS de la pastille selon la priorité : offline > error > warn > ok
-    const cls = isOffline ? 'offline' : hasError ? 'error' : hasWarn ? 'warn' : 'ok';
-    const temp  = tempLog  ? `<span class="octo-temp">${tempLog.replace('Buse:','').trim()}</span>` : '';
-    const print = printLog ? `<span class="octo-temp">${printLog.replace('Impression:','').trim().slice(0,35)}</span>` : '';
-    return `<div class="octo-printer ${cls}"><span class="octo-dot"></span><span>${name}</span>${temp}${print}</div>`;
+  if (!Array.isArray(results) || !results.length) {
+    container.innerHTML = '<span style="color:rgba(255,255,255,.4);font-size:.8rem">Aucune imprimante configurée</span>';
+    return;
+  }
+  const items = results.map(p => {
+    const stateText = p.status?.state?.text || '';
+    const isPrint   = stateText === 'Printing';
+    const isPause   = stateText === 'Paused';
+    const cls       = !p.online ? 'offline' : isPause ? 'warn' : 'ok';
+
+    const toolTemp = p.online ? (p.status?.temperature?.tool0?.actual ?? null) : null;
+    const progress = (p.online && isPrint) ? Math.round(p.job?.progress?.completion ?? 0) : null;
+
+    const temp = toolTemp !== null
+      ? `<span class="octo-temp">🌡 ${toolTemp.toFixed(0)}°C</span>` : '';
+    const prog = progress !== null
+      ? `<span class="octo-temp">${progress}%</span>` : '';
+    const offLbl = !p.online
+      ? `<span class="octo-temp">Hors ligne</span>` : '';
+
+    return `<div class="octo-printer ${cls}">
+      <span class="octo-dot"></span>
+      <span>${p.name}</span>${temp}${prog}${offLbl}
+    </div>`;
   });
-  container.innerHTML = items.join('') || '<span style="color:rgba(255,255,255,.4);font-size:.8rem">Aucune imprimante configurée dans octoprint_sync.php</span>';
+  container.innerHTML = items.join('');
 }
 
 /* ── Initialisation ──

@@ -17,6 +17,7 @@ $isAdmin  = $role === 'admin';
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Caméras</title>
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   body{padding-top:60px}
   .cameras-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem}
@@ -60,12 +61,11 @@ $isAdmin  = $role === 'admin';
     <a href="printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
     <div class="s-section">Administration</div>
     <a href="dashboard.php"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="database.php"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.php" class="active"><span class="s-icon">📷</span> Caméras</a>
     <a href="alerts.php"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
     <a href="sitemap.php"><span class="s-icon">🗺️</span> Plan du site</a>
-    <a href="export.php?format=json"><span class="s-icon">📤</span> Exporter JSON</a>
+    <a href="api.php?action=exportJSON"><span class="s-icon">📤</span> Exporter JSON</a>
     <a href="logout.php"><span class="s-icon">🚪</span> Déconnexion</a>
   </aside>
 
@@ -100,6 +100,35 @@ $isAdmin  = $role === 'admin';
     </div>
   </main>
 </div>
+
+<!-- Modal édition caméra (admin uniquement) -->
+<?php if ($isAdmin): ?>
+<div class="modal-overlay" id="editCamModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('editCamModal').classList.remove('open')">✕</button>
+    <h2>✏️ Modifier la caméra</h2>
+    <input type="hidden" id="ec-id">
+    <div class="form-group">
+      <label>Nom de la caméra</label>
+      <input id="ec-name" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Emplacement</label>
+      <input id="ec-loc" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>URL du flux vidéo</label>
+      <input id="ec-url" class="form-control" placeholder="http://192.168.0.32/webcam/?action=stream">
+      <small style="color:rgba(255,255,255,.4);font-size:.75rem">MJPEG OctoPrint : http://IP/webcam/?action=stream</small>
+    </div>
+    <div style="display:flex;gap:1rem;margin-top:1.5rem">
+      <button class="btn btn-success" onclick="doEditCam()">💾 Enregistrer</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('editCamModal').classList.remove('open')">Annuler</button>
+    </div>
+    <p id="ec-msg" style="margin-top:.8rem;font-size:.85rem;color:#e74c3c"></p>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- Modal ajout caméra (admin uniquement) -->
 <?php if ($isAdmin): ?>
@@ -146,7 +175,10 @@ async function api(action, params = {}) {
     body: JSON.stringify({ action, ...params })
   });
   if (r.status === 401) { window.location.href = 'login.php'; return {}; }
-  return r.json();
+  const text = await r.text();
+  if (!text.trim()) return { ok: false, error: `Réponse vide (HTTP ${r.status}) — vérifiez les logs PHP` };
+  try { return JSON.parse(text); }
+  catch (e) { return { ok: false, error: `PHP: ${text.substring(0, 200)}` }; }
 }
 
 // ── Simulation flux vidéo (canvas 2D animé) ───────────────
@@ -247,13 +279,25 @@ function scheduleMotionAlert(camId, camName) {
 
 // ── Rendu de la grille caméras ────────────────────────────
 async function renderCameras() {
-  const j    = await api('getCameras');
-  const cams = j.data || [];
   const grid = document.getElementById('cameras-grid');
+  let j;
+  try {
+    j = await api('getCameras');
+  } catch (e) {
+    grid.innerHTML = `<div class="no-cam" style="grid-column:1/-1;color:#e74c3c">❌ Erreur réseau : ${e.message}</div>`;
+    return;
+  }
+  if (!j.ok) {
+    grid.innerHTML = `<div class="no-cam" style="grid-column:1/-1;color:#e74c3c">❌ Erreur API : ${j.error || 'inconnue'}</div>`;
+    return;
+  }
+  const cams = j.data || [];
 
   // Annuler les animations et timers existants
   Object.values(camAnimators).forEach(id => cancelAnimationFrame(id));
   Object.values(motionTimers).forEach(t => clearTimeout(t));
+  Object.values(snapshotTimers).forEach(t => clearInterval(t));
+  for (const k in snapshotTimers) delete snapshotTimers[k];
 
   // Compteurs
   document.getElementById('cam-count').textContent  = cams.length;
@@ -283,7 +327,10 @@ async function renderCameras() {
       </div>
       <div class="cam-body">
         ${c.statut === 'en_ligne'
-          ? `<canvas id="canvas-${c.id}" class="cam-canvas"></canvas>`
+          ? c.url_flux
+            ? `<img id="img-${c.id}" src="stream_proxy.php?cam=${c.id}" class="cam-canvas" onerror="this.onerror=null;this.src='';this.alt='❌ Flux inaccessible — vérifiez URL et réseau';this.style='padding:1rem;color:#e74c3c;font-size:.8rem'">`
+              + `<canvas id="canvas-${c.id}" class="cam-canvas" style="display:none"></canvas>`
+            : `<canvas id="canvas-${c.id}" class="cam-canvas"></canvas>`
           : `<div class="cam-overlay">📷<br><small style="font-size:.7rem;margin-top:.5rem;display:block">Caméra hors ligne</small></div>`
         }
         <div class="cam-info-bar">
@@ -296,6 +343,7 @@ async function renderCameras() {
           ? `<button class="btn btn-ghost btn-xs" onclick="toggleCam(${c.id})">${c.statut === 'en_ligne' ? '🔴 Désactiver' : '🟢 Activer'}</button>`
           : ''
         }
+        ${IS_ADMIN ? `<button class="btn btn-ghost btn-xs" onclick="showEditCam(${c.id})">✏️ URL</button>` : ''}
         <button class="btn btn-accent btn-xs" onclick="goFullscreen(${c.id})">⛶ Plein écran</button>
         ${c.detection_mvt
           ? `<span class="badge badge-info" style="font-size:.7rem">🎯 Détection mvt</span>`
@@ -310,13 +358,48 @@ async function renderCameras() {
 
   cams.forEach((c, i) => {
     if (c.statut === 'en_ligne') {
-      setTimeout(() => startCamSimulation('canvas-' + c.id, i), 50);
+      if (c.url_flux) {
+        if (!isStreamUrl(c.url_flux)) startSnapshotRefresh(c.id);
+      } else {
+        setTimeout(() => startCamSimulation('canvas-' + c.id, i), 50);
+      }
       if (c.detection_mvt) scheduleMotionAlert(c.id, c.nom);
     }
   });
 }
 
 // ── Actions caméras ──────────────────────────────────────
+async function showEditCam(id) {
+  if (!IS_ADMIN) return;
+  const j = await api('getCameraById', { id });
+  if (!j.data) return;
+  const c = j.data;
+  document.getElementById('ec-id').value   = c.id;
+  document.getElementById('ec-name').value = c.nom;
+  document.getElementById('ec-loc').value  = c.localisation || '';
+  document.getElementById('ec-url').value  = c.url_flux || '';
+  document.getElementById('ec-msg').textContent = '';
+  document.getElementById('editCamModal').classList.add('open');
+}
+
+async function doEditCam() {
+  if (!IS_ADMIN) return;
+  const id  = document.getElementById('ec-id').value;
+  const nom = document.getElementById('ec-name').value.trim();
+  const loc = document.getElementById('ec-loc').value.trim();
+  const url = document.getElementById('ec-url').value.trim();
+  const msg = document.getElementById('ec-msg');
+  if (!nom) { msg.textContent = 'Le nom est requis'; return; }
+  const j = await api('updateCamera', { id, nom, localisation: loc, url_flux: url });
+  if (j.ok) {
+    document.getElementById('editCamModal').classList.remove('open');
+    renderCameras();
+    showToast('✅ Caméra mise à jour', 'success');
+  } else {
+    msg.textContent = '❌ ' + (j.error || 'Erreur');
+  }
+}
+
 function showAddCam() {
   if (!IS_ADMIN) return;
   document.getElementById('addCamModal').classList.add('open');
@@ -389,6 +472,27 @@ function showToast(msg, type = 'info') {
   t.textContent = msg;
   c.appendChild(t);
   setTimeout(() => t.remove(), 3500);
+}
+
+// ── Helpers flux caméra ──────────────────────────────────
+function isStreamUrl(url) {
+  return /stream|mjpeg/i.test(url);
+}
+
+function camImgError(camId, camIndex) {
+  const img    = document.getElementById('img-'    + camId);
+  const canvas = document.getElementById('canvas-' + camId);
+  if (img)    img.style.display    = 'none';
+  if (canvas) canvas.style.display = 'block';
+  startCamSimulation('canvas-' + camId, camIndex);
+}
+
+const snapshotTimers = {};
+function startSnapshotRefresh(camId) {
+  snapshotTimers[camId] = setInterval(() => {
+    const img = document.getElementById('img-' + camId);
+    if (img) img.src = `stream_proxy.php?cam=${camId}&_t=${Date.now()}`;
+  }, 2000);
 }
 
 // ── Init ─────────────────────────────────────────────────

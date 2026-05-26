@@ -7,14 +7,14 @@
 // ── OctoPrint : liste des imprimantes configurées ───────
 // Ajoutez une entrée par imprimante avec son IP, port et clé API OctoPrint.
 define('OCTOPRINT_PRINTERS', [
-    // ['id' => 'printer1', 'name' => 'Ultimaker 2+',     'model' => 'Ultimaker',  'ip' => '192.168.0.100', 'port' => 5000, 'api_key' => 'VOTRE_CLE_API'],
-    // ['id' => 'printer2', 'name' => 'Creality Ender V2', 'model' => 'Creality',   'ip' => '192.168.0.101', 'port' => 5000, 'api_key' => 'VOTRE_CLE_API'],
+    ['id' => 1, 'name' => 'Ultimaker 2+',          'model' => 'Ultimaker', 'ip' => '192.168.0.32',  'port' => 5000, 'api_key' => 'GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8'],
+    ['id' => 2, 'name' => 'Elegoo Neptune 4 Pro',  'model' => 'Elegoo',    'ip' => '192.168.0.93', 'port' => 80, 'api_key' => '1cbf927f27024488bae6730c4fe4dd5b', 'type' => 'moonraker'],
 ]);
 
 define('DB_HOST',     'localhost');
 define('DB_NAME',     'sgi3d');
 define('DB_USER',     'root');       // Votre utilisateur MySQL
-define('DB_PASSWORD', 'root');           // Votre mot de passe MySQL
+define('DB_PASSWORD', 'phpmy_SGI3D');           // Votre mot de passe MySQL
 define('DB_CHARSET',  'utf8mb4');
 
 function getDB(): PDO {

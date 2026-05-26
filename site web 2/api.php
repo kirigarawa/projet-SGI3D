@@ -7,6 +7,18 @@
 
 require_once 'config.php';
 require_once 'octoprint_api.php';
+require_once 'moonraker_api.php';
+
+function getPrinterManager(int $printerId) {
+    foreach (OCTOPRINT_PRINTERS as $p) {
+        if ($p['id'] === $printerId) {
+            return ($p['type'] ?? 'octoprint') === 'moonraker'
+                ? new MoonrakerManager()
+                : new OctoPrintManager();
+        }
+    }
+    return new OctoPrintManager();
+}
 
 // Headers CORS + JSON
 header('Content-Type: application/json; charset=utf-8');
@@ -21,7 +33,7 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
 
 // Fusionner GET + POST + body JSON
-$data = [...$_GET, ...$_POST, ...$body];
+$data = array_merge($_GET, $_POST, $body);
 $action = $data['action'] ?? '';
 
 if (empty($action)) {
@@ -287,12 +299,17 @@ try {
 
         // ── STATISTIQUES ─────────────────────────────────────
         case 'getStats':
-            $result = $db->query('SELECT * FROM vue_statistiques')->fetch();
-            // Ajouter total utilisateurs et cameras
-            $result['total_utilisateurs'] = $db->query('SELECT COUNT(*) FROM utilisateurs')->fetchColumn();
-            $result['total_cameras']      = $db->query('SELECT COUNT(*) FROM cameras')->fetchColumn();
-            $result['total_alertes']      = $db->query('SELECT COUNT(*) FROM alertes')->fetchColumn();
-            $result['total_print_jobs']   = $db->query('SELECT COUNT(*) FROM travaux_impression')->fetchColumn();
+            $vue = $db->query('SELECT * FROM vue_statistiques')->fetch();
+            $result = is_array($vue) ? $vue : [];
+            $result['total_utilisateurs']  = $db->query('SELECT COUNT(*) FROM utilisateurs')->fetchColumn();
+            $result['utilisateurs_actifs'] = $result['utilisateurs_actifs'] ?? $db->query('SELECT COUNT(*) FROM utilisateurs WHERE actif=1')->fetchColumn();
+            $result['total_cameras']       = $db->query('SELECT COUNT(*) FROM cameras')->fetchColumn();
+            $result['cameras_en_ligne']    = $db->query("SELECT COUNT(*) FROM cameras WHERE statut='en_ligne'")->fetchColumn();
+            $result['total_alertes']       = $db->query('SELECT COUNT(*) FROM alertes')->fetchColumn();
+            $result['alertes_actives']     = $result['alertes_actives'] ?? $db->query('SELECT COUNT(*) FROM alertes WHERE resolue=0')->fetchColumn();
+            $result['total_print_jobs']    = $db->query('SELECT COUNT(*) FROM travaux_impression')->fetchColumn();
+            $result['impressions_en_cours']= $result['impressions_en_cours'] ?? $db->query("SELECT COUNT(*) FROM travaux_impression WHERE statut='en_cours'")->fetchColumn();
+            $result['connexions_reussies'] = $result['connexions_reussies'] ?? $db->query("SELECT COUNT(*) FROM journaux_connexion WHERE succes='oui'")->fetchColumn();
             break;
 
         // ── EXPORT JSON ──────────────────────────────────────
@@ -308,34 +325,117 @@ try {
             ];
             break;
 
-        // ── OCTOPRINT ─────────────────────────────────────
+        // ── OCTOPRINT / MOONRAKER ─────────────────────────
         case 'syncOctoPrint':
-            $octo   = new OctoPrintManager();
-            $result = ['results' => $octo->getAllStatuses(), 'synced_at' => date('c')];
+            $results = [];
+            foreach (OCTOPRINT_PRINTERS as $p) {
+                $mgr       = getPrinterManager($p['id']);
+                $status    = $mgr->getPrinterStatus($p['id']);
+                $job       = $mgr->getJobStatus($p['id']);
+                $results[] = [
+                    'id'        => $p['id'],
+                    'name'      => $p['name'],
+                    'model'     => $p['model'],
+                    'ip'        => $p['ip'],
+                    'status'    => $status,
+                    'job'       => $job,
+                    'online'    => !isset($status['error']),
+                    'timestamp' => date('Y-m-d H:i:s'),
+                ];
+            }
+            $result = ['results' => $results, 'synced_at' => date('c')];
             break;
 
         case 'octoprintState':
-            $octo   = new OctoPrintManager();
-            $pid    = $data['printer_id'] ?? null;
+            $pid     = (int)($data['printer_id'] ?? 0);
+            $octo    = getPrinterManager($pid);
+            $printer = $octo->getPrinterStatus($pid);
+            $job     = $octo->getJobStatus($pid);
+            $online  = !isset($printer['error']);
+
+            // Mapping vers la structure attendue par printers.php
             $result = [
-                'printer' => $octo->getPrinterStatus($pid),
-                'job'     => $octo->getJobStatus($pid),
-                'temp'    => $octo->getTemperature($pid),
+                'online'       => $online,
+                'error'        => $printer['error'] ?? null,
+                'connection'   => $online ? ['state' => $printer['state']['text'] ?? 'Unknown'] : null,
+                'temperatures' => $online ? ($printer['temperature'] ?? []) : [],
+                'job'          => ($online && isset($job['job']['file']['name'])) ? [
+                    'file'           => $job['job']['file']['name'],
+                    'progress'       => round($job['progress']['completion'] ?? 0),
+                    'time'           => $job['progress']['printTime']     ?? null,
+                    'timeLeft'       => $job['progress']['printTimeLeft'] ?? null,
+                    'estimatedTotal' => $job['job']['estimatedPrintTime'] ?? null,
+                ] : null,
             ];
             break;
 
         case 'octoprintJobControl':
-            $octo    = new OctoPrintManager();
-            $pid     = $data['printer_id'] ?? null;
+            $pid     = (int)($data['printer_id'] ?? 0);
+            $octo    = getPrinterManager($pid);
             $command = $data['command'] ?? '';
-            $result  = $command === 'cancel'
-                ? $octo->stopPrint($pid)
-                : $octo->startPrint($pid, $data['filename'] ?? '');
+            if ($command === 'cancel') {
+                $raw = $octo->stopPrint($pid);
+            } elseif ($command === 'pause' || $command === 'resume') {
+                $raw = $octo->pauseResume($pid, $command);
+            } else {
+                $raw = $octo->startPrint($pid, $data['filename'] ?? '');
+            }
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
             break;
 
         case 'octoprintStartPrint':
-            $octo   = new OctoPrintManager();
-            $result = $octo->startPrint($data['printer_id'] ?? null, $data['filename'] ?? '');
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $octo   = getPrinterManager($pid);
+            $raw    = $octo->startPrint($pid, $data['filename'] ?? '');
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintSetTemp':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $octo   = getPrinterManager($pid);
+            $raw    = $octo->setTemperature($pid, $data['heater'] ?? 'tool0', $data['temp'] ?? 0);
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintConnection':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $octo   = getPrinterManager($pid);
+            $raw    = $octo->setConnection($pid, $data['action_cmd'] ?? 'connect');
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintJog':
+            $pid  = (int)($data['printer_id'] ?? 0);
+            $octo = getPrinterManager($pid);
+            $axes = [];
+            foreach (['x','y','z'] as $ax) { if (isset($data[$ax])) $axes[$ax] = (float)$data[$ax]; }
+            $raw  = $octo->jog($pid, $axes);
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintHome':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $octo   = getPrinterManager($pid);
+            $axes   = (array)($data['axes'] ?? ['x','y','z']);
+            $raw    = $octo->home($pid, $axes);
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintFan':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $octo   = getPrinterManager($pid);
+            $raw    = $octo->setFan($pid, $data['speed'] ?? 0);
+            $result = isset($raw['error']) ? $raw : ['ok' => true];
+            break;
+
+        case 'octoprintFiles':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $result = getPrinterManager($pid)->getFiles($pid);
+            break;
+
+        case 'octoprintGcode':
+            $pid    = (int)($data['printer_id'] ?? 0);
+            $result = getPrinterManager($pid)->getGcode($pid);
             break;
 
         default:

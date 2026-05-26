@@ -29,15 +29,16 @@ const SGI3D_DB = {
       const res = await fetch(this.API, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Corps JSON : l'action + tous les paramètres fusionnés
         body:    JSON.stringify({ action, ...params })
       });
-      const json = await res.json();
-      // Si l'API signale une erreur, on la propage comme exception JS
+      const text = await res.text();
+      if (!text.trim()) throw new Error(`Réponse vide (HTTP ${res.status})`);
+      let json;
+      try { json = JSON.parse(text); }
+      catch (e) { throw new Error('PHP: ' + text.substring(0, 200)); }
       if (!json.ok) throw new Error(json.error || 'Erreur API');
       return json.data;
     } catch (e) {
-      // Log dans la console pour faciliter le débogage
       console.error('[SGI3D API]', action, e.message);
       throw e;
     }
@@ -62,11 +63,11 @@ const SGI3D_DB = {
   isAdmin()    { const s = this.getSession(); return s && s.role === 'admin'; },
 
   // Vérifie qu'une session est active.
-  // Si non, redirige vers login.html (ou l'URL fournie) et retourne false.
+  // Si non, redirige vers login.php (ou l'URL fournie) et retourne false.
   // Utilisé en haut de chaque page protégée : if(!SGI3D_DB.requireAuth()){}
   requireAuth(redirect) {
     if (!this.isLoggedIn()) {
-      window.location.href = redirect || 'login.html';
+      window.location.href = redirect || 'login.php';
       return false;
     }
     return true;
@@ -111,6 +112,9 @@ const SGI3D_DB = {
   //  UTILISATEURS
   //  CRUD complet sur la table `utilisateurs`.
   // ════════════════════════════════════════════════════════
+
+  // Retourne toutes les imprimantes enregistrées (tableau)
+  async getImprimantes()    { return this._call('getImprimantes'); },
 
   // Retourne tous les utilisateurs (tableau)
   async getUsers()          { return this._call('getUsers'); },

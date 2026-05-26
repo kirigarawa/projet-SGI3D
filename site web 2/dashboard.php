@@ -1,3 +1,7 @@
+<?php
+session_start();
+if (empty($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,6 +10,7 @@
 <title>SGI3D – Dashboard</title>
 <!-- Feuille de style globale partagée par toutes les pages -->
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   /* Décalage vers le bas pour ne pas passer sous la barre de navigation fixe */
   body{padding-top:60px}
@@ -42,11 +47,11 @@
   <a href="index.php" class="nav-logo">SGI3D</a>
   <div class="nav-links">
     <a href="index.php">🏠 <span>Accueil</span></a>
-    <a href="Printers.php">🖨️ <span>Imprimantes</span></a>
+    <a href="printers.php">🖨️ <span>Imprimantes</span></a>
     <a href="cameras.php">📷 <span>Caméras</span></a>
     <a href="alerts.php">🔔 <span>Alertes</span></a>
     <a href="dashboard.php" class="active">📊 <span>Dashboard</span></a>
-    <!-- Bouton de déconnexion : appelle doLogout() puis redirige vers login.html -->
+    <!-- Bouton de déconnexion : appelle doLogout() puis redirige vers login.php -->
     <a href="#" onclick="doLogout()" class="btn-nav">🚪 <span>Déconnexion</span></a>
   </div>
 </nav>
@@ -63,11 +68,10 @@
   <aside class="sidebar">
     <div class="s-section">Navigation</div>
     <a href="index.php"><span class="s-icon">🏠</span> Accueil</a>
-    <a href="Printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
+    <a href="printers.php"><span class="s-icon">🖨️</span> Imprimantes</a>
 
     <div class="s-section">Administration</div>
     <a href="dashboard.php" class="active"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="dashboard.php"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
     <!-- Le badge affiche le nombre d'alertes non résolues (mis à jour en JS) -->
     <a href="alerts.php"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
@@ -98,7 +102,6 @@
     <!-- Actions rapides : raccourcis vers les pages principales
          et boutons pour export/import DB et test d'impression -->
     <div class="quick-actions">
-      <a href="dashboard.php" class="btn btn-accent">🗄️ Base de données</a>
       <a href="cameras.php"  class="btn btn-success">📷 Caméras live</a>
       <a href="alerts.php"   class="btn btn-warning">🔔 Gérer alertes</a>
       <button class="btn btn-primary" onclick="SGI3D_DB.exportJSON()">📤 Exporter DB</button>
@@ -182,6 +185,8 @@
     <div class="form-group">
       <label>Rôle</label>
       <select id="au-role" class="form-control">
+        <option value="etudiant">Étudiant</option>
+        <option value="collaborateur">Collaborateur</option>
         <option value="operator">Opérateur</option>
         <option value="admin">Administrateur</option>
       </select>
@@ -204,11 +209,24 @@
      db.js expose l'objet global SGI3D_DB avec toutes les
      fonctions d'accès à l'API (getStats, getAlerts, etc.)
      ════════════════════════════════════════════════════════ -->
+<!-- Reconstitue la session JS depuis PHP si sessionStorage est vide -->
+<script>
+(function(){
+  if (!sessionStorage.getItem('sgi3d_session')) {
+    sessionStorage.setItem('sgi3d_session', JSON.stringify({
+      userId:  <?= json_encode($_SESSION['user_id']) ?>,
+      email:   <?= json_encode($_SESSION['email']    ?? '') ?>,
+      name:    <?= json_encode($_SESSION['username'] ?? '') ?>,
+      role:    <?= json_encode($_SESSION['role']     ?? 'operateur') ?>,
+      loginAt: new Date().toISOString()
+    }));
+  }
+})();
+</script>
 <script src="db.js"></script>
 <script>
 // ── GARDE D'AUTHENTIFICATION ─────────────────────────────
-// Redirige vers login.html si l'utilisateur n'est pas connecté
-if(!SGI3D_DB.requireAuth()) {}
+if(!SGI3D_DB.requireAuth()) { throw new Error('non autorisé'); }
 
 // Affiche le nom et le rôle de l'utilisateur connecté dans l'en-tête
 const session = SGI3D_DB.getSession();
@@ -217,24 +235,29 @@ if(session){
 }
 
 // Déconnexion : enregistre l'événement dans les journaux puis redirige
-async function doLogout(){ await SGI3D_DB.logout(); window.location.href='Login.php'; }
+async function doLogout(){ await SGI3D_DB.logout(); window.location.href='login.php'; }
 
 // ── STATISTIQUES ─────────────────────────────────────────
 // Récupère les compteurs globaux depuis l'API et génère
 // les cartes stat-card colorées en haut du dashboard.
 // Met aussi à jour le badge d'alertes dans la sidebar.
 async function renderStats(){
-  const s = await SGI3D_DB.getStats();
+  let s;
+  try { s = await SGI3D_DB.getStats(); }
+  catch(e) {
+    document.getElementById('stats-grid').innerHTML = `<p style="color:#e74c3c;grid-column:1/-1">❌ Erreur stats : ${e.message}</p>`;
+    return;
+  }
+  const v = k => (isNaN(s[k]) || s[k] === undefined) ? '—' : s[k];
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card blue"><div class="s-val">${s.totalUsers}</div><div class="s-label">Utilisateurs</div></div>
-    <div class="stat-card green"><div class="s-val">${s.successLogins}</div><div class="s-label">Connexions réussies</div></div>
-    <div class="stat-card orange"><div class="s-val">${s.totalPrintJobs}</div><div class="s-label">Travaux impression</div></div>
-    <div class="stat-card red"><div class="s-val">${s.unresolvedAlerts}</div><div class="s-label">Alertes actives</div></div>
-    <div class="stat-card purple"><div class="s-val">${s.onlineCameras}/${s.totalCameras}</div><div class="s-label">Caméras en ligne</div></div>
-    <div class="stat-card blue"><div class="s-val">${s.activePrintJobs}</div><div class="s-label">Impressions en cours</div></div>
+    <div class="stat-card blue"><div class="s-val">${v('totalUsers')}</div><div class="s-label">Utilisateurs</div></div>
+    <div class="stat-card green"><div class="s-val">${v('successLogins')}</div><div class="s-label">Connexions réussies</div></div>
+    <div class="stat-card orange"><div class="s-val">${v('totalPrintJobs')}</div><div class="s-label">Travaux impression</div></div>
+    <div class="stat-card red"><div class="s-val">${v('unresolvedAlerts')}</div><div class="s-label">Alertes actives</div></div>
+    <div class="stat-card purple"><div class="s-val">${v('onlineCameras')}/${v('totalCameras')}</div><div class="s-label">Caméras en ligne</div></div>
+    <div class="stat-card blue"><div class="s-val">${v('activePrintJobs')}</div><div class="s-label">Impressions en cours</div></div>
   `;
-  // Mise à jour du badge rouge dans la sidebar
-  document.getElementById('sb-alerts').textContent = s.unresolvedAlerts;
+  document.getElementById('sb-alerts').textContent = v('unresolvedAlerts');
 }
 
 // ── FLUX CONNEXIONS ──────────────────────────────────────
@@ -315,7 +338,7 @@ async function renderUsers(){
           <td><div class="user-avatar">${u.avatar||u.nom[0]}</div></td>
           <td>${u.nom}</td>
           <td>${u.email}</td>
-          <td><span class="badge badge-${u.role==='admin'?'info':'neutral'}">${u.role}</span></td>
+          <td><span class="badge badge-${u.role==='admin'?'info':u.role==='etudiant'?'success':u.role==='collaborateur'?'warning':'neutral'}">${u.role==='etudiant'?'Étudiant':u.role==='admin'?'Admin':u.role==='collaborateur'?'Collaborateur':'Opérateur'}</span></td>
           <td><span class="badge badge-${u.actif?'success':'danger'}">${u.actif?'Actif':'Inactif'}</span></td>
           <td>
             <button class="btn btn-warning btn-xs" onclick="toggleUser(${u.id})">${u.actif?'Désactiver':'Activer'}</button>

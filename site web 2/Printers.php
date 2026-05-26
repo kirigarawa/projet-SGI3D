@@ -6,19 +6,14 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-// ── Config imprimantes (depuis DB ou tableau statique) ────────
-// Option A : depuis la base de données
-/*
-require_once 'db.php'; // ton fichier de connexion PDO
-$stmt = $pdo->query("SELECT id, name, host, port FROM printers ORDER BY id");
-$printers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-*/
-
-// Option B : tableau statique (identique à l'ancien JS)
-$printers = [
-    ['id' => 1, 'name' => 'Ultimaker 2+',          'host' => '192.168.0.19',  'port' => 5000],
-    ['id' => 2, 'name' => 'Creality Ender V2 Neo', 'host' => '192.168.1.101', 'port' => 5000],
-];
+// ── Config imprimantes depuis config.php (source unique) ──────
+require_once 'config.php';
+$printers = array_map(fn($p) => [
+    'id'   => $p['id'],
+    'name' => $p['name'],
+    'host' => $p['ip'],
+    'port' => $p['port'],
+], OCTOPRINT_PRINTERS);
 
 // Serialisation JSON pour injection dans le JS
 $printersJson = json_encode($printers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
@@ -30,6 +25,7 @@ $printersJson = json_encode($printers, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_Q
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Imprimantes</title>
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
 body{padding-top:60px}
 .printers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:1.5rem}
@@ -109,7 +105,9 @@ body{padding-top:60px}
 .gcode-toggle:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.03)}
 .gcode-body{padding:0 1.4rem .9rem;display:none}
 .gcode-body.open{display:block}
-.gcode-canvas{width:100%;height:260px;border-radius:8px;background:#0d1117;display:block;margin-bottom:.6rem;cursor:crosshair}
+.gcode-canvas{width:100%;height:300px;border-radius:8px;background:#0d1117;display:block;margin-bottom:.6rem;cursor:grab}
+.gcode-canvas:active{cursor:grabbing}
+.gcode-hint{font-size:.62rem;color:rgba(255,255,255,.18);margin-top:.25rem;font-family:monospace}
 .gcode-ctrl{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .gcode-ctrl input[type=range]{flex:1;min-width:60px;accent-color:#3498db}
 .gcode-lbl{font-size:.7rem;color:rgba(255,255,255,.35);font-family:monospace;white-space:nowrap}
@@ -125,12 +123,18 @@ body{padding-top:60px}
 .cost-card-lbl{font-size:.62rem;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.5px}
 .cost-card-val{font-size:.98rem;font-weight:700;font-family:monospace;color:#2ecc71;margin-top:.12rem}
 .cost-card.total .cost-card-val{color:#f39c12;font-size:1.15rem}
+.mat-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.65rem 0 .3rem}
+.mat-lbl{font-size:.72rem;color:rgba(255,255,255,.38);white-space:nowrap}
+.mat-sel{flex:1;min-width:160px;padding:.3rem .6rem;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:inherit;outline:none;cursor:pointer}
+.mat-sel:focus{border-color:#f39c12}
+.mat-sel option{background:#1a1a2e;color:#fff}
 .print-section{padding:.75rem 1.4rem;border-top:1px solid rgba(255,255,255,.07)}
 .print-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .fsel{flex:1;min-width:120px;padding:.3rem .6rem;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-family:inherit;outline:none;cursor:pointer}
 .fsel:focus{border-color:#3498db}
 .fsel option{background:#1a1a2e;color:#fff}
 .cb-start{color:#2ecc71;border-color:rgba(46,204,113,.35);background:rgba(46,204,113,.08)}
+.loaded-start{margin-top:.6rem;font-size:.82rem}
 </style>
 </head>
 <body>
@@ -154,7 +158,6 @@ body{padding-top:60px}
     <a href="printers.php" class="active"><span class="s-icon">🖨️</span> Imprimantes</a>
     <div class="s-section">Administration</div>
     <a href="dashboard.php"><span class="s-icon">📊</span> Dashboard</a>
-    <a href="database.php"><span class="s-icon">🗄️</span> Base de données</a>
     <a href="cameras.php"><span class="s-icon">📷</span> Caméras</a>
     <a href="alerts.php"><span class="s-icon">🔔</span> Alertes <span class="s-badge" id="sb-alerts">0</span></a>
     <div class="s-section">Compte</div>
@@ -219,7 +222,10 @@ async function api(action, params = {}) {
     body: JSON.stringify({ action, ...params })
   });
   if (r.status === 401) { window.location.href = 'login.php'; return {}; }
-  return r.json();
+  const text = await r.text();
+  if (!text.trim()) return { ok: false, error: `Réponse vide (HTTP ${r.status})` };
+  try { return JSON.parse(text); }
+  catch (e) { return { ok: false, error: 'PHP: ' + text.substring(0, 200) }; }
 }
 
 async function doLogout() {
@@ -230,7 +236,11 @@ async function doLogout() {
 async function loadPrinter(p) {
   try {
     const j = await api('octoprintState', { printer_id: p.id });
-    j.ok ? renderCard(p, j.data) : renderOffline(p, j.error || 'Erreur API');
+    if (!j.ok) { renderOffline(p, j.error || 'Erreur API'); return; }
+    const s = j.data;
+    // Debug temporaire — à retirer une fois l'OctoPrint fonctionnel
+    if (!s.online) console.warn('[OctoPrint]', p.name, s);
+    renderCard(p, s);
   } catch (e) {
     renderOffline(p, 'Réseau inaccessible');
   }
@@ -286,11 +296,12 @@ function renderCard(p, s) {
       <div class="pc-status ${stCls}">${stLbl}</div>
     </div>
     <div class="pc-body">
+      ${matHtml(p.id)}
       <div class="temps-row">
         ${gauge('Buse (tool0)', t.tool0?.actual ?? null, t.tool0?.target ?? 0, 300, p.id, 'tool0')}
         ${gauge('Lit chauffant', t.bed?.actual ?? null, t.bed?.target ?? 0, 120, p.id, 'bed')}
       </div>
-      ${s.job?.file ? jobHtml(s.job) : '<div class="no-job">Aucune impression en cours</div>'}
+      ${s.job?.file ? jobHtml(s.job, p.id, isOp) : '<div class="no-job">Aucune impression en cours</div>'}
       <div class="ctrl-row">
         ${isPrint ? `<button class="cb cb-pause"  onclick="cmd(${p.id},'pause')">⏸ Pause</button>` : ''}
         ${isPause ? `<button class="cb cb-resume" onclick="cmd(${p.id},'resume')">▶ Reprendre</button>` : ''}
@@ -299,12 +310,14 @@ function renderCard(p, s) {
         ${isClosed ? `<button class="cb cb-connect" onclick="setConn(${p.id},'connect')">🔌 Connecter</button>` : ''}
         <button class="cb cb-neutral" style="margin-left:auto" title="Rafraîchir" onclick="loadPrinter(PRINTERS.find(x=>x.id===${p.id}))">🔄</button>
       </div>
-      ${printStartHtml(p.id)}
+      ${printStartHtml(p.id, s.job?.file)}
       ${moveHtml(p.id)}
       ${fanHtml(p.id)}
       ${gcodeHtml(p.id)}
       ${costHtml(p.id)}
     </div>`;
+  restoreGcode(p.id);
+  restoreCost(p.id);
 }
 
 function renderOffline(p, msg) {
@@ -352,13 +365,13 @@ function gauge(lbl, actual, target, max, pid, heater) {
 }
 
 // ── Barre de progression ─────────────────────────────────────
-function jobHtml(job) {
+function jobHtml(job, pid, canStart) {
   const pct = job.progress || 0;
   return `
     <div class="pbar-section">
       <div class="pbar-head">
         <span class="pbar-file" title="${job.file}">📄 ${job.file}</span>
-        <span class="pbar-pct">${pct}%</span>
+        <span class="pbar-pct">${pct > 0 ? pct + '%' : 'Chargé'}</span>
       </div>
       <div class="pbar-wrap"><div class="pbar" style="width:${pct}%"></div></div>
       <div class="pbar-times">
@@ -366,6 +379,7 @@ function jobHtml(job) {
         <span>⏳ Restant : ${ftime(job.timeLeft)}</span>
         <span>📊 Total : ${ftime(job.estimatedTotal)}</span>
       </div>
+      ${canStart ? `<button class="cb cb-start loaded-start" onclick="startLoadedFile(${pid})">▶ Lancer ce fichier</button>` : ''}
     </div>`;
 }
 
@@ -407,9 +421,9 @@ async function setTempOff(pid, heater) {
   toast(j.ok ? '🌡️ Chauffage éteint' : '❌ Erreur', j.ok ? 'info' : 'error');
 }
 
-async function setConn(pid, action) {
-  toast(action === 'connect' ? '🔌 Connexion…' : '🔌 Déconnexion…', 'info');
-  const j = await api('octoprintConnection', { printer_id: pid, action });
+async function setConn(pid, connAction) {
+  toast(connAction === 'connect' ? '🔌 Connexion…' : '🔌 Déconnexion…', 'info');
+  const j = await api('octoprintConnection', { printer_id: pid, action_cmd: connAction });
   if (j.ok) setTimeout(() => loadPrinter(PRINTERS.find(p => p.id === pid)), 2500);
   else toast('❌ ' + (j.error || 'Erreur'), 'error');
 }
@@ -421,6 +435,59 @@ function toast(msg, type = 'info') {
   t.textContent = msg;
   c.appendChild(t);
   setTimeout(() => t.remove(), 3500);
+}
+
+// ── Présets matériaux ────────────────────────────────────────
+const MATERIAL_PRESETS = {
+  PLA:   { tool: 200, bed: 60,  label: '🟢 PLA' },
+  PETG:  { tool: 230, bed: 80,  label: '🔵 PETG' },
+  ABS:   { tool: 240, bed: 100, label: '🟠 ABS' },
+  ASA:   { tool: 250, bed: 100, label: '🟡 ASA' },
+  TPU:   { tool: 225, bed: 45,  label: '🟣 TPU' },
+  Nylon: { tool: 260, bed: 70,  label: '⚪ Nylon' },
+  PC:    { tool: 270, bed: 110, label: '🔴 PC' },
+  'CPE+': { tool: 260, bed: 100, label: '🟤 CPE+' },
+};
+
+function matHtml(pid) {
+  const opts = Object.entries(MATERIAL_PRESETS)
+    .map(([k, v]) => `<option value="${k}">${v.label} — ${v.tool}°C / ${v.bed}°C</option>`)
+    .join('');
+  return `
+    <div class="mat-row">
+      <span class="mat-lbl">Matériau :</span>
+      <select id="mat-${pid}" class="mat-sel" onchange="applyMat(${pid})">
+        <option value="">— Sélectionner —</option>
+        ${opts}
+      </select>
+      <button class="tbtn" onclick="applyMatAndSend(${pid})">✓ Appliquer + Chauffer</button>
+    </div>`;
+}
+
+function applyMat(pid) {
+  const key = document.getElementById('mat-' + pid)?.value;
+  if (!key || !MATERIAL_PRESETS[key]) return;
+  const { tool, bed } = MATERIAL_PRESETS[key];
+  const ti = document.getElementById('t-' + pid + '-tool0');
+  const bi = document.getElementById('t-' + pid + '-bed');
+  if (ti) ti.value = tool;
+  if (bi) bi.value = bed;
+}
+
+async function applyMatAndSend(pid) {
+  applyMat(pid);
+  const ti = document.getElementById('t-' + pid + '-tool0');
+  const bi = document.getElementById('t-' + pid + '-bed');
+  const tTool = parseFloat(ti?.value);
+  const tBed  = parseFloat(bi?.value);
+  if (isNaN(tTool) || isNaN(tBed)) { toast('Sélectionnez un matériau d\'abord', 'warning'); return; }
+  toast('🌡️ Envoi des températures…', 'info');
+  const [jt, jb] = await Promise.all([
+    api('octoprintSetTemp', { printer_id: pid, heater: 'tool0', temp: tTool }),
+    api('octoprintSetTemp', { printer_id: pid, heater: 'bed',   temp: tBed  }),
+  ]);
+  if (jt.ok && jb.ok) toast(`✅ Buse → ${tTool}°C · Lit → ${tBed}°C`, 'success');
+  else toast('❌ ' + (!jt.ok ? jt.error : jb.error || 'Erreur'), 'error');
 }
 
 // ── Déplacements & ventilateur ───────────────────────────────
@@ -509,15 +576,18 @@ async function setFanOff(pid) {
 }
 
 // ── Lancer une impression ────────────────────────────────────
-function printStartHtml(pid) {
+function printStartHtml(pid, loadedFile) {
+  const preloaded = loadedFile
+    ? `<option value="${loadedFile}|local" selected>📄 ${loadedFile}</option>`
+    : `<option value="">— Cliquez sur 📂 pour charger —</option>`;
   return `
     <div class="print-section">
       <div class="sect-title">▶ Lancer une impression</div>
       <div class="print-row">
         <select id="fsel-${pid}" class="fsel">
-          <option value="">— Cliquez sur 📂 pour charger —</option>
+          ${preloaded}
         </select>
-        <button class="tbtn" onclick="loadFiles(${pid})" title="Charger la liste des fichiers">📂</button>
+        <button class="tbtn" onclick="loadFiles(${pid})" title="Parcourir tous les fichiers">📂</button>
         <button class="cb cb-start" onclick="startPrint(${pid})">▶ Imprimer</button>
       </div>
     </div>`;
@@ -537,6 +607,18 @@ async function loadFiles(pid) {
     + files.map(f => `<option value="${f.name}|${f.origin || 'local'}">${f.name}</option>`).join('');
 }
 
+async function startLoadedFile(pid) {
+  if (!confirm('Démarrer l\'impression du fichier actuellement chargé ?')) return;
+  toast('▶ Lancement…', 'info');
+  const j = await api('octoprintStartPrint', { printer_id: pid });
+  if (j.ok) {
+    toast('✅ Impression lancée', 'success');
+    setTimeout(() => loadPrinter(PRINTERS.find(p => p.id === pid)), 2000);
+  } else {
+    toast('❌ ' + (j.data?.error || j.error || 'Erreur OctoPrint'), 'error');
+  }
+}
+
 async function startPrint(pid) {
   const sel = document.getElementById('fsel-' + pid);
   if (!sel?.value) { toast('Sélectionnez un fichier d\'abord', 'warning'); return; }
@@ -553,12 +635,18 @@ async function startPrint(pid) {
 }
 
 // ── Coût d'impression ────────────────────────────────────────
-const COST_DATA = {};
+const COST_DATA    = {};
+const COST_OPEN    = new Set(); // pids dont le calculateur est visible
+const COST_PARAMS  = {};        // paramètres saisis { kg, kwh, pow, dia, den }
+const COST_RESULTS = {};        // résultats calculés { fil, tps, cfl, cel, tot }
 
 function costHtml(pid) {
   return `
     <div class="cost-section" id="cost-section-${pid}" style="display:none">
-      <div class="sect-title">💰 Coût d'impression</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem">
+        <div class="sect-title" style="margin:0">💰 Coût d'impression</div>
+        <button class="tbtn" style="padding:.15rem .55rem;font-size:.7rem;opacity:.6" onclick="closeCost(${pid})" title="Fermer">✕</button>
+      </div>
       <div class="cost-inputs">
         <div class="cost-field"><label>Prix filament (€/kg)</label><input id="ci-kg-${pid}"  type="number" value="25"   min="0" step="1"></div>
         <div class="cost-field"><label>Prix élec. (€/kWh)</label>  <input id="ci-kwh-${pid}" type="number" value="0.20" min="0" step="0.01"></div>
@@ -575,6 +663,43 @@ function costHtml(pid) {
         <div class="cost-card total"><div class="cost-card-lbl">Total estimé</div><div class="cost-card-val" id="cr-tot-${pid}">—</div></div>
       </div>
     </div>`;
+}
+
+function closeCost(pid) {
+  COST_OPEN.delete(pid);
+  const cs = document.getElementById('cost-section-' + pid);
+  if (cs) cs.style.display = 'none';
+}
+
+function restoreCost(pid) {
+  if (!COST_DATA[pid] || !COST_OPEN.has(pid)) return;
+  const cs = document.getElementById('cost-section-' + pid);
+  if (!cs) return;
+  cs.style.display = '';
+
+  // Restaurer les paramètres saisis
+  const p = COST_PARAMS[pid];
+  if (p) {
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    sv('ci-kg-'  + pid, p.kg);
+    sv('ci-kwh-' + pid, p.kwh);
+    sv('ci-pow-' + pid, p.pow);
+    sv('ci-dia-' + pid, p.dia);
+    sv('ci-den-' + pid, p.den);
+  }
+
+  // Restaurer les résultats calculés
+  const r = COST_RESULTS[pid];
+  if (r) {
+    const st = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    st('cr-fil-' + pid, r.fil);
+    st('cr-tps-' + pid, r.tps);
+    st('cr-cfl-' + pid, r.cfl);
+    st('cr-cel-' + pid, r.cel);
+    st('cr-tot-' + pid, r.tot);
+    const cr = document.getElementById('cost-results-' + pid);
+    if (cr) cr.style.display = '';
+  }
 }
 
 function parseCostMetrics(text) {
@@ -616,11 +741,14 @@ function parseCostMetrics(text) {
 function calcCost(pid) {
   const d = COST_DATA[pid];
   if (!d) { toast('Chargez d\'abord un G-code', 'warning'); return; }
-  const priceKg  = parseFloat(document.getElementById('ci-kg-' + pid).value)  || 25;
+  const priceKg  = parseFloat(document.getElementById('ci-kg-'  + pid).value) || 25;
   const priceKwh = parseFloat(document.getElementById('ci-kwh-' + pid).value) || 0.20;
   const power    = parseFloat(document.getElementById('ci-pow-' + pid).value) || 200;
   const diameter = parseFloat(document.getElementById('ci-dia-' + pid).value) || 1.75;
   const density  = parseFloat(document.getElementById('ci-den-' + pid).value) || 1.24;
+
+  COST_PARAMS[pid] = { kg: priceKg, kwh: priceKwh, pow: power, dia: diameter, den: density };
+
   const volumeMm3 = d.totalExtrusion * Math.PI * (diameter / 2) ** 2;
   const weightG   = (volumeMm3 / 1000) * density;
   const filCost   = (weightG / 1000) * priceKg;
@@ -630,30 +758,46 @@ function calcCost(pid) {
   const timeStr = s >= 3600
     ? Math.floor(s / 3600) + 'h ' + String(Math.floor((s % 3600) / 60)).padStart(2, '0') + 'm'
     : Math.floor(s / 60) + 'm ' + String(s % 60).padStart(2, '0') + 's';
-  document.getElementById('cr-fil-' + pid).textContent = weightG.toFixed(1) + 'g / ' + (d.totalExtrusion / 1000).toFixed(2) + 'm';
-  document.getElementById('cr-tps-' + pid).textContent = timeStr;
-  document.getElementById('cr-cfl-' + pid).textContent = filCost.toFixed(3) + ' €';
-  document.getElementById('cr-cel-' + pid).textContent = elecCost.toFixed(3) + ' €';
-  document.getElementById('cr-tot-' + pid).textContent = totalCost.toFixed(2) + ' €';
+
+  const r = {
+    fil: weightG.toFixed(1) + 'g / ' + (d.totalExtrusion / 1000).toFixed(2) + 'm',
+    tps: timeStr,
+    cfl: filCost.toFixed(3)   + ' €',
+    cel: elecCost.toFixed(3)  + ' €',
+    tot: totalCost.toFixed(2) + ' €'
+  };
+  COST_RESULTS[pid] = r;
+
+  document.getElementById('cr-fil-' + pid).textContent = r.fil;
+  document.getElementById('cr-tps-' + pid).textContent = r.tps;
+  document.getElementById('cr-cfl-' + pid).textContent = r.cfl;
+  document.getElementById('cr-cel-' + pid).textContent = r.cel;
+  document.getElementById('cr-tot-' + pid).textContent = r.tot;
   document.getElementById('cost-results-' + pid).style.display = '';
 }
 
 // ── G-code Viewer ────────────────────────────────────────────
-const GCODE_DATA = {};
+const GCODE_DATA   = {};
+const GCODE_OPEN   = new Set();
+const GCODE_LAYER  = {};
+const GCODE_STATUS = {};
+const GVIEW        = {}; // { theta, phi, scale, drag, lastX, lastY }
 
 function gcodeHtml(pid) {
   return `
     <div class="gcode-section">
       <button class="gcode-toggle" onclick="toggleGcode(${pid})">
-        <span>📄 G-code Viewer</span>
+        <span>📦 G-code 3D Viewer</span>
         <span id="gcode-chev-${pid}">▼</span>
       </button>
       <div class="gcode-body" id="gcode-body-${pid}">
         <canvas class="gcode-canvas" id="gcode-cv-${pid}"></canvas>
+        <div class="gcode-hint">🖱 Glisser pour pivoter · Molette pour zoomer</div>
         <div class="gcode-ctrl">
-          <button class="tbtn" onclick="loadGcode(${pid})">⬇ Charger G-code</button>
+          <button class="tbtn" onclick="loadGcode(${pid})">⬇ Charger</button>
+          <button class="tbtn" onclick="resetView3D(${pid})" title="Réinitialiser la vue">⌂</button>
           <input type="range" id="gcode-sl-${pid}" min="0" max="0" value="0"
-            oninput="renderLayer(${pid},+this.value)">
+            oninput="renderLayer3D(${pid},+this.value)">
           <span class="gcode-lbl" id="gcode-lbl-${pid}">—</span>
         </div>
         <div class="gcode-status" id="gcode-st-${pid}"></div>
@@ -666,17 +810,68 @@ function toggleGcode(pid) {
   const chev = document.getElementById('gcode-chev-' + pid);
   const open = body.classList.toggle('open');
   chev.textContent = open ? '▲' : '▼';
-  if (open) initCanvas(pid);
+  if (open) { GCODE_OPEN.add(pid);    initViewer3D(pid); }
+  else       { GCODE_OPEN.delete(pid); }
 }
 
-function initCanvas(pid) {
+function resetView3D(pid) {
+  if (GVIEW[pid]) { GVIEW[pid].theta = -0.7; GVIEW[pid].phi = 0.5; GVIEW[pid].scale = 1; }
+  renderLayer3D(pid, GCODE_LAYER[pid] ?? 0);
+}
+
+// Restaure l'état du viewer après un re-render de la carte
+function restoreGcode(pid) {
+  if (!GCODE_OPEN.has(pid)) return;
+  const body = document.getElementById('gcode-body-' + pid);
+  const chev = document.getElementById('gcode-chev-' + pid);
+  if (!body) return;
+  body.classList.add('open');
+  if (chev) chev.textContent = '▲';
+  if (GCODE_DATA[pid]) {
+    const sl  = document.getElementById('gcode-sl-' + pid);
+    const st  = document.getElementById('gcode-st-' + pid);
+    const cs  = document.getElementById('cost-section-' + pid);
+    const layerIdx = GCODE_LAYER[pid] ?? (GCODE_DATA[pid].layers.length - 1);
+    if (sl) { sl.max = Math.max(0, GCODE_DATA[pid].layers.length - 1); sl.value = layerIdx; }
+    if (st && GCODE_STATUS[pid]) st.textContent = GCODE_STATUS[pid];
+  }
+  initViewer3D(pid);
+}
+
+function initViewer3D(pid) {
   const cv = document.getElementById('gcode-cv-' + pid);
   if (!cv) return;
-  cv.width  = cv.offsetWidth * (window.devicePixelRatio || 1);
-  cv.height = 260            * (window.devicePixelRatio || 1);
-  cv.style.width  = cv.offsetWidth + 'px';
-  cv.style.height = '260px';
-  GCODE_DATA[pid] ? renderLayer(pid, +document.getElementById('gcode-sl-' + pid).value) : drawEmpty(pid);
+  cv.width  = cv.clientWidth * (window.devicePixelRatio || 1);
+  cv.height = 300            * (window.devicePixelRatio || 1);
+  cv.style.width  = cv.clientWidth + 'px';
+  cv.style.height = '300px';
+
+  if (!GVIEW[pid]) GVIEW[pid] = { theta: -0.7, phi: 0.5, scale: 1, drag: false, lastX: 0, lastY: 0 };
+  const v = GVIEW[pid];
+
+  cv.addEventListener('mousedown', e => {
+    v.drag = true; v.lastX = e.clientX; v.lastY = e.clientY;
+  });
+  cv.addEventListener('mousemove', e => {
+    if (!v.drag) return;
+    v.theta += (e.clientX - v.lastX) * 0.012;
+    v.phi   -= (e.clientY - v.lastY) * 0.012;
+    v.phi    = Math.max(-1.45, Math.min(1.45, v.phi));
+    v.lastX  = e.clientX; v.lastY = e.clientY;
+    renderLayer3D(pid, GCODE_LAYER[pid] ?? 0);
+  });
+  cv.addEventListener('mouseup',    () => { v.drag = false; });
+  cv.addEventListener('mouseleave', () => { v.drag = false; });
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    v.scale *= e.deltaY > 0 ? 0.92 : 1.09;
+    v.scale  = Math.max(0.05, Math.min(30, v.scale));
+    renderLayer3D(pid, GCODE_LAYER[pid] ?? 0);
+  }, { passive: false });
+
+  GCODE_DATA[pid]
+    ? renderLayer3D(pid, GCODE_LAYER[pid] ?? (GCODE_DATA[pid].layers.length - 1))
+    : drawEmpty(pid);
 }
 
 function drawEmpty(pid) {
@@ -707,12 +902,13 @@ async function loadGcode(pid) {
     const sl = document.getElementById('gcode-sl-' + pid);
     sl.max   = Math.max(0, parsed.layers.length - 1);
     sl.value = sl.max;
-    renderLayer(pid, +sl.value);
-    st.textContent = j.data.filename
+    renderLayer3D(pid, +sl.value);
+    GCODE_STATUS[pid] = j.data.filename
       + ' — ' + parsed.layers.length + ' couche(s)'
       + (j.data.truncated ? ' (aperçu 500 Ko)' : '');
+    st.textContent = GCODE_STATUS[pid];
     const cs = document.getElementById('cost-section-' + pid);
-    if (cs) cs.style.display = '';
+    if (cs) { cs.style.display = ''; COST_OPEN.add(pid); }
   }, 10);
 }
 
@@ -766,48 +962,119 @@ function parseGcode(text) {
   return { layers, zH, bounds: { minX, maxX, minY, maxY } };
 }
 
-function renderLayer(pid, idx) {
+// ── Projection 3D → 2D (orthographique avec rotation) ────────
+function project3D(ox, oy, oz, theta, phi) {
+  const x1 = ox * Math.cos(theta) - oy * Math.sin(theta);
+  const y1 = ox * Math.sin(theta) + oy * Math.cos(theta);
+  const z1 = oz;
+  return {
+    x:  x1,
+    y:  y1 * Math.cos(phi) - z1 * Math.sin(phi)
+  };
+}
+
+function renderLayer3D(pid, idx) {
   const d  = GCODE_DATA[pid];
   const cv = document.getElementById('gcode-cv-' + pid);
   if (!cv) return;
+  if (!d)  { drawEmpty(pid); return; }
+
+  GCODE_LAYER[pid] = idx;
+
   const ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   ctx.fillStyle = '#0d1117';
   ctx.fillRect(0, 0, W, H);
-  if (!d) return;
+
   const { layers, zH, bounds: { minX, maxX, minY, maxY } } = d;
-  const pad = 20 * window.devicePixelRatio;
-  const sx = (W - pad * 2) / ((maxX - minX) || 1);
-  const sy = (H - pad * 2) / ((maxY - minY) || 1);
-  const sc = Math.min(sx, sy);
-  const ox = pad + (W - pad * 2 - (maxX - minX) * sc) / 2;
-  const oy = pad + (H - pad * 2 - (maxY - minY) * sc) / 2;
-  const tx = x => ox + (x - minX) * sc;
-  const ty = y => H - oy - (y - minY) * sc;
-  ctx.lineWidth = .8;
+  const v = GVIEW[pid] || { theta: -0.7, phi: 0.5, scale: 1 };
+
+  const midX = (minX + maxX) / 2;
+  const midY = (minY + maxY) / 2;
+  const zVals  = zH.filter(z => isFinite(z));
+  const maxZ   = zVals.length ? Math.max(...zVals) : 1;
+  const midZ   = maxZ / 2;
+
+  // Ajuster l'échelle pour que le modèle tienne dans le canvas
+  const range  = Math.max(maxX - minX, maxY - minY, maxZ || 1);
+  const fit    = (Math.min(W, H) * 0.52) / range * v.scale;
+  const cx = W / 2, cy = H / 2;
+
+  const proj = (x, y, z) => {
+    const p = project3D(x - midX, y - midY, z - midZ, v.theta, v.phi);
+    return { sx: cx + p.x * fit, sy: cy - p.y * fit };
+  };
+
+  // Plateau d'impression (context visuel)
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth   = 1;
+  const bed = [[minX,minY],[maxX,minY],[maxX,maxY],[minX,maxY]];
+  ctx.beginPath();
+  const b0 = proj(bed[0][0], bed[0][1], 0);
+  ctx.moveTo(b0.sx, b0.sy);
+  for (let i = 1; i < bed.length; i++) {
+    const b = proj(bed[i][0], bed[i][1], 0);
+    ctx.lineTo(b.sx, b.sy);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // Axes X/Y/Z (mini repère)
+  const org = proj(minX, minY, 0);
+  const aLen = fit * 8;
+  [['X', proj(minX + 8/fit*aLen, minY, 0), '#e74c3c'],
+   ['Y', proj(minX, minY + 8/fit*aLen, 0), '#2ecc71'],
+   ['Z', proj(minX, minY, 8/fit*aLen),     '#3498db']].forEach(([lbl, p, c]) => {
+    ctx.beginPath(); ctx.strokeStyle = c; ctx.lineWidth = 1.5;
+    ctx.moveTo(org.sx, org.sy); ctx.lineTo(p.sx, p.sy); ctx.stroke();
+    ctx.fillStyle = c; ctx.font = `${10 * (window.devicePixelRatio||1)}px monospace`;
+    ctx.fillText(lbl, p.sx + 3, p.sy - 3);
+  });
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // Couches passées (gradient bleu → orange selon hauteur)
   for (let li = 0; li < idx && li < layers.length; li++) {
-    ctx.strokeStyle = 'rgba(52,152,219,.12)';
+    const z = zH[li] ?? 0;
+    const t = layers.length > 1 ? li / (layers.length - 1) : 1;
+    const r = Math.round(52  + t * (230 - 52));
+    const g = Math.round(152 + t * (126 - 152));
+    const b = Math.round(219 + t * (34  - 219));
+    ctx.strokeStyle = `rgba(${r},${g},${b},${0.1 + t * 0.12})`;
+    ctx.lineWidth   = 0.7 / dpr;
     for (const path of layers[li]) {
       if (path.length < 2) continue;
       ctx.beginPath();
-      ctx.moveTo(tx(path[0].x), ty(path[0].y));
-      for (let i = 1; i < path.length; i++) ctx.lineTo(tx(path[i].x), ty(path[i].y));
+      const p0 = proj(path[0].x, path[0].y, z);
+      ctx.moveTo(p0.sx, p0.sy);
+      for (let i = 1; i < path.length; i++) {
+        const p = proj(path[i].x, path[i].y, z);
+        ctx.lineTo(p.sx, p.sy);
+      }
       ctx.stroke();
     }
   }
+
+  // Couche active (bleu vif)
+  const curZ = zH[idx] ?? 0;
   ctx.strokeStyle = '#3498db';
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth   = 1.6 / dpr;
   for (const path of (layers[idx] || [])) {
     if (path.length < 2) continue;
     ctx.beginPath();
-    ctx.moveTo(tx(path[0].x), ty(path[0].y));
-    for (let i = 1; i < path.length; i++) ctx.lineTo(tx(path[i].x), ty(path[i].y));
+    const p0 = proj(path[0].x, path[0].y, curZ);
+    ctx.moveTo(p0.sx, p0.sy);
+    for (let i = 1; i < path.length; i++) {
+      const p = proj(path[i].x, path[i].y, curZ);
+      ctx.lineTo(p.sx, p.sy);
+    }
     ctx.stroke();
   }
+
   const lbl = document.getElementById('gcode-lbl-' + pid);
   if (lbl) lbl.textContent =
     'Couche ' + (idx + 1) + '/' + layers.length
-    + (zH[idx] !== undefined ? ' — Z=' + zH[idx].toFixed(2) + 'mm' : '');
+    + (zH[idx] !== undefined ? ' — Z=' + (zH[idx] || 0).toFixed(2) + 'mm' : '');
 }
 
 // ── Démarrage ────────────────────────────────────────────────

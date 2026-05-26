@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                     $db->prepare(
                         'INSERT INTO utilisateurs (nom, email, mot_de_passe, role, avatar, actif, cree_le)
-                         VALUES (?, ?, ?, "operateur", ?, 1, NOW())'
+                         VALUES (?, ?, ?, "etudiant", ?, 1, NOW())'
                     )->execute([$name, $email, $password, $avatar]);
 
                     $success = 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.';
@@ -137,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SGI3D – Connexion</title>
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   body{display:flex;flex-direction:column;min-height:100vh;padding-top:60px}
   .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}

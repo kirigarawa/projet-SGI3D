@@ -13,6 +13,7 @@ $isAdmin    = $role === 'admin';
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SGI3D – Plan du site</title>
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
   body{padding-top:60px}
   .sitemap-wrap{max-width:1100px;margin:0 auto;padding:3rem 2rem}
@@ -107,7 +108,7 @@ $isAdmin    = $role === 'admin';
       <div class="node-links">
         <a href="printers.php" class="node-link"><span class="lk-icon">🖨️</span> printers.php</a>
         <a href="#"            class="node-link"><span class="lk-icon">📐</span> Ultimaker 2+</a>
-        <a href="#"            class="node-link"><span class="lk-icon">📐</span> Creality Ender V2 Neo</a>
+        <a href="#"            class="node-link"><span class="lk-icon">📐</span> Elegoo Neptune 4 Pro</a>
         <a href="#"            class="node-link"><span class="lk-icon">▶️</span> Lancer une impression <span class="badge-admin">Login</span></a>
         <a href="index.php"    class="node-link"><span class="lk-icon">←</span> Accueil</a>
         <a href="login.php"    class="node-link"><span class="lk-icon">←</span> Connexion</a>
@@ -126,23 +127,6 @@ $isAdmin    = $role === 'admin';
         <a href="#"             class="node-link"><span class="lk-icon">🔐</span> Journal connexions</a>
         <a href="#"             class="node-link"><span class="lk-icon">🖨️</span> Travaux impression</a>
         <a href="#"             class="node-link"><span class="lk-icon">👥</span> Gestion utilisateurs</a>
-        <a href="database.php"  class="node-link"><span class="lk-icon">→</span> Base de données</a>
-      </div>
-    </div>
-
-    <!-- Base de données -->
-    <div class="site-node">
-      <div class="node-header">
-        <div class="node-icon">🗄️</div>
-        <div><h2>Base de données</h2><p>Gestion données complète</p></div>
-      </div>
-      <div class="node-links">
-        <a href="database.php" class="node-link"><span class="lk-icon">🗄️</span> database.php <span class="badge-admin">Admin</span></a>
-        <a href="#"            class="node-link"><span class="lk-icon">👥</span> Table Utilisateurs</a>
-        <a href="#"            class="node-link"><span class="lk-icon">🔐</span> Table Connexions (logs)</a>
-        <a href="#"            class="node-link"><span class="lk-icon">🖨️</span> Table Travaux impression</a>
-        <a href="#"            class="node-link"><span class="lk-icon">📷</span> Table Caméras</a>
-        <a href="#"            class="node-link"><span class="lk-icon">📤</span> Export JSON / CSV</a>
       </div>
     </div>
 
@@ -213,7 +197,6 @@ $isAdmin    = $role === 'admin';
               ['cameras.php',  '📷 Caméras',        'public', 'Flux vidéo, détection de mouvement'],
               ['alerts.php',   '🔔 Alertes',        'public', 'Gestion alertes, son, notifications'],
               ['dashboard.php','📊 Dashboard',      'admin',  'Stats, activité, gestion utilisateurs'],
-              ['database.php', '🗄️ Base données',  'admin',  'CRUD complet sur toutes les tables'],
               ['sitemap.php',  '🗺️ Plan du site',  'public', 'Navigation complète, cette page'],
               ['logout.php',   '🚪 Déconnexion',   'login',  'Détruit la session PHP et redirige'],
               ['api.php',      '⚙️ API Backend',   'server', 'Point d\'entrée JSON pour toutes les actions'],
@@ -285,7 +268,6 @@ $isAdmin    = $role === 'admin';
   <a href="login.php">🔐 Connexion</a> ·
   <a href="printers.php">🖨️ Imprimantes</a> ·
   <a href="dashboard.php">📊 Dashboard</a> ·
-  <a href="database.php">🗄️ Base de données</a>
   <p style="margin-top:.5rem">© <?= date('Y') ?> SGI3D v3.0 – Système de Gestion d'Impression 3D</p>
 </footer>
 
