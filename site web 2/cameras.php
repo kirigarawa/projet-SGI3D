@@ -37,6 +37,8 @@ $isAdmin  = $role === 'admin';
   .cam-footer{padding:.9rem 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08)}
   .btn-fullscreen{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem}
   .btn-fullscreen:hover{background:rgba(255,255,255,.1)}
+  .cam-body:fullscreen,.cam-body:-webkit-full-screen,.cam-body:-moz-full-screen{background:#000;display:flex;align-items:center;justify-content:center;aspect-ratio:unset}
+  .cam-body:fullscreen .cam-canvas,.cam-body:-webkit-full-screen .cam-canvas,.cam-body:-moz-full-screen .cam-canvas{width:100%;height:100%;object-fit:contain}
   .no-cam{text-align:center;padding:3rem;color:rgba(255,255,255,.4);font-size:1rem}
 </style>
 </head>
@@ -422,8 +424,10 @@ async function deleteCam(id) {
 }
 
 function goFullscreen(id) {
-  const canvas = document.getElementById('canvas-' + id);
-  if (canvas && canvas.requestFullscreen) canvas.requestFullscreen();
+  const el = document.querySelector('#card-' + id + ' .cam-body');
+  if (!el) { showToast('Caméra introuvable', 'warning'); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+  if (req) req.call(el);
   else showToast('Plein écran non disponible dans ce navigateur', 'warning');
 }
 

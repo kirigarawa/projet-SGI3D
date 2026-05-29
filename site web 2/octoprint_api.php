@@ -250,7 +250,13 @@ class OctoPrintManager {
         if ($httpCode == 200 || $httpCode == 204) {
             return $response ? json_decode($response, true) : ['success' => true];
         }
-        
+
+        if ($httpCode == 409) {
+            $body = $response ? json_decode($response, true) : [];
+            $msg  = $body['error'] ?? 'Imprimante non connectée au port série';
+            return ['error' => $msg, 'not_operational' => true];
+        }
+
         return ['error' => $error ?: 'Erreur HTTP ' . $httpCode];
     }
 }

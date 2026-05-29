@@ -11,13 +11,11 @@ header('Content-Type: application/json; charset=utf-8');
 
 $ALLOWED_EXT = ['stl', 'gcode', 'gco'];
 $MAX_SIZE    = 50 * 1024 * 1024; // 50 Mo
-$UPLOAD_DIR  = __DIR__ . '/uploads/';
+require_once __DIR__ . '/config.php';
+$UPLOAD_DIR = UPLOAD_GCODE_DIR;
 
-// Créer le dossier uploads/ s'il n'existe pas
 if (!is_dir($UPLOAD_DIR)) {
     mkdir($UPLOAD_DIR, 0755, true);
-    // Empêcher l'exécution de scripts dans ce dossier
-    file_put_contents($UPLOAD_DIR . '.htaccess', "Options -Indexes\nphp_flag engine off\n");
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['file'])) {

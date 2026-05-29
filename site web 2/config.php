@@ -8,8 +8,10 @@
 // Ajoutez une entrée par imprimante avec son IP, port et clé API OctoPrint.
 define('OCTOPRINT_PRINTERS', [
     ['id' => 1, 'name' => 'Ultimaker 2+',          'model' => 'Ultimaker', 'ip' => '192.168.0.32',  'port' => 5000, 'api_key' => 'GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8'],
-    ['id' => 2, 'name' => 'Elegoo Neptune 4 Pro',  'model' => 'Elegoo',    'ip' => '192.168.0.93', 'port' => 80, 'api_key' => '1cbf927f27024488bae6730c4fe4dd5b', 'type' => 'moonraker'],
+    ['id' => 2, 'name' => 'Elegoo Neptune 4 Pro',  'model' => 'Elegoo',    'ip' => '192.168.0.95', 'port' => 80, 'api_key' => '1cbf927f27024488bae6730c4fe4dd5b', 'type' => 'moonraker'],
 ]);
+
+define('UPLOAD_GCODE_DIR', '/web/uploads/gcode/');
 
 define('DB_HOST',     'localhost');
 define('DB_NAME',     'sgi3d');

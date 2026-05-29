@@ -1,11 +1,12 @@
-# Surveillance des imprimantes 3D via l'API OctoPrint
-# Envoie des alertes par email en cas de problème détecté (température, arrêt, blocage, hors ligne)
+# Surveillance des imprimantes 3D via l'API OctoPrint + capteur de fumée Tyco 601P (GPIO 17)
+# Envoie des alertes par email en cas de problème détecté (température, arrêt, blocage, hors ligne, fumée)
 
 import requests   # Pour faire des requêtes HTTP vers l'API OctoPrint
 import time       # Pour la pause entre chaque cycle de vérification
 import smtplib    # Pour l'envoi d'emails via SMTP
 from email.mime.text import MIMEText  # Pour construire le contenu des emails
 import logging    # Pour afficher des messages de log avec horodatage
+import RPi.GPIO as GPIO  # Pour la lecture du GPIO (capteur de fumée Tyco 601P)
 
 # ─── LOGGING ─────────────────────────────
 # Configure les logs : niveau INFO, avec date/heure et niveau affiché
@@ -30,6 +31,11 @@ EMAIL_RECEIVERS = [
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
+# ─── CONFIG CAPTEUR FUMÉE ────────────────
+
+# GPIO BCM du Tyco 601P — signal TTL 3.3V : HIGH = alarme, LOW = normal
+SMOKE_GPIO = 17
+
 # ─── CONFIG IMPRIMANTES ───────────────────
 
 # Liste des imprimantes à surveiller avec leur URL API OctoPrint et leur clé d'accès
@@ -40,8 +46,7 @@ printers = [
         "job_url": "http://localhost:5000/api/job",      # Endpoint état du job en cours
         "api_key": "GN2-MsGMr05YG0vUw-98MLiRZKFkXcYZrkvfeztDh-8"
     },
-    {
-       
+    # Ajouter ici la deuxième imprimante si nécessaire
 ]
 
 # ─── SEUILS TEMP ─────────────────────────
@@ -60,6 +65,9 @@ stuck_flag = {}
 # Mémorise l'état d'alerte actif par imprimante pour éviter les emails répétés
 # Valeurs possibles : None, "temp", "stop", "stuck", "offline"
 alert_state = {}
+
+# Mémorise si une alerte fumée est déjà active (évite les emails répétés)
+smoke_alerted = False
 
 # ─── ENVOI EMAIL ─────────────────────────
 
@@ -88,6 +96,23 @@ def envoyer_email(message):
         logging.error("Erreur authentification Gmail (mot de passe d'application incorrect)")
     except Exception as e:
         logging.error(f"Erreur email : {e}")
+
+# ─── CAPTEUR FUMÉE GPIO ──────────────────
+
+def on_fumee_detectee(_channel):
+    """Callback déclenché immédiatement par interruption GPIO dès que le Tyco 601P détecte de la fumée."""
+    global smoke_alerted
+    if not smoke_alerted:
+        logging.warning("ALARME FUMÉE — Tyco 601P GPIO 17")
+        envoyer_email("🔥 ALARME INCENDIE — Capteur de fumée Tyco 601P déclenché (GPIO 17) !")
+        smoke_alerted = True
+
+def on_fumee_resolue(_channel):
+    """Callback déclenché quand le signal GPIO repasse à LOW (fin d'alarme)."""
+    global smoke_alerted
+    if smoke_alerted:
+        logging.info("Capteur de fumée : retour à la normale (GPIO 17)")
+        smoke_alerted = False
 
 # ─── VÉRIFICATION IMPRIMANTE ─────────────
 
@@ -177,12 +202,28 @@ def verifier_imprimante(printer):
 # ─── BOUCLE PRINCIPALE ───────────────────
 
 if __name__ == "__main__":
-    logging.info("Démarrage surveillance imprimantes 3D")
+    logging.info("Démarrage surveillance imprimantes 3D + capteur de fumée Tyco 601P")
 
-    # Boucle infinie : vérifie toutes les imprimantes toutes les 60 secondes
-    while True:
-        for printer in printers:
-            logging.info(f"Vérification : {printer['name']}")
-            verifier_imprimante(printer)
+    # ─── INIT GPIO ───
+    GPIO.setmode(GPIO.BCM)
+    # Pull-down : le pin reste LOW quand aucun signal (évite les faux positifs)
+    GPIO.setup(SMOKE_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-        time.sleep(60)  # Attente de 60 secondes avant le prochain cycle
+    # Interruptions matérielles : réaction immédiate sans attendre le cycle de 60s
+    # bouncetime=500ms pour ignorer les rebonds électriques du capteur
+    GPIO.add_event_detect(SMOKE_GPIO, GPIO.RISING,  callback=on_fumee_detectee, bouncetime=500)
+    GPIO.add_event_detect(SMOKE_GPIO, GPIO.FALLING, callback=on_fumee_resolue,  bouncetime=500)
+
+    logging.info(f"Capteur de fumée actif sur GPIO {SMOKE_GPIO}")
+
+    try:
+        # Boucle infinie : vérifie toutes les imprimantes toutes les 60 secondes
+        while True:
+            for printer in printers:
+                logging.info(f"Vérification : {printer['name']}")
+                verifier_imprimante(printer)
+
+            time.sleep(60)  # Attente de 60 secondes avant le prochain cycle
+
+    finally:
+        GPIO.cleanup()  # Libère les GPIO proprement à l'arrêt du script
